@@ -1,6 +1,6 @@
 {
   "name": "api-model-tree",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "sideEffects": false,
   "homepage": "https://github.com/udamir/api-model-tree",
@@ -36,7 +36,7 @@
   "peerDependencies": {},
   "dependencies": {
     "@types/json-schema": "^7.0.12",
-    "allof-merge": "^0.4.3",
+    "allof-merge": "^0.4.5",
     "json-crawl": "^0.2.5"
   },
   "devDependencies": {

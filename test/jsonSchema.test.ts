@@ -86,4 +86,39 @@ describe('jsonschema transformation tests', () => {
 
     })
   })
+
+  describe('schema with references', () => {
+    it("should create tree from simple jsonSchema", () => {
+      const schema: JSONSchema4 = {
+        type: 'object',
+        properties: {
+          id: { $ref: "#/defs/id" },
+          name: { $ref: "#/defs/name" },
+        },
+        defs: {
+          id: {
+            title: 'id',
+            type: 'string',
+          },
+          name: {
+            title: 'name',
+            type: 'string',
+          } 
+        }
+      }
+
+      tree.load(schema)
+
+      expect(tree.root).toMatchObject({ id: '#', type: 'simple', parent: null })
+      expect(tree.root?.children()).toMatchObject([
+        { id: '#/properties/id', type: 'simple', parent: tree.root, value: { fragment: schema.defs!.id }, isRef: true },
+        { id: '#/properties/name', type: 'simple', parent: tree.root, value: { fragment: schema.defs!.name }, isRef: true }
+      ])
+      expect([...tree.nodes.values()]).toMatchObject([
+        { id: '#', type: 'simple', parent: null, value: { fragment: schema } },
+        { id: '#/defs/id', type: 'simple', parent: null, value: { fragment: schema.defs!.id } },
+        { id: '#/defs/name', type: 'simple', parent: null, value: { fragment: schema.defs!.name } }
+      ])
+    })
+  })
 })

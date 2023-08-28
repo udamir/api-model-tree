@@ -12,7 +12,7 @@ export class JsonSchemaTree extends DimTree<IJsonNodeData> {
   public load(schema: JSONSchema6 | JSONSchema4, source: any = schema) {
     this.nodes.clear()
     
-    const data = merge(schema, { mergeRefSibling: true, mergeCombinarySibling: true })
+    const data = merge(schema, { source, mergeRefSibling: true, mergeCombinarySibling: true })
 
     const crawlState: CrawlState = { parent: null, parentType: 'simple' }
 
@@ -34,14 +34,15 @@ export class JsonSchemaTree extends DimTree<IJsonNodeData> {
         if (!this.nodes.has(value.$ref)) {
           // resolve and create node
           const refData = resolveRefNode(source, value)
-          const { pointer: refId } = parseRef(value.$ref)
+          const { normalized } = parseRef(value.$ref)
 
-          node = this.createNode(parent, refId, _type, new JsonNodeData(refData), dimension)
-        } else {
-          const cache = this.nodes.get(value.$ref)!
-          this.createRefNode(parent!, id, cache, isCycle, dimension)
-          return null
-        }
+          node = this.createNode(null, normalized, _type, new JsonNodeData(refData), dimension)
+        } 
+
+        const cache = this.nodes.get(value.$ref)!
+        this.createRefNode(parent!, id, cache, isCycle, dimension)
+        return null
+      
       } else {
         node = this.createNode(parent, id, _type, new JsonNodeData(value as any), dimension)
       }
