@@ -1,37 +1,40 @@
-import type { JSONSchema4, JSONSchema6, JSONSchema7 } from 'json-schema';
-import { SchemaAnnotations, SchemaCombinerName, SchemaNodeKind } from './consts';
-import { DimTreeNode } from './dimTree';
+import type { JSONSchema4, JSONSchema6 } from 'json-schema';
+import { JsonPath } from 'json-crawl';
 
-export type SchemaFragment = Record<string, unknown> | JSONSchema4 | JSONSchema6 | JSONSchema7;
+import { SchemaAnnotations, SchemaNodeKind } from './consts';
+import { ModelTreeComplexNode as ModelTreeComplexNode, ModelTreeNode as ModelTreeNode } from './modelTree';
 
-export type DimDataNode<T> = IDimTreeNode<T> | IDimRefNode<T>
+export type SchemaFragment = JSONSchema6 | JSONSchema4
 
-export interface IDimRefNode<T> extends IDimTreeNode<T> {
-  isRef: boolean
+export type ModelDataNode<T> = IModelTreeNode<T> | IModelRefNode<T>
+
+export interface IModelRefNode<T> extends IModelTreeNode<T> {
+  ref: string
   isCycle?: boolean
 }
 
-export interface IDimTree<T> {
-  root: IDimTreeNode<T> | null
-  nodes: Map<string, IDimTreeNode<T>>
+export interface IModelTree<T> {
+  root: IModelTreeNode<T> | null
+  nodes: Map<string, IModelTreeNode<T>>
 }
 
-export interface IDimTreeNode<T> {
+export interface IModelTreeNode<T> {
   id: string
+  key: string | number
   type: string
   depth: number
-  path: ReadonlyArray<string>
-  parent: IDimTreeNode<T> | null
-  value: T
-  dimensions: string[]
-  children(dim?: string): DimDataNode<T>[]
+  path: JsonPath
+  parent: IModelTreeNode<T> | null
+  nested: ModelDataNode<T>[]
+  value(nestedId?: string): T | null
+  children(nestedId?: string): ModelDataNode<T>[]
 }
 
 export interface IJsonNodeData {
   readonly $id: string | null;
   readonly types: SchemaNodeKind[] | null;
   readonly primaryType: SchemaNodeKind | null;
-  readonly combiners: SchemaCombinerName[] | null;
+  // readonly combiners: SchemaCombinerName[] | null;
 
   readonly required: string[] | null;
   readonly enum: unknown[] | null; 
@@ -45,11 +48,11 @@ export interface IJsonNodeData {
   readonly unknown: boolean;
 }
 
-export type JsonSchemaNode = DimTreeNode<IJsonNodeData>
+export type JsonSchemaNode = ModelTreeNode<IJsonNodeData> | ModelTreeComplexNode<IJsonNodeData>
 
 export type ParentType = 'simple' | 'anyOf' | 'oneOf'
 
 export interface CrawlState {
-  parent: JsonSchemaNode| null
-  parentType: ParentType
+  parent: ModelTreeNode<IJsonNodeData> | null
+  container?: ModelTreeComplexNode<IJsonNodeData>
 }

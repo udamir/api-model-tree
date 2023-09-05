@@ -1,5 +1,4 @@
 import { getAnnotations } from './accessors/getAnnotations';
-import { getCombiners } from './accessors/getCombiners';
 import { getPrimaryType } from './accessors/getPrimaryType';
 import { getRequired } from './accessors/getRequired';
 import { getTypes } from './accessors/getTypes';
@@ -8,13 +7,12 @@ import { isDeprecated } from './accessors/isDeprecated';
 import { unwrapArrayOrNull, unwrapStringOrNull } from './accessors/unwrap';
 import type { IJsonNodeData, SchemaFragment } from './types';
 
-import { SchemaAnnotations, SchemaCombinerName, SchemaNodeKind } from './consts';
+import { SchemaAnnotations, SchemaNodeKind } from './consts';
 
 export class JsonNodeData implements IJsonNodeData {
   public readonly $id: string | null;
   public readonly types: SchemaNodeKind[] | null;
   public readonly primaryType: SchemaNodeKind | null; 
-  public readonly combiners: SchemaCombinerName[] | null;
 
   public readonly required: string[] | null;
   public readonly enum: unknown[] | null;
@@ -30,7 +28,6 @@ export class JsonNodeData implements IJsonNodeData {
     this.$id = unwrapStringOrNull('id' in fragment ? fragment.id : fragment.$id);
     this.types = getTypes(fragment);
     this.primaryType = getPrimaryType(fragment, this.types);
-    this.combiners = getCombiners(fragment);
 
     this.deprecated = isDeprecated(fragment);
     this.enum = 'const' in fragment ? [fragment.const] : unwrapArrayOrNull(fragment.enum);
@@ -44,14 +41,13 @@ export class JsonNodeData implements IJsonNodeData {
 
   public get simple() {
     return (
-      this.primaryType !== SchemaNodeKind.Array && this.primaryType !== SchemaNodeKind.Object && this.combiners === null
+      this.primaryType !== SchemaNodeKind.Array && this.primaryType !== SchemaNodeKind.Object 
     );
   }
 
   public get unknown() {
     return (
       this.types === null &&
-      this.combiners === null &&
       this.format === null &&
       this.enum === null &&
       Object.keys(this.annotations).length + Object.keys(this.validations).length === 0

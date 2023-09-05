@@ -28,9 +28,7 @@ function getTypeValidations(types: SchemaNodeKind[]): (keyof SchemaFragment)[] |
 
 export function getValidations(fragment: SchemaFragment, types: SchemaNodeKind[] | null): Record<string, unknown> {
   const extraValidations = types === null ? null : getTypeValidations(types);
-
-  return {
-    ...pick(fragment, COMMON_VALIDATION_TYPES),
-    ...(extraValidations !== null ? pick(fragment, extraValidations) : null),
-  };
+  const validationKeys = [...COMMON_VALIDATION_TYPES, ...extraValidations || []]
+  const validations = pick(fragment, validationKeys)
+  return validations
 }

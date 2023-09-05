@@ -2,19 +2,19 @@ import { buildPointer, isAnyOfNode, isOneOfNode, isRefNode, merge, parseRef, res
 import type { JSONSchema4, JSONSchema6 } from 'json-schema';
 import { syncCrawl } from 'json-crawl';
 
-import { CrawlState, IJsonNodeData, JsonSchemaNode, ParentType } from "./types";
+import { CrawlState, IJsonNodeData, JsonSchemaNode } from "./types";
 import { jsonSchemaCrawlRules } from "./rules";
 import { JsonNodeData } from "./jsonNodeData";
-import { DimTree } from "./dimTree";
+import { ModelTree, ModelTreeComplexNode } from "./modelTree";
 
-export class JsonSchemaTree extends DimTree<IJsonNodeData> {
+export class JsonSchemaTree extends ModelTree<IJsonNodeData> {
 
   public load(schema: JSONSchema6 | JSONSchema4, source: any = schema) {
     this.nodes.clear()
     
     const data = merge(schema, { source, mergeRefSibling: true, mergeCombinarySibling: true })
 
-    const crawlState: CrawlState = { parent: null, parentType: 'simple' }
+    const crawlState: CrawlState = { parent: null }
 
     syncCrawl(data, (value, ctx) => {
       if (!ctx.rules) { return null }
@@ -22,9 +22,7 @@ export class JsonSchemaTree extends DimTree<IJsonNodeData> {
 
       let node: JsonSchemaNode
       const id = "#" + buildPointer(ctx.path)
-      const { parent, parentType } = ctx.state
-      const dimension = parentType === 'simple' ? "" : parentType
-      const _type: ParentType = isAnyOfNode(value) ? 'anyOf' : isOneOfNode(value) ? 'oneOf' : 'simple'
+      const { parent, container } = ctx.state
 
       if (isRefNode(value)) {
         // check if sycle node
@@ -32,22 +30,36 @@ export class JsonSchemaTree extends DimTree<IJsonNodeData> {
 
         // check if node in cache
         if (!this.nodes.has(value.$ref)) {
-          // resolve and create node
+          // resolve and create node in cache
           const refData = resolveRefNode(source, value)
           const { normalized } = parseRef(value.$ref)
 
-          node = this.createNode(null, normalized, _type, new JsonNodeData(refData), dimension)
+          this.createNode(normalized, "", new JsonNodeData(refData))
         } 
 
         const cache = this.nodes.get(value.$ref)!
-        this.createRefNode(parent!, id, cache, isCycle, dimension)
+        if (container) {
+          container.addNestedNode(cache)
+        } else if (parent) {
+          this.createRefNode(id, ctx.key, cache, isCycle, parent)
+        }
         return null
       
+      } else if (isOneOfNode(value)) {
+        node = this.createComplexNode(id, ctx.key, "oneOf", parent)
+      } else if (isAnyOfNode(value)) {
+        node = this.createComplexNode(id, ctx.key, "anyOf", parent)
       } else {
-        node = this.createNode(parent, id, _type, new JsonNodeData(value as any), dimension)
+        node = this.createNode(id, ctx.key, new JsonNodeData(value as any), parent)
       }
 
-      return { value, state: { parent: node, parentType: _type } }
+      if (container) {
+        container.addNestedNode(node)
+      } else {
+        parent?.addChild(node)
+      }
+
+      return { value, state: node instanceof ModelTreeComplexNode ? { parent, container: node } : { parent: node } }
     }, { state: crawlState, rules: jsonSchemaCrawlRules })
   }
 }

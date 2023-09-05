@@ -1,8 +1,17 @@
 {
   "name": "api-model-tree",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "",
-  "sideEffects": false,
+  "module": "dist/esm/index.js",
+  "main": "dist/cjs/index.js",
+  "types": "dist/cjs/index.d.ts",
+  "files": [
+    "dist",
+    "browser"
+  ],
+  "browser": {
+    "./dist/cjs/index.js": "./browser/api-model-tree.js"
+  },
   "homepage": "https://github.com/udamir/api-model-tree",
   "bugs": "https://github.com/udamir/api-model-tree",
   "author": "Damir Yusipov",
@@ -11,7 +20,6 @@
     "url": "https://github.com/udamir/api-model-tree"
   },
   "license": "MIT",
-  "main": "src/index.ts",
   "keywords": [
     "json",
     "schema",
@@ -21,10 +29,6 @@
     "swagger",
     "tree",
     "simplify"
-  ],
-  "files": [
-    "dist",
-    "browser"
   ],
   "scripts": {
     "build": "tsc && tsc --module commonjs --outDir dist/cjs",
@@ -42,9 +46,11 @@
   "devDependencies": {
     "@types/jest": "^29.5.2",
     "@types/js-yaml": "^4.0.5",
+    "@types/treeify": "^1.0.0",
     "benchmark": "^2.1.4",
     "jest": "^29.5.0",
     "js-yaml": "^4.1.0",
+    "treeify": "^1.1.0",
     "ts-jest": "^29.1.0",
     "ts-loader": "^9.4.3",
     "ts-node": "^10.7.0",
