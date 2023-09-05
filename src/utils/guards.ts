@@ -21,3 +21,10 @@ export function isObjectLiteral(maybeObj: unknown): maybeObj is Record<string, u
 export function isNonNullable<T = unknown>(maybeNullable: T): maybeNullable is NonNullable<T> {
   return maybeNullable !== void 0 && maybeNullable !== null;
 }
+
+export function isArrayOfNode(value: unknown): boolean {
+  if (value && typeof value === "object" && "type" in value && value.type === "array") {
+    return ("items" in value && !Array.isArray(value.items)) || !("items" in value)
+  }
+  return false
+}

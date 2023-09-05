@@ -3,9 +3,10 @@ import type { JSONSchema4, JSONSchema6 } from 'json-schema';
 import { syncCrawl } from 'json-crawl';
 
 import { CrawlState, IJsonNodeData, JsonSchemaNode } from "./types";
+import { ModelTree, ModelTreeComplexNode } from "./modelTree";
 import { jsonSchemaCrawlRules } from "./rules";
 import { JsonNodeData } from "./jsonNodeData";
-import { ModelTree, ModelTreeComplexNode } from "./modelTree";
+import { isArrayOfNode } from "./utils";
 
 export class JsonSchemaTree extends ModelTree<IJsonNodeData> {
 
@@ -49,6 +50,8 @@ export class JsonSchemaTree extends ModelTree<IJsonNodeData> {
         node = this.createComplexNode(id, ctx.key, "oneOf", parent)
       } else if (isAnyOfNode(value)) {
         node = this.createComplexNode(id, ctx.key, "anyOf", parent)
+      } else if (isArrayOfNode(value)) {
+        node = this.createComplexNode(id, ctx.key, "arrayOf", parent)
       } else {
         node = this.createNode(id, ctx.key, new JsonNodeData(value as any), parent)
       }

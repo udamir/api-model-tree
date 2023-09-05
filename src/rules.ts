@@ -20,7 +20,7 @@ export const jsonSchemaCrawlRules: CrawlRules<JsonNodeRule> = {
   },
   "/items": () => ({
     ...jsonSchemaCrawlRules,
-    "/*": () => jsonSchemaCrawlRules,
+    // "/*": () => jsonSchemaCrawlRules,
   }),
   "/additionalProperties": () => jsonSchemaCrawlRules,
   "/additionalItems": () => jsonSchemaCrawlRules,

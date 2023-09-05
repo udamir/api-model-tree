@@ -80,14 +80,12 @@ describe('jsonschema transformation tests', () => {
 
       expect(tree.root).toMatchObject({ id: '#', type: 'oneOf', parent: null })
 
+      expect(tree.root?.value()).toMatchObject({ fragment: { ...common, ...schema.oneOf![0] } })
       expect(tree.root?.value('#/oneOf/0')).toMatchObject({ fragment: { ...common, ...schema.oneOf![0] } })
       expect(tree.root?.value('#/oneOf/1')).toMatchObject({ fragment: { ...common, ...schema.oneOf![1] } })
     })
 
     it("should create tree from jsonSchema with additionalProperties", () => {
-      const common: JSONSchema4 = {
-
-      }
       const schema: JSONSchema4 = {
         title: 'test',
         type: 'object',
@@ -124,9 +122,6 @@ describe('jsonschema transformation tests', () => {
     })
 
     it("should create tree from jsonSchema with patternProperties", () => {
-      const common: JSONSchema4 = {
-
-      }
       const schema: JSONSchema4 = {
         title: 'test',
         type: 'object',
@@ -161,12 +156,28 @@ describe('jsonschema transformation tests', () => {
         { id: '#/patternProperties/%5E%5B0-9%5D%2B%24', key: '^[0-9]+$', type: 'simple', parent: tree.root }
       ])
 
-
       expect(children[0].value()).toMatchObject({ fragment: schema.properties!.id })
       expect(children[1].value()).toMatchObject({ fragment: schema.properties!.name })
       expect(children[2].value()).toMatchObject({ fragment: schema.patternProperties!['^[a-z0-9]+$'] })
       expect(children[3].value()).toMatchObject({ fragment: schema.patternProperties!['^[0-9]+$'] })
+    })
+  })
 
+  describe('schema with array', () => {
+    it("should create tree from simple array jsonSchema", () => {
+      const schema: JSONSchema4 = {
+        title: 'test',
+        type: 'array',
+        items: {
+          type: "string"
+        }
+      }
+
+      tree.load(schema)
+
+      expect(tree.root).toMatchObject({ id: '#', type: 'arrayOf', parent: null })
+      expect(tree.root?.value()).toMatchObject({ fragment: schema.items })
+      expect(tree.root?.value('#/items')).toMatchObject({ fragment: schema.items })
     })
   })
 
