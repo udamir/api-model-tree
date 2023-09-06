@@ -175,9 +175,11 @@ describe('jsonschema transformation tests', () => {
 
       tree.load(schema)
 
-      expect(tree.root).toMatchObject({ id: '#', type: 'arrayOf', parent: null })
-      expect(tree.root?.value()).toMatchObject({ fragment: schema.items })
-      expect(tree.root?.value('#/items')).toMatchObject({ fragment: schema.items })
+      expect(tree.root).toMatchObject({ id: '#', type: 'simple', parent: null })
+      expect(tree.root?.value()).toMatchObject({ fragment: schema })
+
+      expect(tree.root?.children()).toMatchObject([{ id: '#/items', key: 'items', type: 'simple', parent: tree.root }])
+      expect(tree.root?.children()[0].value()).toMatchObject({ fragment: schema.items })
     })
   })
 

@@ -50,8 +50,6 @@ export class JsonSchemaTree extends ModelTree<IJsonNodeData> {
         node = this.createComplexNode(id, ctx.key, "oneOf", parent)
       } else if (isAnyOfNode(value)) {
         node = this.createComplexNode(id, ctx.key, "anyOf", parent)
-      } else if (isArrayOfNode(value)) {
-        node = this.createComplexNode(id, ctx.key, "arrayOf", parent)
       } else {
         node = this.createNode(id, ctx.key, new JsonNodeData(value as any), parent)
       }
