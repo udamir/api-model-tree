@@ -2,36 +2,36 @@ import { CrawlRules } from "json-crawl"
 import { isNumber } from "./utils"
 
 type JsonNodeRule = {
-  node: boolean
+  node: string
 }
 
-export const jsonSchemaCrawlRules: CrawlRules<JsonNodeRule> = {
+export const jsonSchemaCrawlRules = (kind = "root"): CrawlRules<JsonNodeRule> => ({
   "/allOf": {
-    "/*": () => jsonSchemaCrawlRules,
+    "/*": () => jsonSchemaCrawlRules("allOf"),
   },
-  "/not": () => jsonSchemaCrawlRules,
+  "/not": () => jsonSchemaCrawlRules("not"),
   "/oneOf": {
-    "/*": () => jsonSchemaCrawlRules,
+    "/*": () => jsonSchemaCrawlRules("oneOf"),
   },
   "/anyOf": {
-    "/*": () => jsonSchemaCrawlRules,
+    "/*": () => jsonSchemaCrawlRules("anyOf"),
   },
   "/properties": {
-    "/*": () => jsonSchemaCrawlRules,
+    "/*": () => jsonSchemaCrawlRules("property"),
   },
   "/items": () => ({
-    ...jsonSchemaCrawlRules,
-    "/*": (path) => isNumber(path[path.length-1]) ? jsonSchemaCrawlRules : {},
+    ...jsonSchemaCrawlRules("items"),
+    "/*": (path) => isNumber(path[path.length-1]) ? jsonSchemaCrawlRules("item") : {},
   }),
-  "/additionalProperties": () => jsonSchemaCrawlRules,
-  "/additionalItems": () => jsonSchemaCrawlRules,
+  "/additionalProperties": () => jsonSchemaCrawlRules("additionalProperties"),
+  "/additionalItems": () => jsonSchemaCrawlRules("additionalItems"),
   "/patternProperties": { 
-    "/*": () => jsonSchemaCrawlRules,
+    "/*": () => jsonSchemaCrawlRules("patternProperty"),
   },
-  "/propertyNames": () => jsonSchemaCrawlRules,
-  "/contains": () => jsonSchemaCrawlRules,
+  "/propertyNames": () => jsonSchemaCrawlRules("propertyNames"),
+  // "/contains": () => jsonSchemaCrawlRules("contains"),
   "/dependencies": { 
-    "/*": () => jsonSchemaCrawlRules,
+    "/*": () => jsonSchemaCrawlRules("dependency"),
   },
-  node: true
-} 
+  node: kind
+})

@@ -34,23 +34,23 @@ export class JsonSchemaTree extends ModelTree<IJsonNodeData> {
           const refData = resolveRefNode(source, value)
           const { normalized } = parseRef(value.$ref)
 
-          this.createNode(normalized, "", new JsonNodeData(refData))
+          this.createNode(normalized, "definition", "", new JsonNodeData(refData))
         } 
 
         const cache = this.nodes.get(value.$ref)!
         if (container) {
           container.addNestedNode(cache)
         } else if (parent) {
-          this.createRefNode(id, ctx.key, cache, isCycle, parent)
+          this.createRefNode(id, ctx.rules.node, ctx.key, cache, isCycle, parent)
         }
         return null
       
       } else if (isOneOfNode(value)) {
-        node = this.createComplexNode(id, ctx.key, "oneOf", parent)
+        node = this.createComplexNode(id, ctx.rules.node, ctx.key, "oneOf", parent)
       } else if (isAnyOfNode(value)) {
-        node = this.createComplexNode(id, ctx.key, "anyOf", parent)
+        node = this.createComplexNode(id, ctx.rules.node, ctx.key, "anyOf", parent)
       } else {
-        node = this.createNode(id, ctx.key, new JsonNodeData(value as any), parent)
+        node = this.createNode(id, ctx.rules.node, ctx.key, new JsonNodeData(value as any), parent)
       }
 
       if (container) {
@@ -60,6 +60,6 @@ export class JsonSchemaTree extends ModelTree<IJsonNodeData> {
       }
 
       return { value, state: node instanceof ModelTreeComplexNode ? { parent, container: node } : { parent: node } }
-    }, { state: crawlState, rules: jsonSchemaCrawlRules })
+    }, { state: crawlState, rules: jsonSchemaCrawlRules() })
   }
 }

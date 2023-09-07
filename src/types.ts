@@ -21,6 +21,7 @@ export interface IModelTree<T> {
 export interface IModelTreeNode<T> {
   id: string
   key: string | number
+  kind: string
   type: string
   depth: number
   path: JsonPath

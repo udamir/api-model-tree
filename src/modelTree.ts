@@ -8,20 +8,20 @@ export class ModelTree<T extends object> implements IModelTree<T> {
     return this.nodes.size ? this.nodes.get('#')! : null
   }
 
-  public createNode(id: string, key: string | number, value: T, parent: ModelTreeNode<T> | null = null): ModelTreeNode<T> {
-    const node = new ModelTreeNode<T>(id, key, value, parent)
+  public createNode(id: string, kind: string, key: string | number, value: T, parent: ModelTreeNode<T> | null = null): ModelTreeNode<T> {
+    const node = new ModelTreeNode<T>(id, kind, key, value, parent)
     this.nodes.set(id, node)
     return node
   }
 
-  public createComplexNode(id: string, key: string | number, type: string, parent: ModelTreeNode<T> | null = null): ModelTreeComplexNode<T> {
-    const node = new ModelTreeComplexNode<T>(id, key, type, parent)
+  public createComplexNode(id: string, kind: string, key: string | number, type: string, parent: ModelTreeNode<T> | null = null): ModelTreeComplexNode<T> {
+    const node = new ModelTreeComplexNode<T>(id, kind, key, type, parent)
     this.nodes.set(id, node)
     return node
   }
 
-  public createRefNode(id: string, key: string | number, target: IModelTreeNode<T>, isCycle: boolean, parent: ModelTreeNode<T>): ModelRefNode<T> {
-    const node = new ModelRefNode(id, key, target, isCycle, parent)
+  public createRefNode(id: string, kind: string, key: string | number, target: IModelTreeNode<T>, isCycle: boolean, parent: ModelTreeNode<T>): ModelRefNode<T> {
+    const node = new ModelRefNode(id, kind, key, target, isCycle, parent)
     parent.addChild(node)
     return node
   }
@@ -52,7 +52,7 @@ export class ModelRefNode<T extends object> implements IModelRefNode<T> {
     return this._target.id
   }
 
-  constructor(public id: string, public key: string | number, private _target: IModelTreeNode<T>, public isCycle: boolean, public parent: ModelTreeNode<T>) {
+  constructor(public id: string, public kind: string, public key: string | number, private _target: IModelTreeNode<T>, public isCycle: boolean, public parent: ModelTreeNode<T>) {
     this.isCycle = isCycle
   }
 
@@ -66,6 +66,7 @@ export class ModelTreeComplexNode<T extends object> implements IModelTreeNode<T>
 
   constructor(
     public id: string = "#",
+    public kind: string = "root",
     public key: string | number = "",
     public type: string,
     public parent: ModelTreeNode<T> | null = null
@@ -116,6 +117,7 @@ export class ModelTreeNode<T extends object> implements IModelTreeNode<T> {
 
   constructor(
     public id: string = "#",
+    public kind: string = "root",
     public key: string | number = "",
     private _value: T,
     public parent: ModelTreeNode<T> | null = null

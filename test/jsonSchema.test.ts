@@ -36,12 +36,13 @@ describe('jsonschema transformation tests', () => {
 
       tree.load(schema)
 
-      expect(tree.root).toMatchObject({ id: '#', type: 'simple', parent: null })
-      expect(tree.root?.value()).toMatchObject({  fragment: schema })
+      expect(tree.root).toMatchObject({ id: '#', kind: 'root', type: 'simple', parent: null })
+      expect(tree.root?.value()).toMatchObject({ fragment: schema })
+
       const children = tree.root?.children()!
       expect(children).toMatchObject([
-        { id: '#/properties/id', key: 'id', type: 'simple', parent: tree.root },
-        { id: '#/properties/name', key: 'name', type: 'simple', parent: tree.root }
+        { id: '#/properties/id', kind: 'property', key: 'id', type: 'simple', parent: tree.root },
+        { id: '#/properties/name', kind: 'property', key: 'name', type: 'simple', parent: tree.root }
       ])
       expect(children[0].value()).toMatchObject({ fragment: schema.properties!.id })
       expect(children[1].value()).toMatchObject({ fragment: schema.properties!.name })
@@ -78,7 +79,7 @@ describe('jsonschema transformation tests', () => {
 
       tree.load(schema)
 
-      expect(tree.root).toMatchObject({ id: '#', type: 'oneOf', parent: null })
+      expect(tree.root).toMatchObject({ id: '#', kind: 'root', type: 'oneOf', parent: null })
 
       expect(tree.root?.value()).toMatchObject({ fragment: { ...common, ...schema.oneOf![0] } })
       expect(tree.root?.value('#/oneOf/0')).toMatchObject({ fragment: { ...common, ...schema.oneOf![0] } })
@@ -105,15 +106,14 @@ describe('jsonschema transformation tests', () => {
 
       tree.load(schema)
 
-      expect(tree.root).toMatchObject({ id: '#', type: 'simple', parent: null })
-
-      expect(tree.root).toMatchObject({ id: '#', type: 'simple', parent: null })
+      expect(tree.root).toMatchObject({ id: '#', kind: 'root', type: 'simple', parent: null })
       expect(tree.root?.value()).toMatchObject({ fragment: schema })
+
       const children = tree.root?.children()!
       expect(children).toMatchObject([
-        { id: '#/properties/id', key: 'id', type: 'simple', parent: tree.root },
-        { id: '#/properties/name', key: 'name', type: 'simple', parent: tree.root},
-        { id: '#/additionalProperties', key: 'additionalProperties', type: 'simple', parent: tree.root }
+        { id: '#/properties/id', kind: 'property', key: 'id', type: 'simple', parent: tree.root },
+        { id: '#/properties/name', kind: 'property', key: 'name', type: 'simple', parent: tree.root},
+        { id: '#/additionalProperties', kind: 'additionalProperties', key: 'additionalProperties', type: 'simple', parent: tree.root }
       ])
 
       expect(children[0].value()).toMatchObject({ fragment: schema.properties!.id })
@@ -150,10 +150,10 @@ describe('jsonschema transformation tests', () => {
 
       const children = tree.root?.children()!
       expect(children).toMatchObject([
-        { id: '#/properties/id', type: 'simple', parent: tree.root },
-        { id: '#/properties/name', type: 'simple', parent: tree.root },
-        { id: '#/patternProperties/%5E%5Ba-z0-9%5D%2B%24', key: '^[a-z0-9]+$', type: 'simple', parent: tree.root },
-        { id: '#/patternProperties/%5E%5B0-9%5D%2B%24', key: '^[0-9]+$', type: 'simple', parent: tree.root }
+        { id: '#/properties/id', kind: 'property', type: 'simple', parent: tree.root },
+        { id: '#/properties/name', kind: 'property', type: 'simple', parent: tree.root },
+        { id: '#/patternProperties/%5E%5Ba-z0-9%5D%2B%24', kind: 'patternProperty', key: '^[a-z0-9]+$', type: 'simple', parent: tree.root },
+        { id: '#/patternProperties/%5E%5B0-9%5D%2B%24', kind: 'patternProperty', key: '^[0-9]+$', type: 'simple', parent: tree.root }
       ])
 
       expect(children[0].value()).toMatchObject({ fragment: schema.properties!.id })
@@ -178,7 +178,7 @@ describe('jsonschema transformation tests', () => {
       expect(tree.root).toMatchObject({ id: '#', type: 'simple', parent: null })
       expect(tree.root?.value()).toMatchObject({ fragment: schema })
 
-      expect(tree.root?.children()).toMatchObject([{ id: '#/items', key: 'items', type: 'simple', parent: tree.root }])
+      expect(tree.root?.children()).toMatchObject([{ id: '#/items', kind: 'items', key: 'items', type: 'simple', parent: tree.root }])
       expect(tree.root?.children()[0].value()).toMatchObject({ fragment: schema.items })
     })
 
@@ -205,9 +205,9 @@ describe('jsonschema transformation tests', () => {
       expect(tree.root?.value()).toMatchObject({ fragment: schema })
 
       expect(tree.root?.children()).toMatchObject([
-        { id: '#/items/0', key: 0, type: 'simple', parent: tree.root },
-        { id: '#/items/1', key: 1, type: 'simple', parent: tree.root },
-        { id: '#/additionalItems', key: 'additionalItems', type: 'simple', parent: tree.root }
+        { id: '#/items/0', kind: 'item', key: 0, type: 'simple', parent: tree.root },
+        { id: '#/items/1', kind: 'item', key: 1, type: 'simple', parent: tree.root },
+        { id: '#/additionalItems', kind: 'additionalItems', key: 'additionalItems', type: 'simple', parent: tree.root }
       ])
       expect(tree.root?.children()[0].value()).toMatchObject({ fragment: schema.items![0] })
       expect(tree.root?.children()[1].value()).toMatchObject({ fragment: schema.items![1] })
@@ -250,9 +250,9 @@ describe('jsonschema transformation tests', () => {
       const nodes = [...tree.nodes.values()]
 
       expect(nodes).toMatchObject([
-        { id: '#', type: 'simple', parent: null },
-        { id: '#/defs/id', type: 'simple' },
-        { id: '#/defs/name', type: 'simple' }
+        { id: '#', kind: 'root', type: 'simple', parent: null },
+        { id: '#/defs/id', kind: 'definition', type: 'simple' },
+        { id: '#/defs/name', kind: 'definition', type: 'simple' }
       ])
 
       expect(nodes[0].value()).toMatchObject({ fragment: schema })
