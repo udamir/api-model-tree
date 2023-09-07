@@ -1,59 +1,30 @@
-import type { JSONSchema4, JSONSchema6 } from 'json-schema';
-import { JsonPath } from 'json-crawl';
 
-import { SchemaAnnotations, SchemaNodeKind } from './consts';
-import { ModelTreeComplexNode as ModelTreeComplexNode, ModelTreeNode as ModelTreeNode } from './modelTree';
+import { JsonPath } from 'json-crawl'
 
-export type SchemaFragment = JSONSchema6 | JSONSchema4
+import { modelTreeNodeType } from './consts'
 
-export type ModelDataNode<T> = IModelTreeNode<T> | IModelRefNode<T>
+export type ModelDataNode<T, K extends string> = IModelTreeNode<T, K> | IModelRefNode<T, K>
+export type ModelDataNodeType = keyof typeof modelTreeNodeType
 
-export interface IModelRefNode<T> extends IModelTreeNode<T> {
+export interface IModelRefNode<T, K extends string> extends IModelTreeNode<T, K> {
   ref: string
-  isCycle?: boolean
+  isCycle: boolean
 }
 
-export interface IModelTree<T> {
-  root: IModelTreeNode<T> | null
-  nodes: Map<string, IModelTreeNode<T>>
+export interface IModelTree<T, K extends string> {
+  root: IModelTreeNode<T, K> | null
+  nodes: Map<string, IModelTreeNode<T, K>>
 }
 
-export interface IModelTreeNode<T> {
+export interface IModelTreeNode<T, K extends string> {
   id: string
   key: string | number
-  kind: string
-  type: string
+  kind: K
+  type: ModelDataNodeType
   depth: number
   path: JsonPath
-  parent: IModelTreeNode<T> | null
-  nested: ModelDataNode<T>[]
+  parent: IModelTreeNode<T, K> | null
+  nested: ModelDataNode<T, K>[]
   value(nestedId?: string): T | null
-  children(nestedId?: string): ModelDataNode<T>[]
-}
-
-export interface IJsonNodeData {
-  readonly $id: string | null;
-  readonly types: SchemaNodeKind[] | null;
-  readonly primaryType: SchemaNodeKind | null;
-  // readonly combiners: SchemaCombinerName[] | null;
-
-  readonly required: string[] | null;
-  readonly enum: unknown[] | null; 
-  readonly format: string | null;
-  readonly title: string | null;
-  readonly deprecated: boolean;
-
-  readonly annotations: Readonly<Partial<Record<SchemaAnnotations, unknown>>>;
-  readonly validations: Readonly<Record<string, unknown>>;
-
-  readonly unknown: boolean;
-}
-
-export type JsonSchemaNode = ModelTreeNode<IJsonNodeData> | ModelTreeComplexNode<IJsonNodeData>
-
-export type ParentType = 'simple' | 'anyOf' | 'oneOf'
-
-export interface CrawlState {
-  parent: ModelTreeNode<IJsonNodeData> | null
-  container?: ModelTreeComplexNode<IJsonNodeData>
+  children(nestedId?: string): ModelDataNode<T, K>[]
 }

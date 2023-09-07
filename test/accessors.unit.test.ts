@@ -1,5 +1,4 @@
-import { getAnnotations, getValidations } from '../src/accessors';
-import { SchemaNodeKind } from '../src/consts';
+import { getAnnotations, getValidations, jsonSchemaNodeType } from '../src/jsonSchema'
 
 describe('accessors unit tests', () => {
   describe('getAnnotations util', () => {
@@ -35,7 +34,7 @@ describe('accessors unit tests', () => {
             maximum: 20,
             multipleOf: 2,
           },
-          [SchemaNodeKind.Integer],
+          [jsonSchemaNodeType.Integer],
         ),
       ).toStrictEqual({
         exclusiveMaximum: true,

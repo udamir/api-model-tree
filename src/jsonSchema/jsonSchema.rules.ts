@@ -1,15 +1,12 @@
 import { CrawlRules } from "json-crawl"
-import { isNumber } from "./utils"
 
-type JsonNodeRule = {
-  node: string
-}
+import { JsonSchemaCrawlRule, JsonSchemaNodeKind } from "./jsonSchema.types"
+import { isNumber } from "../utils"
 
-export const jsonSchemaCrawlRules = (kind = "root"): CrawlRules<JsonNodeRule> => ({
+export const jsonSchemaCrawlRules = (kind: JsonSchemaNodeKind = "root"): CrawlRules<JsonSchemaCrawlRule> => ({
   "/allOf": {
     "/*": () => jsonSchemaCrawlRules("allOf"),
   },
-  "/not": () => jsonSchemaCrawlRules("not"),
   "/oneOf": {
     "/*": () => jsonSchemaCrawlRules("oneOf"),
   },
@@ -28,10 +25,11 @@ export const jsonSchemaCrawlRules = (kind = "root"): CrawlRules<JsonNodeRule> =>
   "/patternProperties": { 
     "/*": () => jsonSchemaCrawlRules("patternProperty"),
   },
-  "/propertyNames": () => jsonSchemaCrawlRules("propertyNames"),
+  // "/not": () => jsonSchemaCrawlRules("not"),
+  // "/propertyNames": () => jsonSchemaCrawlRules("propertyNames"),
   // "/contains": () => jsonSchemaCrawlRules("contains"),
-  "/dependencies": { 
-    "/*": () => jsonSchemaCrawlRules("dependency"),
-  },
-  node: kind
+  // "/dependencies": { 
+  //   "/*": () => jsonSchemaCrawlRules("dependency"),
+  // },
+  kind
 })

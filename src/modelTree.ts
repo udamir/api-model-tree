@@ -1,33 +1,35 @@
 import { JsonPath } from "json-crawl"
-import type { ModelDataNode, IModelTree, IModelRefNode, IModelTreeNode } from "./types"
 
-export class ModelTree<T extends object> implements IModelTree<T> {
-  public nodes: Map<string, IModelTreeNode<T>> = new Map()
+import type { ModelDataNode, IModelTree, IModelRefNode, IModelTreeNode, ModelDataNodeType } from "./types"
+import { modelTreeNodeType } from "./consts"
+
+export class ModelTree<T extends object, K extends string> implements IModelTree<T, K> {
+  public nodes: Map<string, IModelTreeNode<T, K>> = new Map()
 
   get root() {
     return this.nodes.size ? this.nodes.get('#')! : null
   }
 
-  public createNode(id: string, kind: string, key: string | number, value: T, parent: ModelTreeNode<T> | null = null): ModelTreeNode<T> {
-    const node = new ModelTreeNode<T>(id, kind, key, value, parent)
+  public createNode(id: string, kind: K, key: string | number, value: T, parent: ModelTreeNode<T, K> | null = null): ModelTreeNode<T, K> {
+    const node = new ModelTreeNode<T, K>(id, kind, key, value, parent)
     this.nodes.set(id, node)
     return node
   }
 
-  public createComplexNode(id: string, kind: string, key: string | number, type: string, parent: ModelTreeNode<T> | null = null): ModelTreeComplexNode<T> {
-    const node = new ModelTreeComplexNode<T>(id, kind, key, type, parent)
+  public createComplexNode(id: string, kind: K, key: string | number, type: ModelDataNodeType, parent: ModelTreeNode<T, K> | null = null): ModelTreeComplexNode<T, K> {
+    const node = new ModelTreeComplexNode<T, K>(id, kind, key, type, parent)
     this.nodes.set(id, node)
     return node
   }
 
-  public createRefNode(id: string, kind: string, key: string | number, target: IModelTreeNode<T>, isCycle: boolean, parent: ModelTreeNode<T>): ModelRefNode<T> {
-    const node = new ModelRefNode(id, kind, key, target, isCycle, parent)
+  public createRefNode(id: string, kind: K, key: string | number, target: IModelTreeNode<T, K>, parent: ModelTreeNode<T, K>): ModelRefNode<T, K> {
+    const node = new ModelRefNode(id, kind, key, target, parent)
     parent.addChild(node)
     return node
   }
 }
 
-export class ModelRefNode<T extends object> implements IModelRefNode<T> {
+export class ModelRefNode<T extends object, K extends string> implements IModelRefNode<T, K> {
   get type() {
     return this._target.type
   }
@@ -49,27 +51,45 @@ export class ModelRefNode<T extends object> implements IModelRefNode<T> {
   }
 
   get ref() {
-    return this._target.id
+    return 'ref' in this._target ? this._target.ref : this._target.id
   }
 
-  constructor(public id: string, public kind: string, public key: string | number, private _target: IModelTreeNode<T>, public isCycle: boolean, public parent: ModelTreeNode<T>) {
-    this.isCycle = isCycle
+  get isCycle() {
+    let parent: ModelDataNode<T, K> | null  = this.parent
+    const ref = this.ref
+    while (parent) {
+      if ("ref" in parent && parent.ref === ref || parent.id === ref) {
+        return true
+      }
+      parent = parent.parent
+    }
+    return false
   }
 
-  public children(nested?: string): ModelDataNode<T>[] {
-    return this._target.children(nested)
+  constructor(
+    public id: string,
+    public kind: K,
+    public key: string | number,
+    private _target: ModelDataNode<T, K>,
+    public parent: ModelDataNode<T, K>
+  ) {}
+
+  public children(nested?: string): ModelDataNode<T, K>[] {
+    const children = this._target.children(nested)
+    return children.map((child) => new ModelRefNode(child.id, child.kind, child.key, child, this))
   }
 }
 
-export class ModelTreeComplexNode<T extends object> implements IModelTreeNode<T> {
-  public nested: ModelDataNode<T>[] = []
+export class ModelTreeComplexNode<T extends object, K extends string> implements IModelTreeNode<T, K> {
+  public nested: ModelDataNode<T, K>[] = []
+
 
   constructor(
     public id: string = "#",
-    public kind: string = "root",
+    public kind: K,
     public key: string | number = "",
-    public type: string,
-    public parent: ModelTreeNode<T> | null = null
+    public type: ModelDataNodeType,
+    public parent: ModelTreeNode<T, K> | null = null
   ) {
   }
 
@@ -81,7 +101,7 @@ export class ModelTreeComplexNode<T extends object> implements IModelTreeNode<T>
     return this.parent === null ? 0 : this.parent.depth + 1
   }
 
-  private findNestedNode(nestedId: string): ModelDataNode<T> | null {
+  private findNestedNode(nestedId: string): ModelDataNode<T, K> | null {
     for (const nested of this.nested) {
       if (nested.id === nestedId) {
         return nested
@@ -100,7 +120,7 @@ export class ModelTreeComplexNode<T extends object> implements IModelTreeNode<T>
     return nested?.value() ?? null
   }
 
-  public addNestedNode(node: ModelDataNode<T>) {
+  public addNestedNode(node: ModelDataNode<T, K>) {
     this.nested.push(node)
   }
 
@@ -110,17 +130,17 @@ export class ModelTreeComplexNode<T extends object> implements IModelTreeNode<T>
   }
 }
 
-export class ModelTreeNode<T extends object> implements IModelTreeNode<T> { 
-  private _children: ModelDataNode<T>[] = []
-  public nested: ModelDataNode<T>[] = []
-  public type = 'simple'
+export class ModelTreeNode<T extends object, K extends string> implements IModelTreeNode<T, K> { 
+  private _children: ModelDataNode<T, K>[] = []
+  public nested: ModelDataNode<T, K>[] = []
+  public type = modelTreeNodeType.simple
 
   constructor(
     public id: string = "#",
-    public kind: string = "root",
+    public kind: K,
     public key: string | number = "",
     private _value: T,
-    public parent: ModelTreeNode<T> | null = null
+    public parent: ModelTreeNode<T, K> | null = null
   ) {
   }
 
@@ -140,7 +160,7 @@ export class ModelTreeNode<T extends object> implements IModelTreeNode<T> {
     return nestedId ? [] : this._children
   }
 
-  public addChild(node: ModelDataNode<T>) {
+  public addChild(node: ModelDataNode<T, K>) {
     this._children.push(node)
   }
 }

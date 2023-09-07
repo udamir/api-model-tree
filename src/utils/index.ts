@@ -1,2 +1,2 @@
-export * from './guards';
-export * from './pick';
+export * from './guards'
+export * from './pick'

@@ -216,7 +216,7 @@ describe('jsonschema transformation tests', () => {
   })
 
   describe('schema with references', () => {
-    it("should create tree from simple jsonSchema", () => {
+    it("should create tree for jsonSchema with refs", () => {
       const schema: JSONSchema4 = {
         type: 'object',
         properties: {
@@ -258,6 +258,51 @@ describe('jsonschema transformation tests', () => {
       expect(nodes[0].value()).toMatchObject({ fragment: schema })
       expect(nodes[1].value()).toMatchObject({ fragment: schema.defs!.id })
       expect(nodes[2].value()).toMatchObject({ fragment: schema.defs!.name })
+    })
+
+    it("should create tree for jsonSchema with cycle refs", () => {
+      const schema: JSONSchema4 = {
+        type: 'object',
+        properties: {
+          model: { $ref: "#/defs/model" },
+        },
+        defs: {
+          id: {
+            title: 'id',
+            type: 'string',
+          },
+          model: {
+            type: 'object',
+            properties: {
+              id: {
+                $ref: "#/defs/id"
+              },
+              parent: {
+                $ref: "#/defs/model"
+              }
+            }
+          } 
+        }
+      }
+
+      tree.load(schema)
+
+      expect(tree.root).toMatchObject({ id: '#', type: 'simple', parent: null })
+
+      const model = tree.root?.children()![0]!
+      expect(model).toMatchObject(
+        { id: '#/properties/model', type: 'simple', key: 'model', kind: 'property', parent: tree.root, ref: '#/defs/model' }
+      )
+      expect(model.value()).toMatchObject({ fragment: schema.defs!.model })
+
+      const children = model?.children()
+      expect(children).toMatchObject([
+        { id: '#/properties/model/properties/id', type: 'simple', parent: model, ref: '#/defs/id' },
+        { id: '#/properties/model/properties/parent', type: 'simple', parent: model, ref: '#/defs/model', isCycle: true }
+      ])
+      expect(children[0].value()).toMatchObject({ fragment: schema.defs!.id })
+      expect(children[1].value()).toMatchObject({ fragment: schema.defs!.model })
+
     })
   })
 })
