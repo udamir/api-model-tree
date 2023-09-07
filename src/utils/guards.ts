@@ -28,3 +28,7 @@ export function isArrayOfNode(value: unknown): boolean {
   }
   return false
 }
+
+export function isNumber(value: unknown): value is number {
+  return typeof value === "number"
+}

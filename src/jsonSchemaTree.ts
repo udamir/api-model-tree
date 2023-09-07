@@ -1,12 +1,11 @@
-import { buildPointer, isAnyOfNode, isOneOfNode, isRefNode, merge, parseRef, resolveRefNode } from "allof-merge";
-import type { JSONSchema4, JSONSchema6 } from 'json-schema';
-import { syncCrawl } from 'json-crawl';
+import { buildPointer, isAnyOfNode, isOneOfNode, isRefNode, merge, parseRef, resolveRefNode } from "allof-merge"
+import type { JSONSchema4, JSONSchema6 } from 'json-schema'
+import { syncCrawl } from 'json-crawl'
 
-import { CrawlState, IJsonNodeData, JsonSchemaNode } from "./types";
-import { ModelTree, ModelTreeComplexNode } from "./modelTree";
-import { jsonSchemaCrawlRules } from "./rules";
-import { JsonNodeData } from "./jsonNodeData";
-import { isArrayOfNode } from "./utils";
+import { CrawlState, IJsonNodeData, JsonSchemaNode } from "./types"
+import { ModelTree, ModelTreeComplexNode } from "./modelTree"
+import { jsonSchemaCrawlRules } from "./rules"
+import { JsonNodeData } from "./jsonNodeData"
 
 export class JsonSchemaTree extends ModelTree<IJsonNodeData> {
 
@@ -19,7 +18,7 @@ export class JsonSchemaTree extends ModelTree<IJsonNodeData> {
 
     syncCrawl(data, (value, ctx) => {
       if (!ctx.rules) { return null }
-      if (!("node" in ctx.rules)) { return { value, state: ctx.state } }
+      if (!("node" in ctx.rules) || Array.isArray(value)) { return { value, state: ctx.state } }
 
       let node: JsonSchemaNode
       const id = "#" + buildPointer(ctx.path)

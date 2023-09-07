@@ -1,4 +1,5 @@
 import { CrawlRules } from "json-crawl"
+import { isNumber } from "./utils"
 
 type JsonNodeRule = {
   node: boolean
@@ -20,7 +21,7 @@ export const jsonSchemaCrawlRules: CrawlRules<JsonNodeRule> = {
   },
   "/items": () => ({
     ...jsonSchemaCrawlRules,
-    // "/*": () => jsonSchemaCrawlRules,
+    "/*": (path) => isNumber(path[path.length-1]) ? jsonSchemaCrawlRules : {},
   }),
   "/additionalProperties": () => jsonSchemaCrawlRules,
   "/additionalItems": () => jsonSchemaCrawlRules,

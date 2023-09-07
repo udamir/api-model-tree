@@ -181,6 +181,38 @@ describe('jsonschema transformation tests', () => {
       expect(tree.root?.children()).toMatchObject([{ id: '#/items', key: 'items', type: 'simple', parent: tree.root }])
       expect(tree.root?.children()[0].value()).toMatchObject({ fragment: schema.items })
     })
+
+    it("should create tree from jsonSchema with array items", () => {
+      const schema = {
+        title: 'test',
+        type: 'array',
+        items: [
+          {
+            type: "string"
+          },
+          {
+            type: "boolean"
+          },
+        ],
+        additionalItems: {
+          type: "number"
+        }
+      }
+
+      tree.load(schema as JSONSchema4)
+
+      expect(tree.root).toMatchObject({ id: '#', type: 'simple', parent: null })
+      expect(tree.root?.value()).toMatchObject({ fragment: schema })
+
+      expect(tree.root?.children()).toMatchObject([
+        { id: '#/items/0', key: 0, type: 'simple', parent: tree.root },
+        { id: '#/items/1', key: 1, type: 'simple', parent: tree.root },
+        { id: '#/additionalItems', key: 'additionalItems', type: 'simple', parent: tree.root }
+      ])
+      expect(tree.root?.children()[0].value()).toMatchObject({ fragment: schema.items![0] })
+      expect(tree.root?.children()[1].value()).toMatchObject({ fragment: schema.items![1] })
+      expect(tree.root?.children()[2].value()).toMatchObject({ fragment: schema.additionalItems })
+    })
   })
 
   describe('schema with references', () => {
