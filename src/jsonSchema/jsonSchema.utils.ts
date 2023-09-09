@@ -1,50 +1,26 @@
-import type { JsonSchemaFragment, JsonSchemaNodeType } from './jsonSchema.types'
-import { ANNOTATIONS, jsonSchemaNodeType } from './jsonSchema.consts'
-import { isValidType } from './jsonSchema.guards'
-import { isStringOrNumber } from '../utils'
-import { pick } from '../utils/pick'
+import { isAnyOfNode, isOneOfNode, parsePointer } from 'allof-merge'
 
-export const COMMON_VALIDATION_TYPES: string[] = ['readOnly', 'writeOnly', 'style']
+import type { JsonSchemaFragment, JsonSchemaNodeType, JsonSchemaTransformFunc, JsonSchemaTransformedFragment } from './jsonSchema.types'
+import { jsonSchemaCommonProps, jsonSchemaTypeProps, jsonSchemaNodeTypes } from './jsonSchema.consts'
+import { isAllOfNode, isStringOrNumber, pick } from '../utils'
 
-const VALIDATION_TYPES: Partial<Record<JsonSchemaNodeType, (keyof JsonSchemaFragment)[]>> = {
-  string: ['minLength', 'maxLength', 'pattern'],
-  number: ['multipleOf', 'minimum', 'exclusiveMinimum', 'maximum', 'exclusiveMaximum'],
-  get integer() { return this.number },
-  object: ['additionalProperties', 'minProperties', 'maxProperties'],
-  array: ['additionalItems', 'minItems', 'maxItems', 'uniqueItems'],
-}
+export const isValidType = (maybeType: unknown): maybeType is JsonSchemaNodeType =>
+  typeof maybeType === 'string' && jsonSchemaNodeTypes.includes(maybeType as JsonSchemaNodeType)
 
-function getTypeValidations(types: JsonSchemaNodeType[]): (keyof JsonSchemaFragment)[] | null {
-  let extraValidations: (keyof JsonSchemaFragment)[] | null = null
 
-  for (const type of types) {
-    const value = VALIDATION_TYPES[type]
-    if (value !== void 0) {
-      extraValidations ??= []
-      extraValidations.push(...value)
+export function inferTypes(fragment: JsonSchemaFragment): JsonSchemaNodeType[] {
+  const types: JsonSchemaNodeType[] = []
+  for (const type of Object.keys(jsonSchemaTypeProps) as JsonSchemaNodeType[]) {
+    const props = jsonSchemaTypeProps[type].slice(jsonSchemaCommonProps.length)
+    for (const prop of props) {
+      if (prop in fragment) {
+        types.push(type)
+        break
+      }
     }
   }
 
-  return extraValidations
-}
-
-export function getValidations(fragment: JsonSchemaFragment, types: JsonSchemaNodeType[] | null): Record<string, unknown> {
-  const extraValidations = types === null ? null : getTypeValidations(types)
-  const validationKeys = [...COMMON_VALIDATION_TYPES, ...extraValidations || []]
-  const validations = pick(fragment, validationKeys)
-  return validations
-}
-
-export function inferType(fragment: JsonSchemaFragment): JsonSchemaNodeType | null {
-  if ('properties' in fragment || 'additionalProperties' in fragment || 'patternProperties' in fragment) {
-    return jsonSchemaNodeType.Object
-  }
-
-  if ('items' in fragment || 'additionalItems' in fragment) {
-    return jsonSchemaNodeType.Array
-  }
-
-  return null
+  return types
 }
 
 export function unwrapStringOrNull(value: unknown): string | null {
@@ -55,70 +31,112 @@ export function unwrapArrayOrNull(value: unknown): unknown[] | null {
   return Array.isArray(value) ? value : null
 }
 
-export function getTypes(fragment: JsonSchemaFragment): JsonSchemaNodeType[] | null {
-  const types: JsonSchemaNodeType[] = []
-  let isNullable = false
-
-  if ('nullable' in fragment) {
-    if (fragment.nullable === true) {
-      isNullable = true
-    }
-  }
-  if ('type' in fragment) {
-    if (Array.isArray(fragment.type)) {
-      types.push(...fragment.type.filter(isValidType))
-    } else if (isValidType(fragment.type)) {
-      types.push(fragment.type)
-    }
-    if (isNullable && !types.includes(jsonSchemaNodeType.Null)) {
-      types.push(jsonSchemaNodeType.Null)
-    }
-    return types
-  }
-
-  const inferredType = inferType(fragment)
-  if (inferredType !== null) {
-    types.push(inferredType)
-    if (isNullable && !types.includes(jsonSchemaNodeType.Null)) {
-      types.push(jsonSchemaNodeType.Null)
-    }
-    return types
-  }
-
-  return null
-}
-
 export function getRequired(required: unknown): string[] | null {
   if (!Array.isArray(required)) return null
   return required.filter(isStringOrNumber).map(String)
 }
 
-export function getPrimaryType(fragment: JsonSchemaFragment, types: JsonSchemaNodeType[] | null) {
-  if (types !== null) {
-    if (types.includes(jsonSchemaNodeType.Object)) {
-      return jsonSchemaNodeType.Object
-    }
-
-    if (types.includes(jsonSchemaNodeType.Array)) {
-      return jsonSchemaNodeType.Array
-    }
-
-    if (types.length > 0) {
-      return types[0]
-    }
-
-    return null
+export const transformAdditionalItems = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
+  if (value.type === 'array' && 'aditionalItems' in value && value.aditionalItems === true) {
+    return { ...value, aditionalItems: { type: 'any' } }  as JsonSchemaTransformedFragment
   }
-
-  return null
+  return value as JsonSchemaTransformedFragment
 }
 
-export function getAnnotations(fragment: JsonSchemaFragment) {
-  const annotations = pick(fragment, ANNOTATIONS)
-  if ('example' in fragment && !Array.isArray(annotations.examples)) {
-    // example is more OAS-ish, but it's common enough to be worth supporting
-    annotations.examples = [fragment.example]
+export const transformAdditionalProperties = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
+  if (value.type === 'object' && 'additionalProperties' in value && value.additionalProperties === true) {
+    return { ...value, additionalProperties: { type: 'any' } } as JsonSchemaTransformedFragment
+  }
+  return value as JsonSchemaTransformedFragment
+}
+
+export const transformConst = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
+  if ('const' in value) {
+    const { const: v, ...rest } = value
+    return { ...rest, enum: [v] } as JsonSchemaTransformedFragment
+  }
+  return value as JsonSchemaTransformedFragment
+}
+
+export const transformExclusiveMinimum = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
+  if ('exclusiveMinimum' in value && typeof 'exclusiveMinimum' === 'boolean' && 'minimum' in value) {
+    const { minimum, exclusiveMinimum, ...rest } = value
+    return { ...rest, exclusiveMinimum: minimum } as JsonSchemaTransformedFragment
+  }
+  return value as JsonSchemaTransformedFragment
+}
+
+export const transformExclusiveMaximum = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
+  if ('exclusiveMaximum' in value && typeof 'exclusiveMaximum' === 'boolean' && 'maximum' in value) {
+    const { maximum, exclusiveMaximum, ...rest } = value
+    return { ...rest, exclusiveMaximum: maximum } as JsonSchemaTransformedFragment
+  }
+  return value as JsonSchemaTransformedFragment
+}
+
+export function transformExample(value: JsonSchemaFragment): JsonSchemaTransformedFragment {
+  if ('example' in value) {
+    const { example, ...rest } = value
+    return { ...rest, examples: [...value.examples, example] } as JsonSchemaTransformedFragment
+  }
+  return value as JsonSchemaTransformedFragment
+}
+
+export const transformTypeOfArray = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
+  let types: Set<JsonSchemaNodeType> | null = null
+  if (isOneOfNode(value) || isAnyOfNode(value) || isAllOfNode(value)) {
+    return value as JsonSchemaTransformedFragment
   }
 
-  return annotations
+  if (!('type' in value) || !isValidType(value.type) ) {
+    types = new Set(inferTypes(value))
+    if (!types.size) {
+      return { type: 'any', ...value } as JsonSchemaTransformedFragment
+    }
+  }
+  if ('type' in value && Array.isArray(value.type)) {
+    types = new Set(value.type.filter(isValidType))
+  }
+  if (!types) { return value as JsonSchemaTransformedFragment }
+
+  if (types.size === 1) {
+    const [type] = [...types.values()]
+    return { 
+      type, 
+      ...pick<any>(value, jsonSchemaTypeProps[type]), 
+    } as JsonSchemaTransformedFragment
+  } else {
+    return { anyOf: [...types].map((type) => ({ 
+      type,
+      ...pick<any>(value, jsonSchemaTypeProps[type]),
+    })) } as JsonSchemaTransformedFragment
+  }
 }
+
+export const transformDeprecated = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
+  if ('x-deprecated' in value && typeof value['x-deprecated'] === 'boolean') {
+    return { deprecated: value['x-deprecated'], ...value } as JsonSchemaTransformedFragment
+  }
+
+  return value as JsonSchemaTransformedFragment
+}
+
+export const transformTitle = (value: JsonSchemaFragment, ref?: string): JsonSchemaTransformedFragment => {
+  if ('title' in value || !ref) {
+    return value as JsonSchemaTransformedFragment
+  }
+
+  const key = parsePointer(ref).pop()!
+  return { title: key[0].toUpperCase() + key.slice(1), ... value } as JsonSchemaTransformedFragment
+}
+
+export const transormers: JsonSchemaTransformFunc[] = [
+  transformConst,
+  transformExample,
+  transformDeprecated,
+  transformExclusiveMinimum,
+  transformExclusiveMaximum,
+  transformTypeOfArray,
+  transformAdditionalItems,
+  transformAdditionalProperties,
+]

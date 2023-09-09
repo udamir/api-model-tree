@@ -25,6 +25,7 @@ export const jsonSchemaCrawlRules = (kind: JsonSchemaNodeKind = "root"): CrawlRu
   "/patternProperties": { 
     "/*": () => jsonSchemaCrawlRules("patternProperty"),
   },
+  // ------ not supported properties ------------
   // "/not": () => jsonSchemaCrawlRules("not"),
   // "/propertyNames": () => jsonSchemaCrawlRules("propertyNames"),
   // "/contains": () => jsonSchemaCrawlRules("contains"),

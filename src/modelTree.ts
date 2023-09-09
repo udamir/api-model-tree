@@ -83,7 +83,6 @@ export class ModelRefNode<T extends object, K extends string> implements IModelR
 export class ModelTreeComplexNode<T extends object, K extends string> implements IModelTreeNode<T, K> {
   public nested: ModelDataNode<T, K>[] = []
 
-
   constructor(
     public id: string = "#",
     public kind: K,
@@ -101,9 +100,9 @@ export class ModelTreeComplexNode<T extends object, K extends string> implements
     return this.parent === null ? 0 : this.parent.depth + 1
   }
 
-  private findNestedNode(nestedId: string): ModelDataNode<T, K> | null {
+  private findNestedNode(nestedId?: string): ModelDataNode<T, K> | null {
     for (const nested of this.nested) {
-      if (nested.id === nestedId) {
+      if (!nestedId || nested.id === nestedId) {
         return nested
       }
       if (nested instanceof ModelTreeComplexNode) {
@@ -116,7 +115,7 @@ export class ModelTreeComplexNode<T extends object, K extends string> implements
   }
 
   public value(nestedId?: string): T | null {
-    const nested = nestedId ? this.findNestedNode(nestedId) : this.nested[0]
+    const nested = this.findNestedNode(nestedId)
     return nested?.value() ?? null
   }
 
@@ -125,7 +124,7 @@ export class ModelTreeComplexNode<T extends object, K extends string> implements
   }
 
   public children(nestedId?: string) {
-    const nested = nestedId ? this.findNestedNode(nestedId) : this.nested[0]
+    const nested = this.findNestedNode(nestedId)
     return nested?.children() || []
   }
 }

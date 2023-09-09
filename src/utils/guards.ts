@@ -25,11 +25,8 @@ export function isNonNullable<T = unknown>(maybeNullable: T): maybeNullable is N
   return maybeNullable !== void 0 && maybeNullable !== null
 }
 
-export function isArrayOfNode(value: unknown): boolean {
-  if (value && typeof value === "object" && "type" in value && value.type === "array") {
-    return ("items" in value && !Array.isArray(value.items)) || !("items" in value)
-  }
-  return false
+export function isAllOfNode(value: any) {
+  return value && value.allOf && Array.isArray(value.allOf)
 }
 
 export function isNumber(value: unknown): value is number {

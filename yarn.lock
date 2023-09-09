@@ -990,12 +990,12 @@ ajv@~6.12.6:
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
 
-allof-merge@^0.4.5:
-  version "0.4.5"
-  resolved "https://registry.yarnpkg.com/allof-merge/-/allof-merge-0.4.5.tgz#e5093809958085dae337f696ba1a853f66b619b1"
-  integrity sha512-H6nSXeR3eRyUkLyXi5y8U1dWC5QZgC4oY+lZb54PTZYm8nfmoAr6m3xG8a/idTnuiGb7U98oJVcQt42dvkWq6A==
+allof-merge@0.4.8:
+  version "0.4.8"
+  resolved "https://registry.yarnpkg.com/allof-merge/-/allof-merge-0.4.8.tgz#3c451f83c5e3823a228af6b13a202bcef7f3ec6e"
+  integrity sha512-LS6fxg8gcYn/PzW/8qlXKvn16kkNSrrPeOPsZeJs7e3Q7NxlmYw2xsWurFqcEAQO0AaqeGbH+ruhvJPtBAn0nA==
   dependencies:
-    json-crawl "^0.2.0"
+    json-crawl "^0.2.6"
 
 ansi-escapes@^4.2.1:
   version "4.3.2"
@@ -2112,10 +2112,10 @@ jsesc@^2.5.1:
   resolved "https://registry.yarnpkg.com/jsesc/-/jsesc-2.5.2.tgz#80564d2e483dacf6e8ef209650a67df3f0c283a4"
   integrity sha512-OYu7XEzjkCQ3C5Ps3QIZsQfNpqoJyZZA99wd9aWd05NCtC5pWOkShK2mkL6HXQR6/Cy2lbNdPlZBpuQHXE63gA==
 
-json-crawl@^0.2.0, json-crawl@^0.2.5:
-  version "0.2.5"
-  resolved "https://registry.yarnpkg.com/json-crawl/-/json-crawl-0.2.5.tgz#27f6b184903aaea0f3253f7f7bc6981eb02c6b2f"
-  integrity sha512-Ni1DIJfpG58sgi7KP5WzP1F88pLc93uOb/CUX285YOw9P98epH0OMuSPCBxPGkdnpJx3z9J+wmosJkAxtdw84A==
+json-crawl@^0.2.6:
+  version "0.2.6"
+  resolved "https://registry.yarnpkg.com/json-crawl/-/json-crawl-0.2.6.tgz#9fe9717a47d7d10c27db746afbd10a52dd4faba2"
+  integrity sha512-RGIqnFKadWxySzKPFBciJhem5hGnRDFkfvhBPuH0f59kXmr8j2GlVyGvn8Kw9DdT3D7XKebCX61QQL8Um47dyA==
 
 json-parse-even-better-errors@^2.3.0:
   version "2.3.1"
