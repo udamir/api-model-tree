@@ -40,7 +40,7 @@
   "peerDependencies": {},
   "dependencies": {
     "@types/json-schema": "^7.0.12",
-    "allof-merge": "0.4.8",
+    "allof-merge": "0.4.9",
     "json-crawl": "^0.2.6"
   },
   "devDependencies": {
