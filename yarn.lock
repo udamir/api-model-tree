@@ -990,10 +990,10 @@ ajv@~6.12.6:
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
 
-allof-merge@0.4.8:
-  version "0.4.8"
-  resolved "https://registry.yarnpkg.com/allof-merge/-/allof-merge-0.4.8.tgz#3c451f83c5e3823a228af6b13a202bcef7f3ec6e"
-  integrity sha512-LS6fxg8gcYn/PzW/8qlXKvn16kkNSrrPeOPsZeJs7e3Q7NxlmYw2xsWurFqcEAQO0AaqeGbH+ruhvJPtBAn0nA==
+allof-merge@0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/allof-merge/-/allof-merge-0.5.0.tgz#394a63a3157eda11f542d70c4b2641839c679522"
+  integrity sha512-spia10bol2c5JfdoegfpKsj6pGRwlf3Rx5bjUZ6pbH1KRPNIH3M3abTzOcUmFmKbMz5pr+nWeQ0Ia5LwsFDBvw==
   dependencies:
     json-crawl "^0.2.6"
 

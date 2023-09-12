@@ -304,7 +304,8 @@ describe('jsonschema transformation tests', () => {
         { id: '#/defs/name', kind: 'definition', type: 'simple' }
       ])
 
-      expect(nodes[0].value()).toMatchObject({ _fragment: schema })
+      const { defs, ...rest } = schema
+      expect(nodes[0].value()).toMatchObject({ _fragment: rest })
       expect(nodes[1].value()).toMatchObject({ _fragment: schema.defs!.id })
       expect(nodes[2].value()).toMatchObject({ _fragment: schema.defs!.name })
     })
@@ -352,6 +353,27 @@ describe('jsonschema transformation tests', () => {
       expect(children[0].value()).toMatchObject({ _fragment: schema.defs!.id })
       expect(children[1].value()).toMatchObject({ _fragment: schema.defs!.model })
 
+    })
+  })
+
+  describe('schema with broken reference', () => {
+    it("should create tree for jsonSchema with refs", () => {
+      const schema: JSONSchema4 = {
+        type: 'object',
+        properties: {
+          id: { $ref: "#/defs/id" },
+        }
+      }
+
+      const tree = createJsonSchemaTree(schema)
+
+      expect(tree.root).toMatchObject({ id: '#', type: 'simple', parent: null })
+
+      const children = tree.root?.children()!
+      expect(children).toMatchObject([
+        { id: '#/properties/id', type: 'simple', parent: tree.root, ref: '#/defs/id' },
+      ])
+      expect(children[0].value()).toEqual(null)
     })
   })
 })

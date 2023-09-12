@@ -7,7 +7,6 @@ import { isAllOfNode, isStringOrNumber, pick } from '../utils'
 export const isValidType = (maybeType: unknown): maybeType is JsonSchemaNodeType =>
   typeof maybeType === 'string' && jsonSchemaNodeTypes.includes(maybeType as JsonSchemaNodeType)
 
-
 export function inferTypes(fragment: JsonSchemaFragment): JsonSchemaNodeType[] {
   const types: JsonSchemaNodeType[] = []
   for (const type of Object.keys(jsonSchemaTypeProps) as JsonSchemaNodeType[]) {
@@ -83,32 +82,34 @@ export function transformExample(value: JsonSchemaFragment): JsonSchemaTransform
 }
 
 export const transformTypeOfArray = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
-  let types: Set<JsonSchemaNodeType> | null = null
   if (isOneOfNode(value) || isAnyOfNode(value) || isAllOfNode(value)) {
     return value as JsonSchemaTransformedFragment
   }
+  
+  const types = 'type' in value && value.type ? (Array.isArray(value.type) ? value.type : [value.type]) : []
+  let typeSet = new Set(types.filter(isValidType))
 
-  if (!('type' in value) || !isValidType(value.type) ) {
-    types = new Set(inferTypes(value))
-    if (!types.size) {
-      return { type: 'any', ...value } as JsonSchemaTransformedFragment
-    }
-  }
-  if ('type' in value && Array.isArray(value.type)) {
-    types = new Set(value.type.filter(isValidType))
-  }
-  if (!types) { return value as JsonSchemaTransformedFragment }
 
-  if (types.size === 1) {
-    const [type] = [...types.values()]
+  if (!typeSet.size) {
+    typeSet = new Set(inferTypes(value))
+  }
+
+  if (typeSet.size && "nullable" in value && value.nullable) {
+    typeSet.add('null')
+  }
+
+  if (!typeSet.size) { return value as JsonSchemaTransformedFragment }
+
+  if (typeSet.size === 1) {
+    const [type] = [...typeSet.values()]
     return { 
-      type, 
       ...pick<any>(value, jsonSchemaTypeProps[type]), 
+      type, 
     } as JsonSchemaTransformedFragment
   } else {
-    return { anyOf: [...types].map((type) => ({ 
-      type,
+    return { anyOf: [...typeSet.values()].map((type) => ({ 
       ...pick<any>(value, jsonSchemaTypeProps[type]),
+      type,
     })) } as JsonSchemaTransformedFragment
   }
 }
@@ -122,7 +123,7 @@ export const transformDeprecated = (value: JsonSchemaFragment): JsonSchemaTransf
 }
 
 export const transformTitle = (value: JsonSchemaFragment, ref?: string): JsonSchemaTransformedFragment => {
-  if ('title' in value || !ref) {
+  if (!value || 'title' in value || !ref) {
     return value as JsonSchemaTransformedFragment
   }
 

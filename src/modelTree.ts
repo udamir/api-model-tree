@@ -10,7 +10,7 @@ export class ModelTree<T extends object, K extends string> implements IModelTree
     return this.nodes.size ? this.nodes.get('#')! : null
   }
 
-  public createNode(id: string, kind: K, key: string | number, value: T, parent: ModelTreeNode<T, K> | null = null): ModelTreeNode<T, K> {
+  public createNode(id: string, kind: K, key: string | number, value: T | null, parent: ModelTreeNode<T, K> | null = null): ModelTreeNode<T, K> {
     const node = new ModelTreeNode<T, K>(id, kind, key, value, parent)
     this.nodes.set(id, node)
     return node
@@ -138,7 +138,7 @@ export class ModelTreeNode<T extends object, K extends string> implements IModel
     public id: string = "#",
     public kind: K,
     public key: string | number = "",
-    private _value: T,
+    private _value: T | null,
     public parent: ModelTreeNode<T, K> | null = null
   ) {
   }
