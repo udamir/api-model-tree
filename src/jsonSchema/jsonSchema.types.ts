@@ -48,7 +48,7 @@ export interface IJsonSchemaBaseType {
   readonly readOnly?: boolean
   readonly writeOnly?: boolean
   readonly description?: string
-  readonly examples?: any
+  readonly examples?: any[]
   // example: value => examples: [value]
   readonly enum?: any[]
   readonly default?: any
@@ -106,7 +106,7 @@ export interface IJsonSchemaArrayType extends IJsonSchemaBaseType {
   readonly type: 'array'
   readonly minItems?: number
   readonly maxItems?: number
-  readonly uniqueItems?: number
+  readonly uniqueItems?: boolean
   readonly default?: any
   // aditionalItems: true => child: additionalItems: { type: any }
 }

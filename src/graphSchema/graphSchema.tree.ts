@@ -1,0 +1,100 @@
+import { buildPointer, isAnyOfNode, isOneOfNode, isRefNode, parseRef, resolveRefNode } from "allof-merge"
+import { syncCrawl } from 'json-crawl'
+
+import { 
+  GraphSchemaCrawlState, GraphSchemaNodeData, GraphSchemaComplexNode, GraphSchemaNode, 
+  GraphSchemaTreeNode, GraphSchemaFragment, GraphSchemaNodeKind 
+} from "./graphSchema.types"
+import { graphSchemaCrawlRules } from "./graphSchema.rules"
+import { jsonSchemaTypeProps } from "./graphSchema.consts"
+import { isComplexNode, pick } from "../utils"
+import { IModelTreeNode } from "../types"
+import { ModelTree } from "../modelTree"
+
+
+const createGraphSchemaNode = (
+  tree: ModelTree<GraphSchemaNodeData<any>, GraphSchemaNodeKind>,
+  id: string,
+  kind: GraphSchemaNodeKind,
+  key: string | number,
+  value: GraphSchemaFragment, 
+  parent: GraphSchemaTreeNode<any> | null = null
+): GraphSchemaNode<any> => {
+  if (isOneOfNode(value)) {
+    return tree.createComplexNode(id, kind, key, "oneOf", parent)
+  } else if (isAnyOfNode(value)) {
+    return tree.createComplexNode(id, kind, key, "anyOf", parent)
+  } else {
+    const { type } = value
+    if (!type || typeof type !== 'string') { 
+      throw new Error (`Schema should have type: ${id}`)
+    }
+    
+    const { args, directives, ...rest } = value
+
+    const data = { 
+      ...pick<any>(rest, jsonSchemaTypeProps[type]),
+      // TODO transfrom args
+      // TODO transform directives
+      _fragment: value
+    } as GraphSchemaNodeData<typeof type>
+
+    return tree.createNode(id, kind, key, data, parent)
+  }
+}
+
+export const createGraphSchemaTree = (schema: GraphSchemaFragment, source: any = schema) => {
+  const tree = new ModelTree<GraphSchemaNodeData<any>, GraphSchemaNodeKind>()
+  const data = schema
+
+  const crawlState: GraphSchemaCrawlState = { parent: null }
+
+  syncCrawl(data, (value, ctx) => {
+    if (!ctx.rules) { return null }
+    if (!("kind" in ctx.rules) || Array.isArray(value)) { return { value, state: ctx.state } }
+
+    const id = "#" + buildPointer(ctx.path)
+    const { parent, container } = ctx.state
+    const { kind } = ctx.rules
+
+    if (isRefNode(value)) {
+      let refData = null
+      // check if node in cache
+      let node: IModelTreeNode<GraphSchemaNodeData<any>, GraphSchemaNodeKind> | undefined
+      if (tree.nodes.has(value.$ref)) {
+        node = tree.nodes.get(value.$ref)!
+      } else {
+        // resolve and create node in cache
+        refData = resolveRefNode(source, value)
+        const { normalized } = parseRef(value.$ref)
+
+        node = createGraphSchemaNode(tree, normalized, "definition", "", refData)
+      }
+
+      if (container) {
+        container.addNestedNode(node)
+      } else if (parent) {
+        tree.createRefNode(id, kind, ctx.key, node, parent)
+      }
+        
+      if (refData) {
+        const state = isComplexNode(node) ? { parent, container: node as GraphSchemaComplexNode<any> } : { parent: node as GraphSchemaTreeNode<any> }
+        return { value: refData, state }
+      } else {
+        return null
+      }
+    } 
+      
+    const node = createGraphSchemaNode(tree, id, kind, ctx.key, value as GraphSchemaFragment, parent)
+    
+    if (container) {
+      container.addNestedNode(node)
+    } else {
+      parent?.addChild(node)
+    }
+    const state = isComplexNode(node) ? { parent, container: node as GraphSchemaComplexNode<any> } : { parent: node as GraphSchemaTreeNode<any> }
+    return { value, state }
+  }, { state: crawlState, rules: graphSchemaCrawlRules() })
+
+  return tree
+}
