@@ -1,5 +1,5 @@
 import { 
-  allOfResolverHook, buildPointer, isAnyOfNode, isOneOfNode, isRefNode, 
+  allOfResolverHook, buildPointer, isRefNode, 
   jsonSchemaMergeRules, parseRef, resolveRefNode 
 } from "allof-merge"
 import { SyncCloneHook, isObject, syncClone, syncCrawl } from 'json-crawl'
@@ -11,7 +11,7 @@ import {
 import { transormers, isValidType, transformTitle } from "./jsonSchema.utils"
 import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
 import { jsonSchemaTypeProps } from "./jsonSchema.consts"
-import { isComplexNode, pick } from "../utils"
+import { getNodeComplexityType, pick } from "../utils"
 import { IModelTreeNode } from "../types"
 import { ModelTree } from "../modelTree"
 
@@ -43,10 +43,11 @@ const createJsonSchemaNode = (
 ): JsonSchemaNode<any> => {
   if (value === null) {
     return tree.createNode(id, kind, key, null, parent)
-  } else if (isOneOfNode(value)) {
-    return tree.createComplexNode(id, kind, key, "oneOf", parent)
-  } else if (isAnyOfNode(value)) {
-    return tree.createComplexNode(id, kind, key, "anyOf", parent)
+  }
+  
+  const complexityType = getNodeComplexityType(value)
+  if (complexityType !== 'simple') {
+    return tree.createComplexNode(id, kind, key, complexityType, parent)
   } else {
     const { type = "any" } = value
     if (!type || typeof type !== 'string' || !isValidType(type)) { 
@@ -90,13 +91,15 @@ export const createJsonSchemaTree = (schema: JsonSchemaFragment, source: any = s
       }
 
       if (container) {
-        container.addNestedNode(node)
+        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, container.parent)
+        container.addNestedNode(refNode)
       } else if (parent) {
-        tree.createRefNode(id, kind, ctx.key, node ?? null, parent)
+        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, parent)
+        parent.addChild(refNode)
       }
         
       if (refData && node) {
-        const state = isComplexNode(node) ? { parent, container: node as JsonSchemaComplexNode<any> } : { parent: node as JsonSchemaTreeNode<any> }
+        const state = node.type === 'simple' ? { parent: node as JsonSchemaTreeNode<any> } : { parent, container: node as JsonSchemaComplexNode<any> }
         return { value: refData, state }
       } else {
         return null
@@ -110,7 +113,7 @@ export const createJsonSchemaTree = (schema: JsonSchemaFragment, source: any = s
     } else {
       parent?.addChild(node)
     }
-    const state = isComplexNode(node) ? { parent, container: node as JsonSchemaComplexNode<any> } : { parent: node as JsonSchemaTreeNode<any> }
+    const state = node.type === 'simple' ? { parent: node as JsonSchemaTreeNode<any> } : { parent, container: node as JsonSchemaComplexNode<any> }
     return { value, state }
   }, { state: crawlState, rules: jsonSchemaCrawlRules() })
 

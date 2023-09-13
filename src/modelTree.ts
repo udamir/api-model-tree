@@ -22,9 +22,8 @@ export class ModelTree<T extends object, K extends string> implements IModelTree
     return node
   }
 
-  public createRefNode(id: string, kind: K, key: string | number, target: IModelTreeNode<T, K>, parent: ModelTreeNode<T, K>): ModelRefNode<T, K> {
+  public createRefNode(id: string, kind: K, key: string | number, target: IModelTreeNode<T, K>, parent: IModelTreeNode<T, K> | null): ModelRefNode<T, K> {
     const node = new ModelRefNode(id, kind, key, target, parent)
-    parent.addChild(node)
     return node
   }
 }
@@ -71,7 +70,7 @@ export class ModelRefNode<T extends object, K extends string> implements IModelR
     public kind: K,
     public key: string | number,
     private _target: ModelDataNode<T, K>,
-    public parent: ModelDataNode<T, K>
+    public parent: ModelDataNode<T, K> | null
   ) {}
 
   public children(nested?: string): ModelDataNode<T, K>[] {
@@ -88,7 +87,7 @@ export class ModelTreeComplexNode<T extends object, K extends string> implements
     public kind: K,
     public key: string | number = "",
     public type: ModelDataNodeType,
-    public parent: ModelTreeNode<T, K> | null = null
+    public parent: IModelTreeNode<T, K> | null = null
   ) {
   }
 

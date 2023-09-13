@@ -357,7 +357,7 @@ describe('jsonschema transformation tests', () => {
   })
 
   describe('schema with broken reference', () => {
-    it("should create tree for jsonSchema with refs", () => {
+    it("should create tree for jsonSchema with broken refs", () => {
       const schema: JSONSchema4 = {
         type: 'object',
         properties: {
@@ -374,6 +374,34 @@ describe('jsonschema transformation tests', () => {
         { id: '#/properties/id', type: 'simple', parent: tree.root, ref: '#/defs/id' },
       ])
       expect(children[0].value()).toEqual(null)
+    })
+    
+    it("should create tree for jsonSchema with broken refs in allOf", () => {
+      const schema: JSONSchema4 = {
+        allOf: [
+          {
+            type: 'string',
+          },
+          {
+            description: 'String type'
+          },
+          {
+            $ref: '#/components/schemas/StringPropValidations'
+          }
+        ]
+      }
+
+      const tree = createJsonSchemaTree(schema)
+
+      expect(tree.root).toMatchObject({ id: '#', type: 'allOf', parent: null })
+
+      const nested = tree.root?.nested!
+      expect(nested).toMatchObject([
+        { id: '#/allOf/0', type: 'simple', parent: null },
+        { id: '#/allOf/1', type: 'simple', parent: null },
+        { id: '#/allOf/2', type: 'simple', parent: null, ref: '#/components/schemas/StringPropValidations' },
+      ])
+      expect(nested[2].value()).toEqual(null)
     })
   })
 })

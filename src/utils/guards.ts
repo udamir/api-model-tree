@@ -1,5 +1,6 @@
-import { modelTreeNodeType } from "../consts"
-import { IModelTreeNode } from "../types"
+import { isAnyOfNode, isOneOfNode } from "allof-merge"
+
+import { ModelDataNodeType } from "../types"
 
 export function isStringOrNumber(value: unknown): value is number | string {
   return typeof value === 'string' || typeof value === 'number'
@@ -33,6 +34,15 @@ export function isNumber(value: unknown): value is number {
   return typeof value === "number"
 }
 
-export function isComplexNode(node: IModelTreeNode<any, any>): boolean {
-  return node.type === modelTreeNodeType.oneOf || node.type === modelTreeNodeType.anyOf || node.type === modelTreeNodeType.allOf
+export function getNodeComplexityType(value: any): ModelDataNodeType {
+  if (isAllOfNode(value)) {
+    return "allOf"
+  }
+  if (isOneOfNode(value)) {
+    return "oneOf"
+  }
+  if (isAnyOfNode(value)) {
+    return "anyOf"
+  }
+  return "simple"
 }
