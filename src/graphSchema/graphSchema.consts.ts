@@ -16,16 +16,16 @@ export const graphSchemaNodeTypes = [
   'string', 'number', 'integer', 'boolean', 'null', 'array', 'object'
 ] as const 
 
-export const jsonSchemaCommonProps: (keyof IGraphSchemaBaseType)[]  = [
+export const graphSchemaCommonProps: (keyof IGraphSchemaBaseType)[]  = [
   'type', 'description', 'title', 'deprecated', 'examples', 'enum', 'default', 'args', 'directives'
 ]
 
-export const jsonSchemaTypeProps: Record<GraphSchemaNodeType, readonly string[]> = {
-  boolean: [...jsonSchemaCommonProps],
-  null: [...jsonSchemaCommonProps],
-  string: [...jsonSchemaCommonProps, 'format'],
-  number: [...jsonSchemaCommonProps, 'format'],
-  integer: [...jsonSchemaCommonProps, 'format'],
-  object: [...jsonSchemaCommonProps, 'properties', 'required'],
-  array: [...jsonSchemaCommonProps, 'items'],
+export const graphSchemaTypeProps: Record<GraphSchemaNodeType, readonly string[]> = {
+  boolean: [...graphSchemaCommonProps],
+  null: [...graphSchemaCommonProps],
+  string: [...graphSchemaCommonProps, 'format'],
+  number: [...graphSchemaCommonProps, 'format'],
+  integer: [...graphSchemaCommonProps, 'format'],
+  object: [...graphSchemaCommonProps, 'properties', 'required'],
+  array: [...graphSchemaCommonProps, 'items'],
 } 

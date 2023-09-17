@@ -6,11 +6,10 @@ import {
   GraphSchemaTreeNode, GraphSchemaFragment, GraphSchemaNodeKind 
 } from "./graphSchema.types"
 import { graphSchemaCrawlRules } from "./graphSchema.rules"
-import { jsonSchemaTypeProps } from "./graphSchema.consts"
-import { isComplexNode, pick } from "../utils"
+import { graphSchemaTypeProps } from "./graphSchema.consts"
 import { IModelTreeNode } from "../types"
 import { ModelTree } from "../modelTree"
-
+import { pick } from "../utils"
 
 const createGraphSchemaNode = (
   tree: ModelTree<GraphSchemaNodeData<any>, GraphSchemaNodeKind>,
@@ -33,7 +32,7 @@ const createGraphSchemaNode = (
     const { args, directives, ...rest } = value
 
     const data = { 
-      ...pick<any>(rest, jsonSchemaTypeProps[type]),
+      ...pick<any>(rest, graphSchemaTypeProps[type]),
       // TODO transfrom args
       // TODO transform directives
       _fragment: value
@@ -78,7 +77,7 @@ export const createGraphSchemaTree = (schema: GraphSchemaFragment, source: any =
       }
         
       if (refData) {
-        const state = isComplexNode(node) ? { parent, container: node as GraphSchemaComplexNode<any> } : { parent: node as GraphSchemaTreeNode<any> }
+        const state = node.type === 'simple' ? { parent: node as GraphSchemaTreeNode<any> } : { parent, container: node as GraphSchemaComplexNode<any> }
         return { value: refData, state }
       } else {
         return null
@@ -92,7 +91,7 @@ export const createGraphSchemaTree = (schema: GraphSchemaFragment, source: any =
     } else {
       parent?.addChild(node)
     }
-    const state = isComplexNode(node) ? { parent, container: node as GraphSchemaComplexNode<any> } : { parent: node as GraphSchemaTreeNode<any> }
+    const state =  node.type === 'simple' ? { parent: node as GraphSchemaTreeNode<any> } : { parent, container: node as GraphSchemaComplexNode<any> }
     return { value, state }
   }, { state: crawlState, rules: graphSchemaCrawlRules() })
 

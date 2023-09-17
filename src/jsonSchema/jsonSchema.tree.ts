@@ -1,19 +1,20 @@
 import { 
-  allOfResolverHook, buildPointer, isAnyOfNode, isOneOfNode, isRefNode, 
+  allOfResolverHook, buildPointer, isRefNode, 
   jsonSchemaMergeRules, parseRef, resolveRefNode 
 } from "allof-merge"
 import { SyncCloneHook, isObject, syncClone, syncCrawl } from 'json-crawl'
 
 import { 
-  JsonSchemaCrawlState, JsonSchemaNodeData, JsonSchemaComplexNode, JsonSchemaNode, 
-  JsonSchemaTreeNode, JsonSchemaFragment, JsonSchemaNodeKind 
+  JsonSchemaCrawlState, JsonSchemaNodeData, JsonSchemaNode, 
+  JsonSchemaTreeNode, JsonSchemaFragment, JsonSchemaNodeKind, JsonSchemaComplexNode 
 } from "./jsonSchema.types"
-import { transormers, isValidType, transformTitle } from "./jsonSchema.utils"
+import { transormers, isValidType, transformTitle, isJsonSchemaTreeNode } from "./jsonSchema.utils"
+import { jsonSchemaNodeKind, jsonSchemaTypeProps } from "./jsonSchema.consts"
 import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
-import { jsonSchemaTypeProps } from "./jsonSchema.consts"
-import { isComplexNode, pick } from "../utils"
+import { getNodeComplexityType, pick } from "../utils"
 import { IModelTreeNode } from "../types"
 import { ModelTree } from "../modelTree"
+import { modelTreeNodeType } from "../consts"
 
 export const transformJsonSchema = (schema: JsonSchemaFragment, source: any = schema) => {
 
@@ -43,10 +44,11 @@ const createJsonSchemaNode = (
 ): JsonSchemaNode<any> => {
   if (value === null) {
     return tree.createNode(id, kind, key, null, parent)
-  } else if (isOneOfNode(value)) {
-    return tree.createComplexNode(id, kind, key, "oneOf", parent)
-  } else if (isAnyOfNode(value)) {
-    return tree.createComplexNode(id, kind, key, "anyOf", parent)
+  }
+  
+  const complexityType = getNodeComplexityType(value)
+  if (complexityType !== modelTreeNodeType.simple) {
+    return tree.createComplexNode(id, kind, key, complexityType, parent)
   } else {
     const { type = "any" } = value
     if (!type || typeof type !== 'string' || !isValidType(type)) { 
@@ -63,7 +65,12 @@ const createJsonSchemaNode = (
 }
 
 export const createJsonSchemaTree = (schema: JsonSchemaFragment, source: any = schema) => {
+
   const tree = new ModelTree<JsonSchemaNodeData<any>, JsonSchemaNodeKind>()
+  if (!isObject(schema) || !isObject(source)) {
+    return tree
+  }
+
   const data = transformJsonSchema(schema, source)
 
   const crawlState: JsonSchemaCrawlState = { parent: null }
@@ -86,17 +93,19 @@ export const createJsonSchemaTree = (schema: JsonSchemaFragment, source: any = s
         // resolve and create node in cache
         refData = resolveRefNode(source, value)
         const { normalized } = parseRef(value.$ref)
-        node = createJsonSchemaNode(tree, normalized, "definition", "", refData ? transformTitle(refData, normalized) : null)
+        node = createJsonSchemaNode(tree, normalized, jsonSchemaNodeKind.definition, "", refData ? transformTitle(refData, normalized) : null)
       }
 
       if (container) {
-        container.addNestedNode(node)
+        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, container.parent)
+        container.addNestedNode(refNode)
       } else if (parent) {
-        tree.createRefNode(id, kind, ctx.key, node ?? null, parent)
+        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, parent)
+        parent.addChild(refNode)
       }
         
       if (refData && node) {
-        const state = isComplexNode(node) ? { parent, container: node as JsonSchemaComplexNode<any> } : { parent: node as JsonSchemaTreeNode<any> }
+        const state = isJsonSchemaTreeNode(node) ? { parent: node } : { parent, container: node as JsonSchemaComplexNode<any> }
         return { value: refData, state }
       } else {
         return null
@@ -110,7 +119,7 @@ export const createJsonSchemaTree = (schema: JsonSchemaFragment, source: any = s
     } else {
       parent?.addChild(node)
     }
-    const state = isComplexNode(node) ? { parent, container: node as JsonSchemaComplexNode<any> } : { parent: node as JsonSchemaTreeNode<any> }
+    const state = isJsonSchemaTreeNode(node) ? { parent: node } : { parent, container: node as JsonSchemaComplexNode<any> }
     return { value, state }
   }, { state: crawlState, rules: jsonSchemaCrawlRules() })
 
