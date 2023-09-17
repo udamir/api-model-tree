@@ -8,13 +8,15 @@ describe('jsonschema transformation tests', () => {
       const schema: JSONSchema4 = {
         title: 'test',
         type: 'string',
-        enum: ['a', 'b', 'c']
+        enum: ['a', 'b', 'c'],
+        example: 'a'
       }
 
       const tree = createJsonSchemaTree(schema)
 
       expect(tree.root).toMatchObject({ id: '#', type: 'simple', parent: null })
-      expect(tree.root?.value()).toMatchObject({ _fragment: schema })
+      const { example, ...rest } = schema
+      expect(tree.root?.value()).toMatchObject({ _fragment: { ...rest, examples: [schema.example] }})
     })
 
     it("should create tree from object jsonSchema", () => {

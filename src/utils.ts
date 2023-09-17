@@ -1,6 +1,6 @@
 import { isAnyOfNode, isOneOfNode } from "allof-merge"
 
-import { ModelDataNodeType } from "../types"
+import { ModelDataNodeType } from "./types"
 
 export function isStringOrNumber(value: unknown): value is number | string {
   return typeof value === 'string' || typeof value === 'number'
@@ -45,4 +45,20 @@ export function getNodeComplexityType(value: any): ModelDataNodeType {
     return "anyOf"
   }
   return "simple"
+}
+
+export const keys = <T extends object>(value: T): (keyof T)[] => {
+  return Object.keys(value) as (keyof T)[]
+}
+
+export function pick<T extends object>(target: any, keys: readonly (keyof T)[]): Partial<T> {
+  const source: Partial<T> = {}
+
+  for (const key of keys) {
+    if (key in target) {
+      source[key] = target[key]
+    }
+  }
+
+  return source
 }

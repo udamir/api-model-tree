@@ -6,7 +6,7 @@ import { ModelTreeComplexNode, ModelTreeNode } from '../modelTree'
 export type JsonSchemaNodeKind = keyof typeof jsonSchemaNodeKind
 export type JsonSchemaNodeType = typeof jsonSchemaNodeTypes[number]
 
-export type JsonSchemaFragment = JSONSchema6 | JSONSchema4
+export type JsonSchemaFragment<T = {}> = (JSONSchema6 | JSONSchema4) & T
 
 export type JsonSchemaCrawlRule = {
   kind: JsonSchemaNodeKind

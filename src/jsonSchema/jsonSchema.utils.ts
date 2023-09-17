@@ -1,8 +1,14 @@
 import { isAnyOfNode, isOneOfNode, parsePointer } from 'allof-merge'
 
-import type { JsonSchemaFragment, JsonSchemaNodeType, JsonSchemaTransformFunc, JsonSchemaTransformedFragment } from './jsonSchema.types'
+import type { 
+  JsonSchemaFragment, JsonSchemaNodeData, JsonSchemaNodeKind, JsonSchemaNodeType, 
+  JsonSchemaTransformFunc, JsonSchemaTransformedFragment, JsonSchemaTreeNode 
+} from './jsonSchema.types'
 import { jsonSchemaCommonProps, jsonSchemaTypeProps, jsonSchemaNodeTypes } from './jsonSchema.consts'
-import { isAllOfNode, isStringOrNumber, pick } from '../utils'
+import { isAllOfNode, isStringOrNumber, keys, pick } from '../utils'
+import { validators } from './jsonSchema.validators'
+import { modelTreeNodeType } from '../consts'
+import { IModelTreeNode } from '../types'
 
 export const isValidType = (maybeType: unknown): maybeType is JsonSchemaNodeType =>
   typeof maybeType === 'string' && jsonSchemaNodeTypes.includes(maybeType as JsonSchemaNodeType)
@@ -57,6 +63,15 @@ export const transformConst = (value: JsonSchemaFragment): JsonSchemaTransformed
   return value as JsonSchemaTransformedFragment
 }
 
+export const transformRequred = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
+  if ('required' in value && Array.isArray(value.required)) {
+    const required = value.required.filter((item, index, array) => typeof item === 'string' && array.indexOf(item) === index)
+
+    return { ...value, required } as JsonSchemaTransformedFragment
+  }
+  return value as JsonSchemaTransformedFragment
+}
+
 export const transformExclusiveMinimum = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
   if ('exclusiveMinimum' in value && typeof 'exclusiveMinimum' === 'boolean' && 'minimum' in value) {
     const { minimum, exclusiveMinimum, ...rest } = value
@@ -76,7 +91,7 @@ export const transformExclusiveMaximum = (value: JsonSchemaFragment): JsonSchema
 export function transformExample(value: JsonSchemaFragment): JsonSchemaTransformedFragment {
   if ('example' in value) {
     const { example, ...rest } = value
-    return { ...rest, examples: [...value.examples, example] } as JsonSchemaTransformedFragment
+    return { ...rest, examples: [...value.examples ?? [], example] } as JsonSchemaTransformedFragment
   }
   return value as JsonSchemaTransformedFragment
 }
@@ -114,6 +129,14 @@ export const transformTypeOfArray = (value: JsonSchemaFragment): JsonSchemaTrans
   }
 }
 
+export const isJsonSchemaTreeNode = (node?: IModelTreeNode<JsonSchemaNodeData<any>, JsonSchemaNodeKind>): node is JsonSchemaTreeNode<any> => {
+  return !!node && node.type === modelTreeNodeType.simple
+}
+
+export const isJsonSchemaComplexNode = (node?: IModelTreeNode<JsonSchemaNodeData<any>, JsonSchemaNodeKind>): node is JsonSchemaTreeNode<any> => {
+  return !!node && node.type !== modelTreeNodeType.simple
+}
+
 export const transformDeprecated = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
   if ('x-deprecated' in value && typeof value['x-deprecated'] === 'boolean') {
     return { deprecated: value['x-deprecated'], ...value } as JsonSchemaTransformedFragment
@@ -131,7 +154,24 @@ export const transformTitle = (value: JsonSchemaFragment, ref?: string): JsonSch
   return { title: key[0].toUpperCase() + key.slice(1), ... value } as JsonSchemaTransformedFragment
 }
 
+export const filterValidProps = (value: JsonSchemaFragment<any>): JsonSchemaTransformedFragment => {
+  const result = { ...value }
+
+  for (const prop of keys(validators)) {
+    if (prop in result) {
+      const isValidProp = validators[prop]
+      if (!isValidProp(result[prop])) {
+        delete result[prop]
+      }
+    }
+  }
+
+  return result
+}
+
 export const transormers: JsonSchemaTransformFunc[] = [
+  filterValidProps,
+  transformRequred,
   transformConst,
   transformExample,
   transformDeprecated,
