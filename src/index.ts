@@ -1,3 +1,4 @@
+export * from './graphSchema'
 export * from './jsonSchema'
 export * from './modelTree'
 export * from './consts'

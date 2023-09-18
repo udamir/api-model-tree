@@ -2,6 +2,7 @@ import { IGraphSchemaBaseType, GraphSchemaNodeType } from "./graphSchema.types"
 
 export const graphSchemaNodeKind = {
   root: 'root',
+  args: 'args',
   arg: 'arg',
   directive: 'directive',
   definition: "definition",

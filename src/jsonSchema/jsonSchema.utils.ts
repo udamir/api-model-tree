@@ -169,7 +169,7 @@ export const filterValidProps = (value: JsonSchemaFragment<any>): JsonSchemaTran
   return result
 }
 
-export const transormers: JsonSchemaTransformFunc[] = [
+export const jsonSchemaTransormers: JsonSchemaTransformFunc[] = [
   filterValidProps,
   transformRequred,
   transformConst,

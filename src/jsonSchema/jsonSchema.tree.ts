@@ -8,7 +8,7 @@ import {
   JsonSchemaCrawlState, JsonSchemaNodeData, JsonSchemaNode, 
   JsonSchemaTreeNode, JsonSchemaFragment, JsonSchemaNodeKind, JsonSchemaComplexNode 
 } from "./jsonSchema.types"
-import { transormers, isValidType, transformTitle, isJsonSchemaTreeNode } from "./jsonSchema.utils"
+import { jsonSchemaTransormers, isValidType, transformTitle, isJsonSchemaTreeNode } from "./jsonSchema.utils"
 import { jsonSchemaNodeKind, jsonSchemaTypeProps } from "./jsonSchema.consts"
 import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
 import { getNodeComplexityType, pick } from "../utils"
@@ -24,7 +24,7 @@ export const transformJsonSchema = (schema: JsonSchemaFragment, source: any = sc
       return { value } 
     }
     
-    const transformed = transormers.reduce((current, transformer) => transformer(current), value as any)
+    const transformed = jsonSchemaTransormers.reduce((current, transformer) => transformer(current), value as any)
 
     return { value: transformed }
   }

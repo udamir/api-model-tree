@@ -9,6 +9,8 @@ export type GraphSchemaNodeType = typeof graphSchemaNodeTypes[number]
 
 export type GraphSchemaFragment = GraphApiObject | GraphApiScalar | GraphApiUnion | GraphApiEnum | GraphApiList
 
+export type GraphSchemaTransformFunc = (value: GraphSchemaFragment) => GraphSchemaFragment
+
 export type GraphSchemaCrawlRule = {
   kind: GraphSchemaNodeKind
 }
@@ -30,13 +32,16 @@ export type GraphSchemaNodeData<T extends GraphSchemaNodeType> =
   T extends 'array' ? IGraphSchemaArrayType :
   T extends 'null' ? IGraphSchemaNullType : never
 
+export interface IGraphSchemaEnumValueType {
+  value: any
+  description?: string
+  directives?: Record<string, any> // TODO
+}
+
 export interface IGraphSchemaBaseType extends IJsonSchemaBaseType {
   directives?: Record<string, any> // TODO
   args?: Record<string, any> // TODO
-}
-
-export interface IGraphSchemaAnyType extends IGraphSchemaBaseType {
-  readonly type: 'any'
+  values?: IGraphSchemaEnumValueType[]
 }
 
 export interface IGraphSchemaNullType extends IGraphSchemaBaseType {
@@ -45,25 +50,27 @@ export interface IGraphSchemaNullType extends IGraphSchemaBaseType {
 
 export interface IGraphSchemaBooleanType extends IGraphSchemaBaseType {
   readonly type: 'boolean'
+  readonly default?: string
 }
 
 export interface IGraphSchemaStringType extends IGraphSchemaBaseType {
   readonly type: 'string'
   readonly format?: string
   readonly enum?: string[]
+  readonly values?: IGraphSchemaEnumValueType[]
   readonly default?: string
 }
 
 export interface IGraphSchemaNumberType extends IGraphSchemaBaseType {
   readonly type: 'number' | 'integer'
   readonly format?: string
-  readonly enum?: number[]
   readonly default?: number // remove if wrong type
 }
 
 export interface IGraphSchemaObjectType extends IGraphSchemaBaseType {
   readonly type: 'object'
   readonly required?: string[]
+  readonly default?: any
 }
 
 export interface IGraphSchemaArrayType extends IGraphSchemaBaseType {

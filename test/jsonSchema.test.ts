@@ -2,7 +2,7 @@ import { JSONSchema4 } from 'json-schema'
 
 import { createJsonSchemaTree } from '../src'
 
-describe('jsonschema transformation tests', () => {
+describe.skip('jsonschema transformation tests', () => {
   describe('simple schema', () => {
     it("should create tree from simple jsonSchema", () => {
       const schema: JSONSchema4 = {

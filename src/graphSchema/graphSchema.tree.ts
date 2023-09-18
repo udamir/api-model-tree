@@ -1,15 +1,43 @@
-import { buildPointer, isAnyOfNode, isOneOfNode, isRefNode, parseRef, resolveRefNode } from "allof-merge"
-import { syncCrawl } from 'json-crawl'
+import { buildPointer, isAnyOfNode, isOneOfNode, isRefNode, parseRef, resolvePointer, resolveRefNode } from "allof-merge"
+import { SyncCloneHook, syncClone, syncCrawl } from 'json-crawl'
 
 import { 
   GraphSchemaCrawlState, GraphSchemaNodeData, GraphSchemaComplexNode, GraphSchemaNode, 
   GraphSchemaTreeNode, GraphSchemaFragment, GraphSchemaNodeKind 
 } from "./graphSchema.types"
+import { graphSchemaTransormers } from "./graphSchema.utils"
 import { graphSchemaCrawlRules } from "./graphSchema.rules"
 import { graphSchemaTypeProps } from "./graphSchema.consts"
 import { IModelTreeNode } from "../types"
 import { ModelTree } from "../modelTree"
-import { pick } from "../utils"
+import { isObject, pick } from "../utils"
+
+export const transformGraphSchema = (schema: GraphSchemaFragment, source: any = schema) => {
+
+  const transformHook: SyncCloneHook = (value, ctx) => {
+    // skip if not object or current node graph-schema
+    if ((!isObject(value) || Array.isArray(value)) || !ctx.rules?.kind) { 
+      return { value } 
+    }
+    
+    const transformed = graphSchemaTransormers.reduce((current, transformer) => transformer(current), value as any)
+
+    const { $ref, ...sibling } = transformed
+
+    if ($ref && Object.keys(sibling).length) {
+      // resolve ref
+      const _ref = parseRef($ref)
+      const refData = resolvePointer(source, _ref.pointer) 
+      // merge 
+      return refData ? { value: { ...refData, ...sibling } } : transformed
+    }
+
+    return { value: transformed }
+  }
+
+  return syncClone(schema, transformHook, { rules: graphSchemaCrawlRules() })
+}
+
 
 const createGraphSchemaNode = (
   tree: ModelTree<GraphSchemaNodeData<any>, GraphSchemaNodeKind>,
@@ -33,8 +61,6 @@ const createGraphSchemaNode = (
 
     const data = { 
       ...pick<any>(rest, graphSchemaTypeProps[type]),
-      // TODO transfrom args
-      // TODO transform directives
       _fragment: value
     } as GraphSchemaNodeData<typeof type>
 
@@ -44,7 +70,7 @@ const createGraphSchemaNode = (
 
 export const createGraphSchemaTree = (schema: GraphSchemaFragment, source: any = schema) => {
   const tree = new ModelTree<GraphSchemaNodeData<any>, GraphSchemaNodeKind>()
-  const data = schema
+  const data = transformGraphSchema(schema, source)
 
   const crawlState: GraphSchemaCrawlState = { parent: null }
 

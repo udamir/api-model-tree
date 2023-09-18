@@ -9,19 +9,15 @@ export const graphSchemaCrawlRules = (kind: GraphSchemaNodeKind = "root"): Crawl
   "/oneOf": {
     "/*": () => graphSchemaCrawlRules("oneOf"),
   },
-  "/anyOf": {
-    "/*": () => graphSchemaCrawlRules("anyOf"),
-  },
   "/properties": {
     "/*": () => graphSchemaCrawlRules("property"),
   },
   "/args": {
-    "/*": { // TODO  GraphApiField: args => Record<string, GraphApiType>
-      "/schema": () => graphSchemaCrawlRules("arg"),
-    }
+    "/properties": {
+      "/*": () => graphSchemaCrawlRules("arg"),
+    },
+    kind: 'args'
   },
   "/items": () => graphSchemaCrawlRules("items"),
-  // ------ not supported properties ------------
-  // "/not": () => graphSchemaCrawlRules("not"),
   kind
 })
