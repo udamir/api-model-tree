@@ -881,9 +881,9 @@
   integrity sha512-Hl219/BT5fLAaz6NDkSuhzasy49dwQS/DSdu4MdggFB8zcXv7vflBI3xp7FEmkmdDkBUI2bPUNeMttp2knYdxw==
 
 "@types/treeify@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@types/treeify/-/treeify-1.0.0.tgz#f04743cb91fc38254e8585d692bd92503782011c"
-  integrity sha512-ONpcZAEYlbPx4EtJwfTyCDQJGUpKf4sEcuySdCVjK5Fj/3vHp5HII1fqa1/+qrsLnpYELCQTfVW/awsGJePoIg==
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@types/treeify/-/treeify-1.0.1.tgz#3ca75f2873e4738a1672728608df9b4a02ecfcb3"
+  integrity sha512-LKtbHwOf5FjWXri/6l6kxMPLVJV69VoyTL2IS+icQcr6k9ffVgXMCvnVXRFWpv5bQED/Gdl8KU+CfuwTAg5HkA==
 
 "@types/yargs-parser@*":
   version "21.0.0"
