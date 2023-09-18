@@ -15,7 +15,8 @@ describe.skip('jsonschema transformation tests', () => {
       const tree = createJsonSchemaTree(schema)
 
       expect(tree.root).toMatchObject({ id: '#', type: 'simple', parent: null })
-      expect(tree.root?.value()).toMatchObject({ _fragment: schema })
+      const { example, ...rest } = schema
+      expect(tree.root?.value()).toMatchObject({ _fragment: { ...rest, examples: [schema.example] }})
     })
 
     it("should create tree from object jsonSchema", () => {
