@@ -58,7 +58,7 @@ export interface IGraphSchemaStringType extends IGraphSchemaBaseType {
 
 export interface IGraphSchemaEnumValueType {
   description?: string
-  deprecationReason?: boolean
+  deprecationReason?: string
 }
 
 export interface IGraphSchemaNumberType extends IGraphSchemaBaseType {
