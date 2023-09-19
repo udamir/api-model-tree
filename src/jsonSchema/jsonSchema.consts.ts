@@ -20,7 +20,7 @@ export const jsonSchemaNodeTypes = [
 
 export const jsonSchemaCommonProps: (keyof IJsonSchemaBaseType)[]  = [
   'type', 'description', 'title', 'deprecated', 'readOnly', 
-  'writeOnly', 'examples', 'enum', 'default', 'examples'
+  'writeOnly', 'enum', 'default', 'examples'
 ]
 
 export const jsonSchemaTypeProps: Record<JsonSchemaNodeType, readonly string[]> = {

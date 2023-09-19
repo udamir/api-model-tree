@@ -8,7 +8,7 @@ export const validators = {
   deprecated: (value: unknown) => typeof value === 'boolean',
   readOnly: (value: unknown) => typeof value === 'boolean',
   writeOnly: (value: unknown) => typeof value === 'boolean',
-  examples: (value: unknown) => typeof value === 'boolean',
+  examples: (value: unknown) => Array.isArray(value),
   enum: (value: unknown) => Array.isArray(value),
   format: (value: unknown) => typeof value === 'string',
   minLength: (value: unknown) => typeof value === 'number',

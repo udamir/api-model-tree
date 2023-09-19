@@ -1,6 +1,6 @@
 # api-model-tree
 
-Convert JsonSchema into structured and simplified data tree
+Convert JsonSchema based document into structured and simplified data tree
 
 ### Installation
 
