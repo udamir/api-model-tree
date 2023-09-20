@@ -3,7 +3,7 @@ import { buildSchema } from "graphql"
 import path from "path"
 import fs from "fs"
 
-import { createGraphSchemaTree } from "../src"
+import { createGraphSchemaTree, GraphSchemaFragment } from "../src"
 
 const buildGraphApiSchema = (filename: string): GraphApiSchema => {
   const resPath = path.join(__dirname, "./resources/", filename)
@@ -28,7 +28,7 @@ describe("graphschema transformation tests", () => {
       }
       `
       const source = buildFromSchema(buildSchema(raw, { noLocation: true }))
-      const schema = source.queries!.todo
+      const schema = source.queries!.todo as GraphSchemaFragment
 
       const tree = createGraphSchemaTree(schema)
 
@@ -52,7 +52,7 @@ describe("graphschema transformation tests", () => {
 
     it("should create tree from complex jsonSchema", () => {
       const source = buildGraphApiSchema('example.graphql')
-      const schema = source.queries!.todo
+      const schema = source.queries!.todo as GraphSchemaFragment
 
       const tree = createGraphSchemaTree(schema, source)
 

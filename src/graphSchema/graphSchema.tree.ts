@@ -1,16 +1,17 @@
-import { buildPointer, isAnyOfNode, isOneOfNode, isRefNode, parseRef, resolvePointer, resolveRefNode } from "allof-merge"
+import { buildPointer, isRefNode, parseRef, resolvePointer, resolveRefNode } from "allof-merge"
 import { SyncCloneHook, syncClone, syncCrawl } from 'json-crawl'
 
 import { 
   GraphSchemaCrawlState, GraphSchemaNodeData, GraphSchemaComplexNode, GraphSchemaNode, 
   GraphSchemaTreeNode, GraphSchemaFragment, GraphSchemaNodeKind 
 } from "./graphSchema.types"
+import { getNodeComplexityType, isObject, pick } from "../utils"
 import { graphSchemaTransormers } from "./graphSchema.utils"
 import { graphSchemaCrawlRules } from "./graphSchema.rules"
 import { graphSchemaTypeProps } from "./graphSchema.consts"
+import { modelTreeNodeType } from "../consts"
 import { IModelTreeNode } from "../types"
 import { ModelTree } from "../modelTree"
-import { isObject, pick } from "../utils"
 
 export const transformGraphSchema = (schema: GraphSchemaFragment, source: any = schema) => {
 
@@ -29,7 +30,7 @@ export const transformGraphSchema = (schema: GraphSchemaFragment, source: any = 
       const _ref = parseRef($ref)
       const refData = resolvePointer(source, _ref.pointer) 
       // merge 
-      return refData ? { value: { ...refData, ...sibling } } : transformed
+      return refData ? { value: { ...refData, ...sibling } } : { value: transformed }
     }
 
     return { value: transformed }
@@ -47,10 +48,13 @@ const createGraphSchemaNode = (
   value: GraphSchemaFragment, 
   parent: GraphSchemaTreeNode<any> | null = null
 ): GraphSchemaNode<any> => {
-  if (isOneOfNode(value)) {
-    return tree.createComplexNode(id, kind, key, "oneOf", parent)
-  } else if (isAnyOfNode(value)) {
-    return tree.createComplexNode(id, kind, key, "anyOf", parent)
+  if (value === null) {
+    return tree.createNode(id, kind, key, null, parent)
+  }
+  
+  const complexityType = getNodeComplexityType(value)
+  if (complexityType !== modelTreeNodeType.simple) {
+    return tree.createComplexNode(id, kind, key, complexityType, parent)
   } else {
     const { type } = value
     if (!type || typeof type !== 'string') { 
@@ -93,13 +97,15 @@ export const createGraphSchemaTree = (schema: GraphSchemaFragment, source: any =
         refData = resolveRefNode(source, value)
         const { normalized } = parseRef(value.$ref)
 
-        node = createGraphSchemaNode(tree, normalized, "definition", "", refData)
+        node = createGraphSchemaNode(tree, normalized, "definition", "", refData ?? null)
       }
 
       if (container) {
-        container.addNestedNode(node)
+        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, container.parent)
+        container.addNestedNode(refNode)
       } else if (parent) {
-        tree.createRefNode(id, kind, ctx.key, node, parent)
+        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, parent)
+        parent.addChild(refNode)
       }
         
       if (refData) {
