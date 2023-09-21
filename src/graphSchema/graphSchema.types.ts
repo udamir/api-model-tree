@@ -1,4 +1,4 @@
-import { GraphApiEnum, GraphApiList, GraphApiObject, GraphApiScalar, GraphApiUnion } from 'gqlapi'
+import { GraphSchema } from 'gqlapi'
 
 import { graphSchemaNodeKind, graphSchemaNodeTypes } from './graphSchema.consts'
 import { ModelTreeComplexNode, ModelTreeNode } from '../modelTree'
@@ -7,7 +7,7 @@ import { IJsonSchemaBaseType } from '../jsonSchema'
 export type GraphSchemaNodeKind = keyof typeof graphSchemaNodeKind
 export type GraphSchemaNodeType = typeof graphSchemaNodeTypes[number]
 
-export type GraphSchemaFragment = GraphApiObject | GraphApiScalar | GraphApiUnion | GraphApiEnum | GraphApiList
+export type GraphSchemaFragment = GraphSchema
 
 export type GraphSchemaTransformFunc = (value: GraphSchemaFragment) => GraphSchemaFragment
 
@@ -34,7 +34,7 @@ export type GraphSchemaNodeData<T extends GraphSchemaNodeType> =
 
 
 export interface IGraphSchemaBaseType extends IJsonSchemaBaseType {
-  directives?: Record<string, string> // TODO
+  directives?: Record<string, any> // TODO
   args?: Record<string, IGraphSchemaObjectType>
   values?: Record<string, IGraphSchemaEnumValueType>
 }
