@@ -1,6 +1,7 @@
 import { CrawlRules } from "json-crawl"
 
 import { GraphSchemaCrawlRule, GraphSchemaNodeKind } from "./graphSchema.types"
+import { transformDirectives, transformNullable } from "./graphSchema.utils"
 
 export const graphSchemaCrawlRules = (kind: GraphSchemaNodeKind = "root"): CrawlRules<GraphSchemaCrawlRule> => ({
   "/allOf": {
@@ -19,5 +20,6 @@ export const graphSchemaCrawlRules = (kind: GraphSchemaNodeKind = "root"): Crawl
     kind: 'args'
   },
   "/items": () => graphSchemaCrawlRules("items"),
-  kind
+  kind,
+  transformers: [transformDirectives, transformNullable] 
 })

@@ -13,6 +13,7 @@ export type GraphSchemaTransformFunc = (value: GraphSchemaFragment) => GraphSche
 
 export type GraphSchemaCrawlRule = {
   kind: GraphSchemaNodeKind
+  transformers: GraphSchemaTransformFunc[]
 }
 
 export type GraphSchemaTreeNode<T extends GraphSchemaNodeType> = ModelTreeNode<GraphSchemaNodeData<T>, GraphSchemaNodeKind>
