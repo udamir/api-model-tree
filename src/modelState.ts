@@ -107,17 +107,17 @@ export class ModelStatePropNode<T> extends ModelStateBaseNode<T>{
 }
 
 export class ModelState<T> {
-  private _root
+  public readonly root: ModelStatePropNode<T> | null
 
   constructor(public tree: IModelTree<T, any>) {
-    this._root = tree.root ? new ModelStatePropNode(tree.root) : null
+    this.root = tree.root ? new ModelStatePropNode(tree.root) : null
   }
 
   public modelStateNodes(): ModelStateNode<T>[] {
-    if (!this._root) {
+    if (!this.root) {
       return []
     }
 
-    return [this._root, ...this._root.allChildren()]
+    return [this.root, ...this.root.allChildren()]
   }
 }
