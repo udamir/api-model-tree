@@ -1,6 +1,6 @@
 import { isAnyOfNode, isOneOfNode } from "allof-merge"
 
-import { ModelDataNodeType } from "./types"
+import { ModelTreeNodeType } from "./types"
 
 export function isStringOrNumber(value: unknown): value is number | string {
   return typeof value === 'string' || typeof value === 'number'
@@ -34,7 +34,7 @@ export function isNumber(value: unknown): value is number {
   return typeof value === "number"
 }
 
-export function getNodeComplexityType(value: any): ModelDataNodeType {
+export function getNodeComplexityType(value: any): ModelTreeNodeType {
   if (isAllOfNode(value)) {
     return "allOf"
   }
