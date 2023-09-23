@@ -1,6 +1,6 @@
 import { JsonPath } from "json-crawl"
 
-import type { ModelDataNode, IModelTree, IModelRefNode, IModelTreeNode, ModelDataNodeType } from "./types"
+import type { ModelDataNode, IModelTree, IModelRefNode, IModelTreeNode, ModelTreeNodeType } from "./types"
 import { modelTreeNodeType } from "./consts"
 
 export class ModelTree<T extends object, K extends string> implements IModelTree<T, K> {
@@ -16,7 +16,7 @@ export class ModelTree<T extends object, K extends string> implements IModelTree
     return node
   }
 
-  public createComplexNode(id: string, kind: K, key: string | number, type: ModelDataNodeType, parent: ModelTreeNode<T, K> | null = null): ModelTreeComplexNode<T, K> {
+  public createComplexNode(id: string, kind: K, key: string | number, type: ModelTreeNodeType, parent: ModelTreeNode<T, K> | null = null): ModelTreeComplexNode<T, K> {
     const node = new ModelTreeComplexNode<T, K>(id, kind, key, type, parent)
     this.nodes.set(id, node)
     return node
@@ -77,61 +77,16 @@ export class ModelRefNode<T extends object, K extends string> implements IModelR
     const children = this._target.children(nested)
     return children.map((child) => new ModelRefNode(child.id, child.kind, child.key, child, this))
   }
-}
 
-export class ModelTreeComplexNode<T extends object, K extends string> implements IModelTreeNode<T, K> {
-  public nested: ModelDataNode<T, K>[] = []
-
-  constructor(
-    public id: string = "#",
-    public kind: K,
-    public key: string | number = "",
-    public type: ModelDataNodeType,
-    public parent: IModelTreeNode<T, K> | null = null
-  ) {
-  }
-
-  public get path(): JsonPath {
-    return this.parent === null ? [] : [...this.parent.path, this.key]
-  }
-
-  public get depth(): number {
-    return this.parent === null ? 0 : this.parent.depth + 1
-  }
-
-  private findNestedNode(nestedId?: string): ModelDataNode<T, K> | null {
-    for (const nested of this.nested) {
-      if (!nestedId || nested.id === nestedId) {
-        return nested
-      }
-      if (nested instanceof ModelTreeComplexNode) {
-        const node = nested.findNestedNode(nestedId)
-        if (node) { return node }
-      }
-    }
-
-    return null
-  }
-
-  public value(nestedId?: string): T | null {
-    const nested = this.findNestedNode(nestedId)
-    return nested?.value() ?? null
-  }
-
-  public addNestedNode(node: ModelDataNode<T, K>) {
-    this.nested.push(node)
-  }
-
-  public children(nestedId?: string) {
-    const nested = this.findNestedNode(nestedId)
-    return nested?.children() || []
+  public nestedNode(nestedId?: string): ModelDataNode<T, K> | null {
+    return this._target.nestedNode(nestedId)
   }
 }
 
 export class ModelTreeNode<T extends object, K extends string> implements IModelTreeNode<T, K> { 
   private _children: ModelDataNode<T, K>[] = []
   public nested: ModelDataNode<T, K>[] = []
-  public type = modelTreeNodeType.simple
+  public type: ModelTreeNodeType = modelTreeNodeType.simple
 
   constructor(
     public id: string = "#",
@@ -150,6 +105,24 @@ export class ModelTreeNode<T extends object, K extends string> implements IModel
     return this.parent === null ? 0 : this.parent.depth + 1
   }
 
+  public nestedNode(nestedId?: string, deep = false): ModelDataNode<T, K> | null {
+    if (!nestedId && this.nested.length) {
+      return this.nested[0]
+    }
+
+    for (const nested of this.nested) {
+      if (nested.id === nestedId) {
+        return nested
+      }
+      if (deep && nested instanceof ModelTreeComplexNode) {
+        const node = nested.nestedNode(nestedId, deep)
+        if (node) { return node }
+      }
+    }
+
+    return null
+  }
+
   public value(nestedId?: string): T | null {
     return nestedId ? null : this._value
   }
@@ -160,5 +133,32 @@ export class ModelTreeNode<T extends object, K extends string> implements IModel
 
   public addChild(node: ModelDataNode<T, K>) {
     this._children.push(node)
+  }
+}
+
+export class ModelTreeComplexNode<T extends object, K extends string> extends ModelTreeNode<T, K> {
+
+  constructor(
+    public id: string = "#",
+    public kind: K,
+    public key: string | number = "",
+    public type: ModelTreeNodeType,
+    public parent: ModelTreeNode<T, K> | null = null
+  ) {
+    super(id, kind, key, null, parent)
+  }
+
+  public value(nestedId?: string): T | null {
+    const nested = this.nestedNode(nestedId, true)
+    return nested?.value() ?? null
+  }
+
+  public addNestedNode(node: ModelDataNode<T, K>) {
+    this.nested.push(node)
+  }
+
+  public children(nestedId?: string) {
+    const nested = this.nestedNode(nestedId, true)
+    return nested?.children() || []
   }
 }

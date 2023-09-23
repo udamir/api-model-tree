@@ -1,6 +1,7 @@
 export * from './graphSchema'
 export * from './jsonSchema'
 export * from './modelTree'
+export * from './modelState'
 export * from './consts'
 export * from './utils'
 export * from './types'

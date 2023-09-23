@@ -1,8 +1,8 @@
 import { GraphSchemaFragment, GraphSchemaTransformFunc } from "./graphSchema.types"
 
 export const transformNullable = (value: GraphSchemaFragment): GraphSchemaFragment => {
-  const { nullable, ...rest } = value
-  return nullable ? { oneOf: [ rest, { type: 'null' } ] } : value
+  const { nullable, args, ...rest } = value
+  return nullable ? { ...args ? { args } : {}, oneOf: [ rest, { type: 'null' } ] } : value
 }
 
 export const transformDirectives = (value: GraphSchemaFragment): GraphSchemaFragment => {

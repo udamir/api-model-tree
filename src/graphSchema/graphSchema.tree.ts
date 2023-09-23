@@ -39,7 +39,6 @@ export const transformGraphSchema = (schema: GraphSchemaFragment, source: any = 
   return syncClone(schema, transformHook, { rules: graphSchemaCrawlRules() })
 }
 
-
 const createGraphSchemaNode = (
   tree: ModelTree<GraphSchemaNodeData<any>, GraphSchemaNodeKind>,
   id: string,
@@ -51,7 +50,7 @@ const createGraphSchemaNode = (
   if (value === null) {
     return tree.createNode(id, kind, key, null, parent)
   }
-  
+
   const complexityType = getNodeComplexityType(value)
   if (complexityType !== modelTreeNodeType.simple) {
     return tree.createComplexNode(id, kind, key, complexityType, parent)
@@ -115,15 +114,19 @@ export const createGraphSchemaTree = (schema: GraphSchemaFragment, source: any =
         return null
       }
     } 
-      
+        
     const node = createGraphSchemaNode(tree, id, kind, ctx.key, value as GraphSchemaFragment, parent)
-    
-    if (container) {
+
+    if (node.kind === 'args') {
+      const nested = container ? container.nested : parent!.nested
+      nested[-1] = node
+    } else if (container) {
       container.addNestedNode(node)
     } else {
       parent?.addChild(node)
     }
-    const state =  node.type === 'simple' ? { parent: node as GraphSchemaTreeNode<any> } : { parent, container: node as GraphSchemaComplexNode<any> }
+
+    const state = node.type === 'simple' ? { parent: node as GraphSchemaTreeNode<any> } : { parent, container: node as GraphSchemaComplexNode<any> }
     return { value, state }
   }, { state: crawlState, rules: graphSchemaCrawlRules() })
 
