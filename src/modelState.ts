@@ -8,12 +8,16 @@ export class ModelStateBaseNode<T>{
 
   public readonly type: string = 'base'
 
-  get children(): ModelStateNode<T>[] {
-    return this.expanded ? this._children : []
+  get selected () {
+    return this._selected
   }
 
-  get selected() {
-    return this._selected
+  set selected (value: string | undefined) {
+    this._selected = value
+  }
+
+  get children(): ModelStateNode<T>[] {
+    return this.expanded ? this._children : []
   }
 
   get childrenTotal(): number {
@@ -40,21 +44,27 @@ export class ModelStateCombinerNode<T> extends ModelStateBaseNode<T> {
   public readonly type: string = 'combinary'
 
   constructor (public node: ModelDataNode<T, any>, private _parent: ModelStateBaseNode<T>) {
-    super(true)
-    this.buildChildren()
+    super(true, true)
+    this._children = this.buildChildren()
   }
   
   protected buildChildren() {
-    const _children: ModelStateNode<T>[] = []
     // convert nested to children
-    const nested = this.node?.nestedNode(this._selected)
-    nested?.nested.length && _children.push(new ModelStateCombinerNode(nested.nestedNode()!, this._parent))
-    return _children
+    const nested = this.node?.nestedNode(this.selected)
+    return nested?.nested.length ? [new ModelStateCombinerNode(nested, this._parent)] : []
+  }
+
+  get selected() {
+    if (!this._selected && this.node.nested.length) {
+      return this.node.nested[0].id
+    }
+    return this._selected
   }
 
   public select(id: string) {
-    if (id === this._selected) { return }
+    if (id === this.selected) { return }
     this._selected = id
+    this._parent.selected = id
     this._children = this.buildChildren()
   }
 }
@@ -68,8 +78,23 @@ export class ModelStatePropNode<T> extends ModelStateBaseNode<T>{
 
   public readonly type: string = 'property'
   
+  get selected() {
+    return this._selected
+  }
+
+  get children(): ModelStateNode<T>[] {
+    return this.expanded ? [...this._argNodes, ...this._combinaryNodes, ...this._childrenNodes] : []
+  }
+
+  set selected (value: string | undefined) {
+    if (value !== this._selected) {
+      this._selected = value
+      this.buildChildrenNodes()
+    }
+  }
+
   get value(): T | null {
-    return this.node.value(this._selected)
+    return this.node.value(this.selected)
   }
 
   constructor (public node: ModelDataNode<T, any>, _expandDepth = 1, first = false) {
@@ -95,7 +120,6 @@ export class ModelStatePropNode<T> extends ModelStateBaseNode<T>{
   }
 
   private buildChildrenNodes(): ModelStateNode<T>[] {
-    if (!this.expanded) { return [] }
     const children = this.node.children(this.selected)
     this._childrenNodes = children.length ? children.map((prop) => new ModelStatePropNode(prop)) : []
     return this._childrenNodes
