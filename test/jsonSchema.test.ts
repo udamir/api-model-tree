@@ -1,6 +1,6 @@
 import { JSONSchema4 } from 'json-schema'
 
-import { ModelState, ModelStateCombinerNode, createJsonSchemaTree } from '../src'
+import { ModelState, ModelStateCombinaryNode, createJsonSchemaTree } from '../src'
 
 describe('jsonschema transformation tests', () => {
   describe('simple schema', () => {
@@ -178,32 +178,33 @@ describe('jsonschema transformation tests', () => {
       }
 
       const tree = createJsonSchemaTree(schema)
-      const state = new ModelState(tree)
-
+      const state = new ModelState(tree, 2)
+      
+      expect(state.root!).toMatchObject({ type: 'expandable' })
       expect(state.root!.node).toMatchObject({ id: '#', kind: 'root', type: 'oneOf', parent: null })
       expect(state.root!.value).toMatchObject({ _fragment: { ...common, ...schema.oneOf![0]!.oneOf![0] }})
 
-      const children = state.root!.allChildren()
+      const children = state.root!.children
       expect(children[0]).toMatchObject({ type: 'combinary', selected: '#/oneOf/0' })
       expect(children[1]).toMatchObject({ type: 'combinary', selected: '#/oneOf/0/oneOf/0' })
-      expect(children[2]).toMatchObject({ type: 'property', node: { key: 'id' }, value: { type: "string" } })
-      expect(children[3]).toMatchObject({ type: 'property', node: { key: 'name' }, value: { type: "string" } })
+      expect(children[2]).toMatchObject({ type: 'basic', node: { key: 'id' }, value: { type: "string" } })
+      expect(children[3]).toMatchObject({ type: 'basic', node: { key: 'name' }, value: { type: "string" } })
 
-      const combinaryNode = children[1] as ModelStateCombinerNode<any>
+      const combinaryNode = children[1] as ModelStateCombinaryNode<any>
       combinaryNode.select('#/oneOf/0/oneOf/1')
 
-      const children2 = state.root!.allChildren()
+      const children2 = state.root!.children
       expect(children2[0]).toMatchObject({ type: 'combinary', selected: '#/oneOf/0' })
       expect(children2[1]).toMatchObject({ type: 'combinary', selected: '#/oneOf/0/oneOf/1' })
-      expect(children2[2]).toMatchObject({ type: 'property', node: { key: 'id' }, value: { type: "string" } })
-      expect(children2[3]).toMatchObject({ type: 'property', node: { key: 'test' }, value: { type: "string" } })
+      expect(children2[2]).toMatchObject({ type: 'basic', node: { key: 'id' }, value: { type: "string" } })
+      expect(children2[3]).toMatchObject({ type: 'basic', node: { key: 'test' }, value: { type: "string" } })
 
-      const combinary2 = children2[0] as ModelStateCombinerNode<any>
+      const combinary2 = children2[0] as ModelStateCombinaryNode<any>
       combinary2.select('#/oneOf/1')
-      const children3 = state.root!.allChildren()
+      const children3 = state.root!.children
       expect(children3[0]).toMatchObject({ type: 'combinary', selected: '#/oneOf/1' })
-      expect(children3[1]).toMatchObject({ type: 'property', node: { key: 'id' }, value: { type: "number" } })
-      expect(children3[2]).toMatchObject({ type: 'property', node: { key: 'name' }, value: { type: "string" } })
+      expect(children3[1]).toMatchObject({ type: 'basic', node: { key: 'id' }, value: { type: "number" } })
+      expect(children3[2]).toMatchObject({ type: 'basic', node: { key: 'name' }, value: { type: "string" } })
     })
 
     it("should create tree from jsonSchema with additionalProperties", () => {

@@ -1,7 +1,7 @@
 
 import { JsonPath } from 'json-crawl'
 
-import { modelTreeNodeType } from './consts'
+import { modelStateNodeType, modelTreeNodeType } from './consts'
 
 export type ModelDataNode<T, K extends string> = IModelTreeNode<T, K> | IModelRefNode<T, K>
 export type ModelTreeNodeType = keyof typeof modelTreeNodeType
@@ -29,3 +29,5 @@ export interface IModelTreeNode<T, K extends string> {
   children(nestedId?: string): ModelDataNode<T, K>[]
   nestedNode(nestedId?: string): ModelDataNode<T, K> | null
 }
+
+export type ModelStateNodeType = keyof typeof modelStateNodeType

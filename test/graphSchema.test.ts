@@ -67,13 +67,14 @@ describe("graphschema transformation tests", () => {
       const schema = source.queries!.todo as GraphSchemaFragment
 
       const tree = createGraphSchemaTree(schema)
-      const state = new ModelState(tree)
+      const state = new ModelState(tree, 2)
+      
       const nodes = state.modelStateNodes()
 
-      expect(nodes[0]).toMatchObject({ type: 'property', node: { id: "#", type: "oneOf", parent: null }})
-      expect(nodes[1]).toMatchObject({ type: 'property', first: true, node: { id: "#/args/properties/id", key: 'id', type: 'simple' }})
-      expect(nodes[2]).toMatchObject({ type: 'property', first: false, node: { id: "#/args/properties/isCompleted", key: 'isCompleted', type: 'simple' }})
-      expect(nodes[3]).toMatchObject({ type: 'combinary', first: true, node: { id: "#", type: "oneOf", parent: null }})
+      expect(nodes[0]).toMatchObject({ type: 'expandable', node: { id: "#", type: "oneOf", parent: null }})
+      expect(nodes[1]).toMatchObject({ type: 'basic', first: true, node: { id: "#/args/properties/id", key: 'id', type: 'simple' }})
+      expect(nodes[2]).toMatchObject({ type: 'basic', first: false, node: { id: "#/args/properties/isCompleted", key: 'isCompleted', type: 'simple' }})
+      expect(nodes[3]).toMatchObject({ type: 'combinary', node: { id: "#", type: "oneOf", parent: null }})
 
       const root = nodes[0] as ModelStatePropNode<any>
       root.expanded = false
@@ -81,7 +82,7 @@ describe("graphschema transformation tests", () => {
       const collapsedNodes = state.modelStateNodes()
       expect(collapsedNodes.length).toEqual(1)
 
-      expect(nodes[0].children.length).toEqual(0)
+      expect(root.children.length).toEqual(0)
     })
 
     it("should create tree from complex jsonSchema", () => {
