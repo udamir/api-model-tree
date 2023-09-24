@@ -31,3 +31,40 @@ export interface IModelTreeNode<T, K extends string> {
 }
 
 export type ModelStateNodeType = keyof typeof modelStateNodeType
+
+export type IModelStateNode<T> = IModelStateCombinaryNode<T> | IModelStatePropNode<T>
+
+export interface IModelStatePropNode<T> {
+  readonly type: Exclude<ModelStateNodeType, 'combinary'>
+  readonly node: ModelDataNode<T, any>
+
+  // selected combinary item id (for nodes with combinary children)
+  readonly selected: string | undefined
+
+  // node.value()
+  readonly value: T | null
+  // list of child state nodes
+  readonly children: IModelStateNode<T>[] 
+  // if true - this is the first child of group (args/properties/items)
+  readonly first: boolean
+  // expanded state
+  readonly expanded: boolean
+
+  // all children nodes in flat list (including children of all levels)
+  readonly allChildren: IModelStateNode<T>[]
+  // all children count included children of all levels
+  readonly allChildrenCount: number 
+
+  expand(value: number): void 
+  collapse(value: number): void
+}
+
+export interface IModelStateCombinaryNode<T> {
+  readonly type: Exclude<ModelStateNodeType, 'basic' | 'expandable'>
+  readonly node: ModelDataNode<T, any>
+
+  // selected combinary item id
+  readonly selected: string | undefined
+
+  select(id: string): void
+}
