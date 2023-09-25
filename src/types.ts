@@ -55,8 +55,8 @@ export interface IModelStatePropNode<T> {
   // all children count included children of all levels
   readonly allChildrenCount: number 
 
-  expand(value: number): void 
-  collapse(value: number): void
+  expand(value?: number): void 
+  collapse(value?: number): void
 }
 
 export interface IModelStateCombinaryNode<T> {

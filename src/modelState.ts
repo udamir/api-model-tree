@@ -74,11 +74,11 @@ export class ModelStatePropNode<T> implements IModelStatePropNode<T>{
   }
 
   public collapse(value = 1) {
-    this.expanded = !value 
-
-    if (value > 1 && !("isCycle" in this.node && this.node.isCycle)) {
-      this.children.forEach((child) => isModelStatePropNode(child) && child.expand(value-1))
+    if (value > 1) {
+      this.children.forEach((child) => isModelStatePropNode(child) && child.collapse(value-1))
     } 
+    
+    this.expanded = !value 
   }
   
   get selected() {
