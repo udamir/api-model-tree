@@ -1,81 +1,103 @@
-import { IModelTree, ModelDataNode } from "./types"
+import { IModelStateCombinaryNode, IModelStateNode, IModelStatePropNode, IModelTree, ModelDataNode, ModelStateNodeType } from "./types"
+import { isModelStatePropNode } from "./utils"
+import { modelStateNodeType } from "./consts"
 
-export type ModelStateNode<T> = ModelStateCombinerNode<T> | ModelStatePropNode<T>
-
-export class ModelStateBaseNode<T>{
+export class ModelStateCombinaryNode<T> implements IModelStateCombinaryNode<T> {
+  public readonly type = modelStateNodeType.combinary
   protected _selected: string | undefined
-  protected _children: ModelStateNode<T>[] = []
 
-  public readonly type: string = 'base'
-
-  get children(): ModelStateNode<T>[] {
-    return this.expanded ? this._children : []
+  constructor (public readonly node: ModelDataNode<T, any>, private _parent: ModelStatePropNode<T>, selected?: string) {
+    this.node.nestedNode(selected)
   }
-
+  
   get selected() {
+    if (!this._selected && this.node.nested.length) {
+      return this.node.nested[0].id
+    }
     return this._selected
   }
 
-  get childrenTotal(): number {
-    return this._children.reduce((res, curr) => res + curr.childrenTotal, this._children.length)
+  public select(id: string) {
+    if (id === this.selected) { return }
+    this._selected = id
+    this._parent.setSelected(id)
+  }
+}
+
+export class ModelStatePropNode<T> implements IModelStatePropNode<T>{
+  private _argNodes: ModelStatePropNode<T>[] = []
+  private _combinaryNodes: ModelStateCombinaryNode<T>[] = []
+
+  protected _expanded = false
+  protected _selected: string | undefined
+  protected _children: IModelStateNode<T>[] | null = null
+
+  public readonly type: Exclude<ModelStateNodeType, 'combinary'>
+
+  get expanded() {
+    return this._expanded
   }
 
-  public allChildren(): ModelStateNode<T>[] {
+  set expanded(value: boolean) {
+    if (value !== this._expanded) {
+      this._expanded = value
+      if (this._children === null) {
+        this._children = this.buildChildren()
+      }
+    }
+  }
+  
+  get children(): IModelStateNode<T>[] {
+    return this.expanded && this._children ? this._children : []
+  }
+  
+  get allChildrenCount(): number {
+    return this._children?.reduce((res, curr) => res + (isModelStatePropNode(curr) ? curr.allChildrenCount : 0), this._children.length) ?? 0
+  }
+
+  get allChildren(): IModelStateNode<T>[] {
     const _childrent = []
 
     for (let child of this.children) {
-      _childrent.push(child, ...child.allChildren())
+      _childrent.push(child, ...isModelStatePropNode(child) ? child.allChildren : [])
     }
 
     return _childrent
   }
 
-  constructor(public readonly first = false, public expanded = false) {
+  public expand(value = 1) {
+    this.expanded = !!value
+
+    if (value > 1 && !("isCycle" in this.node && this.node.isCycle)) {
+      this.children.forEach((child) => isModelStatePropNode(child) && child.expand(value-1))
+    } 
   }
 
-}
-
-export class ModelStateCombinerNode<T> extends ModelStateBaseNode<T> {
-
-  public readonly type: string = 'combinary'
-
-  constructor (public node: ModelDataNode<T, any>, private _parent: ModelStateBaseNode<T>) {
-    super(true)
-    this.buildChildren()
+  public collapse(value = 1) {
+    if (value > 1) {
+      this.children.forEach((child) => isModelStatePropNode(child) && child.collapse(value-1))
+    } 
+    
+    this.expanded = !value 
   }
   
-  protected buildChildren() {
-    const _children: ModelStateNode<T>[] = []
-    // convert nested to children
-    const nested = this.node?.nestedNode(this._selected)
-    nested?.nested.length && _children.push(new ModelStateCombinerNode(nested.nestedNode()!, this._parent))
-    return _children
+  get selected() {
+    return this._selected
   }
 
-  public select(id: string) {
-    if (id === this._selected) { return }
-    this._selected = id
-    this._children = this.buildChildren()
+  setSelected (value: string | undefined) {
+    if (value !== this._selected) {
+      this._selected = value
+      this._children = [...this._argNodes, ...this.buildCombinaryNodes(), ...this.buildChildrenNodes()] 
+    }
   }
-}
 
-export class ModelStatePropNode<T> extends ModelStateBaseNode<T>{
-  private _expandDepth: number
-
-  private _argNodes: ModelStateNode<T>[] = []
-  private _combinaryNodes: ModelStateNode<T>[] = []
-  private _childrenNodes: ModelStateNode<T>[] = []
-
-  public readonly type: string = 'property'
-  
   get value(): T | null {
-    return this.node.value(this._selected)
+    return this.node.value(this.selected)
   }
 
-  constructor (public node: ModelDataNode<T, any>, _expandDepth = 1, first = false) {
-    super(first, _expandDepth > 0)
-    this._expandDepth = _expandDepth < 0 ? 0 : _expandDepth
-    this._children = this.buildChildren()
+  constructor (public readonly node: ModelDataNode<T, any>, public readonly first = false) {
+    this.type = node.children().length || node.nested.length || node.nested[-1] ? modelStateNodeType.expandable : modelStateNodeType.basic
   }
 
   private buildArgNodes() {
@@ -83,41 +105,49 @@ export class ModelStatePropNode<T> extends ModelStateBaseNode<T>{
     if (!nested[-1]) { return [] }
     // convert nested args to children
     const argList = nested[-1].children() ?? []
-    this._argNodes = argList.length ? argList.map((arg, i) => new ModelStatePropNode(arg, this._expandDepth - 1, i === 0)) : []
+    this._argNodes = argList.length ? argList.map((arg, i) => new ModelStatePropNode(arg, i === 0)) : []
     return this._argNodes
   }
 
   private buildCombinaryNodes() {
     if (!this.node.nested.length) { return []}
+    const _combinary: ModelStateCombinaryNode<T>[] = []
+    
     // convert nested to children
-    this._combinaryNodes = [new ModelStateCombinerNode(this.node, this)]
-    return this._combinaryNodes
+    let node = this.node
+    for (let i = 0; node.nested.length > 0; i++) {
+      const combinary = this._combinaryNodes[i] ?? new ModelStateCombinaryNode(node, this)
+      node = node.nestedNode(combinary.selected) ?? node.nested[0]
+      _combinary.push(combinary)
+    }
+
+    this._combinaryNodes = _combinary
+    return _combinary
   }
 
-  private buildChildrenNodes(): ModelStateNode<T>[] {
-    if (!this.expanded) { return [] }
+  private buildChildrenNodes(): IModelStateNode<T>[] {
     const children = this.node.children(this.selected)
-    this._childrenNodes = children.length ? children.map((prop) => new ModelStatePropNode(prop)) : []
-    return this._childrenNodes
+    return children.length ? children.map((prop, i) => new ModelStatePropNode(prop, i === 0)) : []
   }
 
-  protected buildChildren(): ModelStateNode<T>[] {
+  protected buildChildren(): IModelStateNode<T>[] {
     return [...this.buildArgNodes(), ...this.buildCombinaryNodes(), ...this.buildChildrenNodes()]
   }
 }
 
 export class ModelState<T> {
-  private _root
+  public readonly root: ModelStatePropNode<T> | null
 
-  constructor(public tree: IModelTree<T, any>) {
-    this._root = tree.root ? new ModelStatePropNode(tree.root) : null
+  constructor(public tree: IModelTree<T, any>, expandDepth = 1) {
+    this.root = tree.root ? new ModelStatePropNode(tree.root) : null
+    this.root?.expand(expandDepth)
   }
 
-  public modelStateNodes(): ModelStateNode<T>[] {
-    if (!this._root) {
+  public modelStateNodes(): IModelStateNode<T>[] {
+    if (!this.root) {
       return []
     }
 
-    return [this._root, ...this._root.allChildren()]
+    return [this.root, ...this.root.allChildren]
   }
 }

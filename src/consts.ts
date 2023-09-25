@@ -4,3 +4,9 @@ export const modelTreeNodeType = {
   anyOf: 'anyOf',
   allOf: 'allOf',
 } as const
+
+export const modelStateNodeType = {
+  basic: 'basic',
+  expandable: 'expandable',
+  combinary: 'combinary'
+} as const
