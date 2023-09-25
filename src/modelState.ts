@@ -127,7 +127,7 @@ export class ModelStatePropNode<T> implements IModelStatePropNode<T>{
 
   private buildChildrenNodes(): IModelStateNode<T>[] {
     const children = this.node.children(this.selected)
-    return children.length ? children.map((prop) => new ModelStatePropNode(prop)) : []
+    return children.length ? children.map((prop, i) => new ModelStatePropNode(prop, i === 0)) : []
   }
 
   protected buildChildren(): IModelStateNode<T>[] {
