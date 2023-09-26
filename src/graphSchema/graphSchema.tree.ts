@@ -1,26 +1,27 @@
 import { buildPointer, isRefNode, parseRef, resolvePointer, resolveRefNode } from "allof-merge"
-import { SyncCloneHook, syncClone, syncCrawl } from 'json-crawl'
+import { SyncCrawlHook, syncCrawl } from 'json-crawl'
 
 import { 
   GraphSchemaCrawlState, GraphSchemaNodeData, GraphSchemaComplexNode, GraphSchemaNode, 
-  GraphSchemaTreeNode, GraphSchemaFragment, GraphSchemaNodeKind 
+  GraphSchemaTreeNode, GraphSchemaFragment, GraphSchemaNodeKind, GraphSchemaTransformFunc 
 } from "./graphSchema.types"
 import { getNodeComplexityType, isObject, pick } from "../utils"
-import { graphSchemaTransormers } from "./graphSchema.utils"
 import { graphSchemaCrawlRules } from "./graphSchema.rules"
-import { graphSchemaTypeProps } from "./graphSchema.consts"
+import { graphSchemaNodeKind, graphSchemaTypeProps } from "./graphSchema.consts"
 import { modelTreeNodeType } from "../consts"
 import { IModelTreeNode } from "../types"
 import { ModelTree } from "../modelTree"
 
-export const transformGraphSchema = (schema: GraphSchemaFragment, source: any = schema) => {
-
-  const transformHook: SyncCloneHook = (value, ctx) => {
+export const createTransformHook = (source: any): SyncCrawlHook => {
+  return (value, { rules, state }) => {
     // skip if not object or current node graph-schema
-    if ((!isObject(value) || Array.isArray(value)) || !ctx.rules?.kind) { 
-      return { value } 
+    const graphSchemaNodeKinds = Object.keys(graphSchemaNodeKind)
+
+    if ((!isObject(value) || Array.isArray(value)) || !rules?.kind || !graphSchemaNodeKinds.includes(rules.kind)) { 
+      return { value, state } 
     }
-    
+
+    const graphSchemaTransormers: GraphSchemaTransformFunc[] = rules.transformers ?? []
     const transformed = graphSchemaTransormers.reduce((current, transformer) => transformer(current), value as any)
 
     const { $ref, ...sibling } = transformed
@@ -33,19 +34,18 @@ export const transformGraphSchema = (schema: GraphSchemaFragment, source: any = 
       return refData ? { value: { ...refData, ...sibling } } : { value: transformed }
     }
 
-    return { value: transformed }
+    return { value: transformed, state }
   }
-
-  return syncClone(schema, transformHook, { rules: graphSchemaCrawlRules() })
 }
 
-const createGraphSchemaNode = (
+export const createGraphSchemaNode = (
   tree: ModelTree<GraphSchemaNodeData<any>, GraphSchemaNodeKind>,
   id: string,
   kind: GraphSchemaNodeKind,
   key: string | number,
   value: GraphSchemaFragment, 
-  parent: GraphSchemaTreeNode<any> | null = null
+  parent: GraphSchemaTreeNode<any> | null = null,
+  count = true
 ): GraphSchemaNode<any> => {
   if (value === null) {
     return tree.createNode(id, kind, key, null, parent)
@@ -60,26 +60,23 @@ const createGraphSchemaNode = (
       throw new Error (`Schema should have type: ${id}`)
     }
     
-    const { args, directives, ...rest } = value
+    const { args, ...rest } = value
 
     const data = { 
       ...pick<any>(rest, graphSchemaTypeProps[type]),
       _fragment: value
     } as GraphSchemaNodeData<typeof type>
 
-    return tree.createNode(id, kind, key, data, parent)
+    return tree.createNode(id, kind, key, data, parent, count)
   }
 }
 
-export const createGraphSchemaTree = (schema: GraphSchemaFragment, source: any = schema) => {
-  const tree = new ModelTree<GraphSchemaNodeData<any>, GraphSchemaNodeKind>()
-  const data = transformGraphSchema(schema, source)
+export const createGraphSchemaTreeCrawlHook = (tree: ModelTree<GraphSchemaNodeData<any>, GraphSchemaNodeKind>, source: any): SyncCrawlHook => {
+  const graphSchemaNodeKinds = Object.keys(graphSchemaNodeKind)
 
-  const crawlState: GraphSchemaCrawlState = { parent: null }
-
-  syncCrawl(data, (value, ctx) => {
+  return (value, ctx) => {
     if (!ctx.rules) { return null }
-    if (!("kind" in ctx.rules) || Array.isArray(value)) { return { value, state: ctx.state } }
+    if (!("kind" in ctx.rules) || !graphSchemaNodeKinds.includes(ctx.rules.kind) || Array.isArray(value)) { return { value, state: ctx.state } }
 
     const id = "#" + buildPointer(ctx.path)
     const { parent, container } = ctx.state
@@ -115,7 +112,7 @@ export const createGraphSchemaTree = (schema: GraphSchemaFragment, source: any =
       }
     } 
         
-    const node = createGraphSchemaNode(tree, id, kind, ctx.key, value as GraphSchemaFragment, parent)
+    const node = createGraphSchemaNode(tree, id, kind, ctx.key, value as GraphSchemaFragment, parent, kind !== 'args')
 
     if (node.kind === 'args') {
       const nested = container ? container.nested : parent!.nested
@@ -128,7 +125,18 @@ export const createGraphSchemaTree = (schema: GraphSchemaFragment, source: any =
 
     const state = node.type === 'simple' ? { parent: node as GraphSchemaTreeNode<any> } : { parent, container: node as GraphSchemaComplexNode<any> }
     return { value, state }
-  }, { state: crawlState, rules: graphSchemaCrawlRules() })
+  }
+}
+
+export const createGraphSchemaTree = (schema: GraphSchemaFragment, source: any = schema) => {
+  const tree = new ModelTree<GraphSchemaNodeData<any>, GraphSchemaNodeKind>()
+  const crawlState: GraphSchemaCrawlState = { parent: null }
+
+  syncCrawl(
+    schema,
+    [ createTransformHook(source), createGraphSchemaTreeCrawlHook(tree, source)], 
+    { state: crawlState, rules: graphSchemaCrawlRules() }
+  )
 
   return tree
 }

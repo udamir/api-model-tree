@@ -10,8 +10,8 @@ export class ModelTree<T extends object, K extends string> implements IModelTree
     return this.nodes.size ? this.nodes.get('#')! : null
   }
 
-  public createNode(id: string, kind: K, key: string | number, value: T | null, parent: ModelTreeNode<T, K> | null = null): ModelTreeNode<T, K> {
-    const node = new ModelTreeNode<T, K>(id, kind, key, value, parent)
+  public createNode(id: string, kind: K, key: string | number, value: T | null, parent: ModelTreeNode<T, K> | null = null, count = true): ModelTreeNode<T, K> {
+    const node = new ModelTreeNode<T, K>(id, kind, key, value, parent, count)
     this.nodes.set(id, node)
     return node
   }
@@ -34,7 +34,7 @@ export class ModelRefNode<T extends object, K extends string> implements IModelR
   }
 
   public get depth(): number {
-    return this.parent === null ? 0 : this.parent.depth + 1
+    return this.parent === null ? 0 : this.parent.depth + (this._countInDepth ? 1 : 0)
   }
 
   public get path(): JsonPath {
@@ -70,7 +70,8 @@ export class ModelRefNode<T extends object, K extends string> implements IModelR
     public kind: K,
     public key: string | number,
     private _target: ModelDataNode<T, K>,
-    public parent: ModelDataNode<T, K> | null
+    public parent: ModelDataNode<T, K> | null,
+    private _countInDepth = true
   ) {}
 
   public children(nested?: string): ModelDataNode<T, K>[] {
@@ -93,7 +94,8 @@ export class ModelTreeNode<T extends object, K extends string> implements IModel
     public kind: K,
     public key: string | number = "",
     private _value: T | null,
-    public parent: ModelTreeNode<T, K> | null = null
+    public parent: ModelTreeNode<T, K> | null = null,
+    private _countInDepth = true
   ) {
   }
 
@@ -102,7 +104,7 @@ export class ModelTreeNode<T extends object, K extends string> implements IModel
   }
 
   public get depth(): number {
-    return this.parent === null ? 0 : this.parent.depth + 1
+    return this.parent === null ? 0 : this.parent.depth + (this._countInDepth ? 1 : 0)
   }
 
   public nestedNode(nestedId?: string, deep = false): ModelDataNode<T, K> | null {

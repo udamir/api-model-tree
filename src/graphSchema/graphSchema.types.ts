@@ -33,7 +33,6 @@ export type GraphSchemaNodeData<T extends GraphSchemaNodeType> =
   T extends 'array' ? IGraphSchemaArrayType :
   T extends 'null' ? IGraphSchemaNullType : never
 
-
 export interface IGraphSchemaBaseType extends IJsonSchemaBaseType {
   directives?: Record<string, any> // TODO
   args?: Record<string, IGraphSchemaObjectType>

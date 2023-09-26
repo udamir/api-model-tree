@@ -1,6 +1,6 @@
 {
   "name": "api-model-tree",
-  "version": "0.5.6",
+  "version": "0.6.0",
   "description": "Convert JsonSchema based document into structured and simplified data tree",
   "module": "dist/esm/index.js",
   "main": "dist/cjs/index.js",
@@ -41,7 +41,7 @@
   "dependencies": {
     "@types/json-schema": "^7.0.12",
     "allof-merge": "0.5.0",
-    "gqlapi": "^0.4.7",
+    "gqlapi": "^0.4.8",
     "json-crawl": "^0.2.6"
   },
   "devDependencies": {

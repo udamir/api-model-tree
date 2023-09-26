@@ -1,4 +1,4 @@
-import { GraphSchemaFragment, GraphSchemaTransformFunc } from "./graphSchema.types"
+import { GraphSchemaFragment } from "./graphSchema.types"
 
 export const transformNullable = (value: GraphSchemaFragment): GraphSchemaFragment => {
   const { nullable, args, ...rest } = value
@@ -9,8 +9,3 @@ export const transformDirectives = (value: GraphSchemaFragment): GraphSchemaFrag
   const { deprecated } = value.directives || {}
   return deprecated ? { ...value, deprecated: true } : value
 }
-
-export const graphSchemaTransormers: GraphSchemaTransformFunc[] = [
-  transformDirectives,
-  transformNullable,
-]
