@@ -1,11 +1,12 @@
 import { graphSchemaNodeKind } from "../graphSchema";
 
-export const graphApiSchemaNodeKind = {
+export const graphApiNodeKinds = ['schema', 'directive', 'query', 'mutation', 'subscription']
+
+export const graphApiNodeKind = {
   ...graphSchemaNodeKind,
   schema: 'schema',
-  directives: 'directives',
   directive: 'directive',
   query: 'query',
   mutation: 'mutation',
-  subsription: 'subsription',
+  subscription: 'subscription',
 } as const

@@ -1578,10 +1578,10 @@ globals@^11.1.0:
   resolved "https://registry.yarnpkg.com/globals/-/globals-11.12.0.tgz#ab8795338868a0babd8525758018c2a7eb95c42e"
   integrity sha512-WOBp/EEGUiIsJSp7wcv/y6MO+lV9UoncWqxuFfm8eBwzWNgyfBd6Gz+IeKQ9jCmyhoH99g15M3T+QaVHFjizVA==
 
-gqlapi@^0.4.7:
-  version "0.4.7"
-  resolved "https://registry.yarnpkg.com/gqlapi/-/gqlapi-0.4.7.tgz#3726d251d42b010e34a703b80f2fd5ecfd3d55b8"
-  integrity sha512-zT1ogYk/htzxsy64v2/Qf0evB3TWk7gTLpAieI0eNxDZehsu1bGzvDQ9ADb7qx2K4RmL55jHi2uk9r/p/RlO/A==
+gqlapi@^0.4.8:
+  version "0.4.8"
+  resolved "https://registry.yarnpkg.com/gqlapi/-/gqlapi-0.4.8.tgz#d3b4b7aea23d328cf984cd9b65657d3d20c96e67"
+  integrity sha512-9ddRebLFKoLRFR/rf0KYxG8WKCUnOaWARXd2B7+kddYCJZH0ukGiayzwCntfYCoORMd/vCOML9lCTvkNnqvPsw==
 
 graceful-fs@^4.1.2, graceful-fs@^4.1.6, graceful-fs@^4.2.4, graceful-fs@^4.2.9:
   version "4.2.11"

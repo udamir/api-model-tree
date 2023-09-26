@@ -4,12 +4,10 @@ export const graphSchemaNodeKind = {
   root: 'root',
   args: 'args',
   arg: 'arg',
-  directive: 'directive',
   definition: "definition",
   property: "property",
   items: "items",
   allOf: "allOf",
-  anyOf: "anyOf",
   oneOf: "oneOf",
 } as const
 

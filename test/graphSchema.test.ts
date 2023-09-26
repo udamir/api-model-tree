@@ -41,9 +41,9 @@ describe("graphschema transformation tests", () => {
       expect(argsNode.value()).toMatchObject({ _fragment: args })
       
       const argsList = argsNode.children()
-      expect(argsList[0]).toMatchObject({ key: 'id', type: 'simple' })
+      expect(argsList[0]).toMatchObject({ key: 'id', type: 'simple', depth: 1 })
       expect(argsList[0].value()).toMatchObject({ type: 'string', format: 'ID', _fragment: args?.properties?.id })
-      expect(argsList[1]).toMatchObject({ key: 'isCompleted', type: 'simple' })
+      expect(argsList[1]).toMatchObject({ key: 'isCompleted', type: 'simple', depth: 1 })
       expect(argsList[1].value()).toMatchObject({ type: 'boolean', default: false, _fragment: args?.properties?.isCompleted })
 
       expect(tree.root?.value('#/oneOf/0')).toMatchObject({ _fragment: rest })
@@ -93,5 +93,39 @@ describe("graphschema transformation tests", () => {
 
       expect(tree.root).toMatchObject({ id: "#", type: "oneOf", parent: null })
     })
+  })
+
+  describe("schema with directives", () => {
+    it("should create tree from jsonSchema with directive", () => {
+
+      const raw = `
+      directive @limit(offset: Int = 0, limit: Int = 20) on FIELD | FIELD_DEFINITION
+
+      type Object {
+          id: ID!
+          count: Int @limit
+      } 
+
+      type Query {
+        "A Query with 1 required argument and 1 optional argument"
+        todo(
+          id: ID!
+      
+          "A default value of false"
+          isCompleted: Boolean = false
+        ): Object!
+      }
+      `
+      const source = buildFromSchema(buildSchema(raw, { noLocation: true }))
+      const schema = source.queries!.todo as GraphSchemaFragment
+
+      const tree = createGraphSchemaTree(schema, source)
+      expect(tree.root!.value()).toMatchObject({ type: 'object', title: 'Object' })
+
+      const children = tree.root!.children()
+      expect(children[1]).toMatchObject({ key: 'count', type: 'simple' })
+      expect(children[1].value()).toMatchObject({ type: 'integer', directives: { limit: {} } })      
+    })
+
   })
 })

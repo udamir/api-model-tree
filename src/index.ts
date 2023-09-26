@@ -1,3 +1,4 @@
+export * from './graphapi'
 export * from './graphSchema'
 export * from './jsonSchema'
 export * from './modelTree'
