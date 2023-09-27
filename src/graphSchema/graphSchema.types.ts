@@ -34,9 +34,10 @@ export type GraphSchemaNodeData<T extends GraphSchemaNodeType> =
   T extends 'null' ? IGraphSchemaNullType : never
 
 export interface IGraphSchemaBaseType extends IJsonSchemaBaseType {
-  directives?: Record<string, any> // TODO
-  args?: Record<string, IGraphSchemaObjectType>
-  values?: Record<string, IGraphSchemaEnumValueType>
+  readonly directives?: Record<string, any> // TODO
+  readonly args?: Record<string, IGraphSchemaObjectType>
+  readonly values?: Record<string, IGraphSchemaEnumValueType>
+  readonly deprecated?: boolean | { reason: string }
 }
 
 export interface IGraphSchemaNullType extends IGraphSchemaBaseType {
@@ -57,8 +58,8 @@ export interface IGraphSchemaStringType extends IGraphSchemaBaseType {
 }
 
 export interface IGraphSchemaEnumValueType {
-  description?: string
-  deprecationReason?: string
+  readonly description?: string
+  readonly deprecated?: boolean | { reason: string }
 }
 
 export interface IGraphSchemaNumberType extends IGraphSchemaBaseType {

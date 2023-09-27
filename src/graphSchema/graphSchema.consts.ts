@@ -16,13 +16,13 @@ export const graphSchemaNodeTypes = [
 ] as const 
 
 export const graphSchemaCommonProps: (keyof IGraphSchemaBaseType)[]  = [
-  'type', 'description', 'title', 'deprecated', 'examples', 'enum', 'default', 'args', 'directives'
+  'type', 'description', 'title', 'deprecated', 'examples', 'default', 'args', 'directives'
 ]
 
 export const graphSchemaTypeProps: Record<GraphSchemaNodeType, readonly string[]> = {
   boolean: [...graphSchemaCommonProps],
   null: [...graphSchemaCommonProps],
-  string: [...graphSchemaCommonProps, 'format'],
+  string: [...graphSchemaCommonProps, 'format', 'enum', 'values'],
   number: [...graphSchemaCommonProps, 'format'],
   integer: [...graphSchemaCommonProps, 'format'],
   object: [...graphSchemaCommonProps, 'properties', 'required'],

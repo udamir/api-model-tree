@@ -14,7 +14,7 @@ const buildGraphApiSchema = (filename: string): GraphApiSchema => {
 
 describe("graphschema transformation tests", () => {
   describe("simple schema", () => {
-    it("should create tree from simple jsonSchema", () => {
+    it("should create tree from simple graphSchema", () => {
 
       const raw = `
       type Query {
@@ -50,7 +50,7 @@ describe("graphschema transformation tests", () => {
       expect(tree.root?.value('#/oneOf/1')).toMatchObject({ type: 'null' })
     })
 
-    it("should create model state from simple jsonSchema", () => {
+    it("should create model state from simple graphSchema", () => {
 
       const raw = `
       type Query {
@@ -85,7 +85,7 @@ describe("graphschema transformation tests", () => {
       expect(root.children.length).toEqual(0)
     })
 
-    it("should create tree from complex jsonSchema", () => {
+    it("should create tree from complex graphSchema", () => {
       const source = buildGraphApiSchema('example.graphql')
       const schema = source.queries!.todo as GraphSchemaFragment
 
@@ -96,7 +96,7 @@ describe("graphschema transformation tests", () => {
   })
 
   describe("schema with directives", () => {
-    it("should create tree from jsonSchema with directive", () => {
+    it("should create tree from graphSchema with directive", () => {
 
       const raw = `
       directive @limit(offset: Int = 0, limit: Int = 20) on FIELD | FIELD_DEFINITION
@@ -125,6 +125,46 @@ describe("graphschema transformation tests", () => {
       const children = tree.root!.children()
       expect(children[1]).toMatchObject({ key: 'count', type: 'simple' })
       expect(children[1].value()).toMatchObject({ type: 'integer', directives: { limit: {} } })      
+    })
+
+    it("should create tree from graphSchema with directive in enum", () => {
+
+      const raw = `
+      directive @limit(offset: Int = 0, limit: Int = 20) on FIELD | FIELD_DEFINITION
+      directive @example(value: String) on FIELD | FIELD_DEFINITION
+
+      type Object {
+          """Id of the object"""
+          id: ID @deprecated
+          name: String @example(value: "dog") @deprecated
+          """Star Wars trilogy"""
+          episode: Episode!
+      }
+      
+      enum Episode {
+          """episode 1"""
+          NEWHOPE
+          """episode 2"""
+          EMPIRE @deprecated (reason: "was deleted")
+          JEDI
+          NEWEPISOE
+      } 
+
+      type Query {
+        "A Query with 1 required argument and 1 optional argument"
+        todo: Object!
+      }
+      `
+      const source = buildFromSchema(buildSchema(raw, { noLocation: true }))
+      const schema = source.queries!.todo as GraphSchemaFragment
+
+      const tree = createGraphSchemaTree(schema, source)
+      expect(tree.root!.value()).toMatchObject({ type: 'object', title: 'Object' })
+
+      const children = tree.root!.children()
+      expect(children[0].value()).toMatchObject({ type: 'string', format: 'ID', deprecated: true })      
+      expect(children[1].value()).toMatchObject({ type: 'string', deprecated: true, examples: ['dog'] })      
+      expect(children[2].value()).toMatchObject({ type: 'string', enum: ['NEWHOPE', 'EMPIRE', 'JEDI', 'NEWEPISOE'], values: { EMPIRE: { deprecationReason: 'was deleted' }}})      
     })
 
   })

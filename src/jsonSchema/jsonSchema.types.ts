@@ -44,7 +44,7 @@ export interface IJsonSchemaBaseType {
   // readonly nullable: boolean | null 
   readonly type: JsonSchemaNodeType // type: [string, number] => anyOf: [ { type: string }, { type: number }]
   readonly title?: string
-  readonly deprecated?: boolean // x-deprecated => deprecated
+  readonly deprecated?: boolean | Record<string, string> // x-deprecated => deprecated
   readonly readOnly?: boolean
   readonly writeOnly?: boolean
   readonly description?: string
