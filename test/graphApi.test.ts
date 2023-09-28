@@ -19,15 +19,14 @@ describe("graphapi transformation tests", () => {
       }
       `
       const source = buildFromSchema(buildSchema(raw, { noLocation: true }))
-
       const tree = createGraphApiTree(source)
 
       expect(tree.root).toMatchObject({ id: "#", kind: "schema", type: "simple", parent: null })
       const children = tree.root!.children()
       expect(children[0]).toMatchObject({ id: "#/queries/todo", kind: "query", type: "simple", depth: 0, parent: tree.root })
-      expect(children[1]).toMatchObject({ id: "#/components/directives/include", kind: "directive", type: "simple", parent: tree.root })
-      expect(children[2]).toMatchObject({ id: "#/components/directives/skip", kind: "directive", type: "simple", parent: tree.root })
-
+      expect(children.length).toEqual(1)
+      // expect(children[1]).toMatchObject({ id: "#/components/directives/include", kind: "directive", type: "simple", parent: tree.root })
+      // expect(children[2]).toMatchObject({ id: "#/components/directives/skip", kind: "directive", type: "simple", parent: tree.root })
     })
   })
 })

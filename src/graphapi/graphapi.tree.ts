@@ -4,7 +4,7 @@ import { GraphApiDirectiveDefinition, GraphApiSchema } from "gqlapi"
 
 import { GraphSchemaFragment, GraphSchemaTreeNode, createGraphSchemaNode, createGraphSchemaTreeCrawlHook, createTransformHook } from "../graphSchema"
 
-import { graphApiNodeKind, graphApiNodeKinds } from "./graphapi.consts"
+import { graphApiNodeKind, graphApiNodeKinds, graphqlEmbeddedDirectives } from "./graphapi.consts"
 import { graphApiCrawlRules } from "./graphapi.rules"
 import { ModelTree } from "../modelTree"
 
@@ -32,6 +32,7 @@ const createGraphApiTreeCrawlHook = (tree: ModelTree<any, any>): SyncCrawlHook =
         break;
       }
       case graphApiNodeKind.directive: {
+        if (graphqlEmbeddedDirectives.includes(String(ctx.key))) { return { value, state: ctx.state } } 
         const { args, ...rest } = value as GraphApiDirectiveDefinition
         const data = { ...rest, _fragment: value }
         node = tree.createNode(id, kind, ctx.key, data, parent)

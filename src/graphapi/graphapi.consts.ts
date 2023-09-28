@@ -1,6 +1,8 @@
 import { graphSchemaNodeKind } from "../graphSchema";
 
-export const graphApiNodeKinds = ['schema', 'directive', 'query', 'mutation', 'subscription']
+export const graphApiNodeKinds = ['schema', 'directive', 'query', 'mutation', 'subscription'] as const
+
+export const graphqlEmbeddedDirectives = ['skip', 'include']
 
 export const graphApiNodeKind = {
   ...graphSchemaNodeKind,

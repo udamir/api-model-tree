@@ -1,25 +1,26 @@
 import { CrawlRules } from "json-crawl"
 
-import { GraphSchemaCrawlRule, GraphSchemaNodeKind } from "./graphSchema.types"
 import { transformDirectives, transformNullable, transformValues } from "./graphSchema.utils"
+import { GraphSchemaCrawlRule, GraphSchemaNodeKind } from "./graphSchema.types"
+import { graphSchemaNodeKind } from "./graphSchema.consts"
 
-export const graphSchemaCrawlRules = (kind: GraphSchemaNodeKind = "root"): CrawlRules<GraphSchemaCrawlRule> => ({
+export const graphSchemaCrawlRules = (kind: GraphSchemaNodeKind = graphSchemaNodeKind.root): CrawlRules<GraphSchemaCrawlRule> => ({
   "/allOf": {
-    "/*": () => graphSchemaCrawlRules("allOf"),
+    "/*": () => graphSchemaCrawlRules(graphSchemaNodeKind.allOf),
   },
   "/oneOf": {
-    "/*": () => graphSchemaCrawlRules("oneOf"),
+    "/*": () => graphSchemaCrawlRules(graphSchemaNodeKind.oneOf),
   },
   "/properties": {
-    "/*": () => graphSchemaCrawlRules("property"),
+    "/*": () => graphSchemaCrawlRules(graphSchemaNodeKind.property),
   },
   "/args": {
     "/properties": {
-      "/*": () => graphSchemaCrawlRules("arg"),
+      "/*": () => graphSchemaCrawlRules(graphSchemaNodeKind.arg),
     },
-    kind: 'args'
+    kind: graphSchemaNodeKind.args
   },
-  "/items": () => graphSchemaCrawlRules("items"),
+  "/items": () => graphSchemaCrawlRules(graphSchemaNodeKind.items),
   kind,
   transformers: [transformDirectives, transformNullable, transformValues] 
 })

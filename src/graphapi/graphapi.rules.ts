@@ -26,7 +26,10 @@ export const graphApiCrawlRules: CrawlRules<GraphApiCrawlRule> = {
   "/components": {
     "/directives": {
       "/*": {
-        "/args": graphSchemaCrawlRules(),
+        "/args": {
+          ...graphSchemaCrawlRules(),
+          kind: graphApiNodeKind.args
+        },
         kind: graphApiNodeKind.directive
       }
     }
