@@ -32,7 +32,7 @@ const createGraphApiTreeCrawlHook = (tree: ModelTree<any, any>): SyncCrawlHook =
         break;
       }
       case graphApiNodeKind.directive: {
-        if (graphqlEmbeddedDirectives.includes(String(ctx.key))) { return { value, state: ctx.state } } 
+        if (graphqlEmbeddedDirectives.includes(String(ctx.key))) { return null } 
         const { args, ...rest } = value as GraphApiDirectiveDefinition
         const data = { ...rest, _fragment: value }
         node = tree.createNode(id, kind, ctx.key, data, parent)
