@@ -8,15 +8,14 @@ export const transformNullable = (value: GraphSchemaFragment): GraphSchemaFragme
 export const transformDirectives = (value: GraphSchemaFragment): GraphSchemaFragment => {
   if (!("directives" in value) || !value.directives) { return value }
 
-  const { directives = {}, ...rest } = value
-  const { deprecated, example, ..._directives } = directives
-  const reason = deprecated?.meta?.reason
+  const { directives = {}, deprecated, ...rest } = value
+  const { example, deprecated: _, ..._directives } = directives
 
   const examples = Object.values(example?.meta ?? {})
   return { 
     ...rest, 
     ...Object.keys(_directives).length ? { directives: _directives } : {},
-    ...deprecated ? { deprecated: reason ? { reason } : true } : {},
+    ...deprecated ? { deprecated } : {},
     ...examples.length ? { examples } : {}
   } as GraphSchemaFragment
 }
@@ -28,10 +27,10 @@ export const transformValues = (value: GraphSchemaFragment): GraphSchemaFragment
   const _values: Record<string, IGraphSchemaEnumValueType> = {}
 
   for (const key of Object.keys(values)) {
-    const { description, deprecationReason } = values[key]
+    const { description, deprecated } = values[key]
     _values[key] = {
       ...description ? { description } : {},
-      ...deprecationReason ? { deprecated: { reason: deprecationReason }} : {}
+      ...deprecated ? { deprecated } : {}
     }
   }
 

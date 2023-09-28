@@ -164,7 +164,7 @@ describe("graphschema transformation tests", () => {
       const children = tree.root!.children()
       expect(children[0].value()).toMatchObject({ type: 'string', format: 'ID', deprecated: true })      
       expect(children[1].value()).toMatchObject({ type: 'string', deprecated: true, examples: ['dog'] })      
-      expect(children[2].value()).toMatchObject({ type: 'string', enum: ['NEWHOPE', 'EMPIRE', 'JEDI', 'NEWEPISOE'], values: { EMPIRE: { deprecationReason: 'was deleted' }}})      
+      expect(children[2].value()).toMatchObject({ type: 'string', enum: ['NEWHOPE', 'EMPIRE', 'JEDI', 'NEWEPISOE'], values: { EMPIRE: { deprecated: {reason: 'was deleted' }}}})      
     })
 
   })
