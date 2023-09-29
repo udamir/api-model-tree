@@ -3,6 +3,14 @@ import { JsonPath } from 'json-crawl'
 
 import { modelStateNodeType, modelTreeNodeType } from './consts'
 
+
+export type SchemaTransformFunc<T> = (value: T) => any
+
+export type SchemaCrawlRule<T, K extends string> = {
+  kind: K
+  transformers: SchemaTransformFunc<T>[]
+}
+
 export type ModelDataNode<T, K extends string> = IModelTreeNode<T, K> | IModelRefNode<T, K>
 export type ModelTreeNodeType = keyof typeof modelTreeNodeType
 
@@ -41,8 +49,10 @@ export interface IModelStatePropNode<T> {
   // selected combinary item id (for nodes with combinary children)
   readonly selected: string | undefined
 
-  // node.value()
+  // node.value(selected)
   readonly value: T | null
+  // node.nestedNode(selected)
+  readonly nestedNode: ModelDataNode<T, any> | null
   // list of child state nodes
   readonly children: IModelStateNode<T>[] 
   // if true - this is the first child of group (args/properties/items)

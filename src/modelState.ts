@@ -96,6 +96,10 @@ export class ModelStatePropNode<T> implements IModelStatePropNode<T>{
     return this.node.value(this.selected)
   }
 
+  get nestedNode(): ModelDataNode<T, any> | null {
+    return this.node.nestedNode(this.selected)
+  }
+
   constructor (public readonly node: ModelDataNode<T, any>, public readonly first = false) {
     this.type = node.children().length || node.nested.length || node.nested[-1] ? modelStateNodeType.expandable : modelStateNodeType.basic
   }

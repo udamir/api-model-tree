@@ -3,18 +3,15 @@ import { GraphSchema } from 'gqlapi'
 import { graphSchemaNodeKind, graphSchemaNodeTypes } from './graphSchema.consts'
 import { ModelTreeComplexNode, ModelTreeNode } from '../modelTree'
 import { IJsonSchemaBaseType } from '../jsonSchema'
+import { SchemaCrawlRule, SchemaTransformFunc } from '../types'
 
 export type GraphSchemaNodeKind = keyof typeof graphSchemaNodeKind
 export type GraphSchemaNodeType = typeof graphSchemaNodeTypes[number]
 
 export type GraphSchemaFragment = GraphSchema
 
-export type GraphSchemaTransformFunc = (value: GraphSchemaFragment) => GraphSchemaFragment
-
-export type GraphSchemaCrawlRule = {
-  kind: GraphSchemaNodeKind
-  transformers: GraphSchemaTransformFunc[]
-}
+export type GraphSchemaTransformFunc = SchemaTransformFunc<GraphSchemaFragment>
+export type GraphSchemaCrawlRule = SchemaCrawlRule<GraphSchemaFragment, GraphSchemaNodeKind>
 
 export type GraphSchemaTreeNode<T extends GraphSchemaNodeType> = ModelTreeNode<GraphSchemaNodeData<T>, GraphSchemaNodeKind>
 export type GraphSchemaComplexNode<T extends GraphSchemaNodeType> = ModelTreeComplexNode<GraphSchemaNodeData<T>, GraphSchemaNodeKind>

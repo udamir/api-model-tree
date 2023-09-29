@@ -2,7 +2,7 @@ import {
   allOfResolverHook, buildPointer, isRefNode, 
   jsonSchemaMergeRules, parseRef, resolveRefNode 
 } from "allof-merge"
-import { SyncCloneHook, isObject, syncClone, syncCrawl } from 'json-crawl'
+import { SyncCloneHook, SyncCrawlHook, isObject, syncClone, syncCrawl } from 'json-crawl'
 
 import { 
   JsonSchemaCrawlState, JsonSchemaNodeData, JsonSchemaNode, 
@@ -12,9 +12,9 @@ import { jsonSchemaTransormers, isValidType, transformTitle, isJsonSchemaTreeNod
 import { jsonSchemaNodeKind, jsonSchemaTypeProps } from "./jsonSchema.consts"
 import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
 import { getNodeComplexityType, pick } from "../utils"
+import { modelTreeNodeType } from "../consts"
 import { IModelTreeNode } from "../types"
 import { ModelTree } from "../modelTree"
-import { modelTreeNodeType } from "../consts"
 
 export const transformJsonSchema = (schema: JsonSchemaFragment, source: any = schema) => {
 
@@ -64,18 +64,8 @@ const createJsonSchemaNode = (
   }
 }
 
-export const createJsonSchemaTree = (schema: JsonSchemaFragment, source: any = schema) => {
-
-  const tree = new ModelTree<JsonSchemaNodeData<any>, JsonSchemaNodeKind>()
-  if (!isObject(schema) || !isObject(source)) {
-    return tree
-  }
-
-  const data = transformJsonSchema(schema, source)
-
-  const crawlState: JsonSchemaCrawlState = { parent: null }
-
-  syncCrawl(data, (value, ctx) => {
+export const createJsonSchemaTreeCrawlHook = (tree: ModelTree<JsonSchemaNodeData<any>, JsonSchemaNodeKind>, source: any): SyncCrawlHook => {
+  return (value, ctx) => {
     if (!ctx.rules) { return null }
     if (!("kind" in ctx.rules) || Array.isArray(value)) { return { value, state: ctx.state } }
 
@@ -121,7 +111,21 @@ export const createJsonSchemaTree = (schema: JsonSchemaFragment, source: any = s
     }
     const state = isJsonSchemaTreeNode(node) ? { parent: node } : { parent, container: node as JsonSchemaComplexNode<any> }
     return { value, state }
-  }, { state: crawlState, rules: jsonSchemaCrawlRules() })
+  }
+}
+
+export const createJsonSchemaTree = (schema: JsonSchemaFragment, source: any = schema) => {
+
+  const tree = new ModelTree<JsonSchemaNodeData<any>, JsonSchemaNodeKind>()
+  if (!isObject(schema) || !isObject(source)) {
+    return tree
+  }
+
+  const data = transformJsonSchema(schema, source)
+
+  const crawlState: JsonSchemaCrawlState = { parent: null }
+
+  syncCrawl(data, createJsonSchemaTreeCrawlHook(tree, source), { state: crawlState, rules: jsonSchemaCrawlRules() })
 
   return tree
 }

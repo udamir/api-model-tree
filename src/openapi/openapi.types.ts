@@ -1,15 +1,15 @@
 import { GraphSchema } from 'gqlapi'
 
-import { graphApiNodeKind } from './graphapi.consts'
+import { openApiNodeKind } from './openapi.consts'
 import { GraphSchemaNodeData } from '../graphSchema'
 import { ModelTreeNode } from '../modelTree'
 import { SchemaCrawlRule } from '../types'
 
-export type GraphApiNodeKind = keyof typeof graphApiNodeKind
+export type OpenApiNodeKind = keyof typeof openApiNodeKind
 
-export type GraphApiCrawlRule = SchemaCrawlRule<any, GraphApiNodeKind>
+export type OpenApiCrawlRule = SchemaCrawlRule<any, OpenApiNodeKind>
 
-export type GraphapiTreeNode = ModelTreeNode<GraphApiNodeData, GraphApiNodeKind>
+export type GraphapiTreeNode = ModelTreeNode<GraphApiNodeData, OpenApiNodeKind>
 
 export type GraphApiNodeData = GraphApiSchemaNodeData | GraphApiDirectiveNodeData | GraphSchemaNodeData<any>
 
