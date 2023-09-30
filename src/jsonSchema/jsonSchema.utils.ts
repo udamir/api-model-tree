@@ -1,4 +1,4 @@
-import { isAnyOfNode, isOneOfNode, parsePointer } from 'allof-merge'
+import { isAnyOfNode, isOneOfNode, isRefNode, parsePointer } from 'allof-merge'
 
 import type { 
   JsonSchemaFragment, JsonSchemaNodeData, JsonSchemaNodeKind, JsonSchemaNodeType, 
@@ -42,6 +42,7 @@ export function getRequired(required: unknown): string[] | null {
 }
 
 export const transformAdditionalItems = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
+  // transform aditionalItems: true into aditionalItems with type: any
   if (value.type === 'array' && 'aditionalItems' in value && value.aditionalItems === true) {
     return { ...value, aditionalItems: { type: 'any' } }  as JsonSchemaTransformedFragment
   }
@@ -49,13 +50,43 @@ export const transformAdditionalItems = (value: JsonSchemaFragment): JsonSchemaT
 }
 
 export const transformAdditionalProperties = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
+  // transform additionalProperties: true into additionalProperties with type: any
   if (value.type === 'object' && 'additionalProperties' in value && value.additionalProperties === true) {
     return { ...value, additionalProperties: { type: 'any' } } as JsonSchemaTransformedFragment
   }
   return value as JsonSchemaTransformedFragment
 }
 
+export const transformDiscriminator = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
+  // 1. convert discriminator to consts
+  // 2. add custom tag to descriminator property
+
+  if ('discriminator' in value && isOneOfNode(value) || isAnyOfNode(value)) {
+    const { discriminator, ...rest } = value
+
+    if (typeof discriminator !== 'object' || !discriminator || Array.isArray(discriminator) || !('propertyName' in discriminator)) {
+      return rest as JsonSchemaTransformedFragment
+    }
+
+    const prop = discriminator.propertyName
+    const mapping: Record<string, string> = discriminator.mapping ?? {}
+    const refs = Object.entries(mapping).reduce((res, [key, $ref]) => res[$ref] = key, {} as any)
+
+    const transformCombinary = (item: unknown) => isRefNode(item) && item.$ref in refs 
+      ? { ...item, properties: { [prop]: { ...item.properties ?? {}, const: refs[item.$ref] }}} 
+      : item
+    
+    if (isAnyOfNode(value)) {
+      return { ...rest, anyOf: value.anyOf.map(transformCombinary) } as JsonSchemaTransformedFragment
+    } else if (isOneOfNode(value)) {
+      return { ...rest, oneOf: value.oneOf.map(transformCombinary) } as JsonSchemaTransformedFragment
+    }
+  }
+  return value as JsonSchemaTransformedFragment
+}
+
 export const transformConst = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
+  // transform const into enum
   if ('const' in value) {
     const { const: v, ...rest } = value
     return { ...rest, enum: [v] } as JsonSchemaTransformedFragment
@@ -64,6 +95,8 @@ export const transformConst = (value: JsonSchemaFragment): JsonSchemaTransformed
 }
 
 export const transformRequred = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
+  // 1. remove not unique items
+  // 2. remove non-string items
   if ('required' in value && Array.isArray(value.required)) {
     const required = value.required.filter((item, index, array) => typeof item === 'string' && array.indexOf(item) === index)
 
@@ -73,6 +106,8 @@ export const transformRequred = (value: JsonSchemaFragment): JsonSchemaTransform
 }
 
 export const transformExclusiveMinimum = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
+  // 1. convert exclusiveMinimum from boolean to number
+  // 2. remove minimum if exclusiveMinimum exists
   if ('exclusiveMinimum' in value && typeof value.exclusiveMinimum === 'boolean' && 'minimum' in value) {
     const { minimum, exclusiveMinimum, ...rest } = value
     return { ...rest, exclusiveMinimum: minimum } as JsonSchemaTransformedFragment
@@ -81,6 +116,8 @@ export const transformExclusiveMinimum = (value: JsonSchemaFragment): JsonSchema
 }
 
 export const transformExclusiveMaximum = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
+  // 1. convert exclusiveMaximum from boolean to number
+  // 2. remove maximum if exclusiveMaximum exists
   if ('exclusiveMaximum' in value && typeof value.exclusiveMaximum === 'boolean' && 'maximum' in value) {
     const { maximum, exclusiveMaximum, ...rest } = value
     return { ...rest, exclusiveMaximum: maximum } as JsonSchemaTransformedFragment
@@ -89,6 +126,7 @@ export const transformExclusiveMaximum = (value: JsonSchemaFragment): JsonSchema
 }
 
 export function transformExample(value: JsonSchemaFragment): JsonSchemaTransformedFragment {
+  // 1. convert example to array of examples
   if ('example' in value) {
     const { example, ...rest } = value
     return { ...rest, examples: [...value.examples || [], example] } as JsonSchemaTransformedFragment
@@ -97,6 +135,10 @@ export function transformExample(value: JsonSchemaFragment): JsonSchemaTransform
 }
 
 export const transformTypeOfArray = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
+  // 1. remove non-standard types
+  // 2. convert nullable into null type
+  // 3. convert array of types into anyOf with single type
+  // TODO: 4. set any type if it is undefined ?
   if (isOneOfNode(value) || isAnyOfNode(value) || isAllOfNode(value)) {
     return value as JsonSchemaTransformedFragment
   }
@@ -138,6 +180,8 @@ export const isJsonSchemaComplexNode = (node?: IModelTreeNode<JsonSchemaNodeData
 }
 
 export const transformDeprecated = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
+  // 1. convert "x-deprecated" into deprecated
+  // TODO: 2. convert "x-deprecated-infor" into deprecated object
   if ('x-deprecated' in value && typeof value['x-deprecated'] === 'boolean') {
     return { deprecated: value['x-deprecated'], ...value } as JsonSchemaTransformedFragment
   }
@@ -146,6 +190,7 @@ export const transformDeprecated = (value: JsonSchemaFragment): JsonSchemaTransf
 }
 
 export const transformTitle = (value: JsonSchemaFragment, ref?: string): JsonSchemaTransformedFragment => {
+  // 1. transform $ref key into title
   if (!value || 'title' in value || !ref) {
     return value as JsonSchemaTransformedFragment
   }
@@ -171,6 +216,7 @@ export const filterValidProps = (value: JsonSchemaFragment<any>): JsonSchemaTran
 
 export const jsonSchemaTransormers: JsonSchemaTransformFunc[] = [
   filterValidProps,
+  transformDiscriminator,
   transformRequred,
   transformConst,
   transformExample,

@@ -97,6 +97,10 @@ export class JsonSchemaStatePropNode<T = JsonSchemaNodeData<any>> implements IMo
     return this.node.value(this.selected)
   }
 
+  get nestedNode(): ModelDataNode<T, any> | null {
+    return this.node.nestedNode(this.selected)
+  }
+  
   public sort(dir = 0) {
     if (!dir) {
       this._children = [...this._combinaryNodes, ...this._childrenNodes]
