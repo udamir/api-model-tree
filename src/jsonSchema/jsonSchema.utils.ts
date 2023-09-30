@@ -73,7 +73,7 @@ export const transformRequred = (value: JsonSchemaFragment): JsonSchemaTransform
 }
 
 export const transformExclusiveMinimum = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
-  if ('exclusiveMinimum' in value && typeof 'exclusiveMinimum' === 'boolean' && 'minimum' in value) {
+  if ('exclusiveMinimum' in value && typeof value.exclusiveMinimum === 'boolean' && 'minimum' in value) {
     const { minimum, exclusiveMinimum, ...rest } = value
     return { ...rest, exclusiveMinimum: minimum } as JsonSchemaTransformedFragment
   }
@@ -81,7 +81,7 @@ export const transformExclusiveMinimum = (value: JsonSchemaFragment): JsonSchema
 }
 
 export const transformExclusiveMaximum = (value: JsonSchemaFragment): JsonSchemaTransformedFragment => {
-  if ('exclusiveMaximum' in value && typeof 'exclusiveMaximum' === 'boolean' && 'maximum' in value) {
+  if ('exclusiveMaximum' in value && typeof value.exclusiveMaximum === 'boolean' && 'maximum' in value) {
     const { maximum, exclusiveMaximum, ...rest } = value
     return { ...rest, exclusiveMaximum: maximum } as JsonSchemaTransformedFragment
   }

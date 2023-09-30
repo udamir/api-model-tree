@@ -1,8 +1,8 @@
+import { GraphApiDirectiveDefinition, GraphApiSchema } from "gqlapi"
 import { SyncCrawlHook, syncCrawl } from 'json-crawl'
 import { buildPointer } from "allof-merge"
-import { GraphApiDirectiveDefinition, GraphApiSchema } from "gqlapi"
 
-import { GraphSchemaFragment, GraphSchemaTreeNode, createGraphSchemaNode, createGraphSchemaTreeCrawlHook, createTransformHook } from "../graphSchema"
+import { GraphSchemaFragment, GraphSchemaTreeNode, createGraphSchemaNode, createGraphSchemaTreeCrawlHook, createTransformHook, graphSchemaNodeKinds } from "../graphSchema"
 
 import { graphApiNodeKind, graphApiNodeKinds, graphqlEmbeddedDirectives } from "./graphapi.consts"
 import { graphApiCrawlRules } from "./graphapi.rules"
@@ -54,8 +54,8 @@ export const createGraphApiTree = (schema: GraphApiSchema) => {
   syncCrawl(
     schema,
     [
+      createTransformHook(schema, [...graphSchemaNodeKinds, graphApiNodeKind.query, graphApiNodeKind.subscription, graphApiNodeKind.mutation]),
       createGraphApiTreeCrawlHook(tree),
-      createTransformHook(schema),
       createGraphSchemaTreeCrawlHook(tree, schema)
     ], 
     { state: crawlState, rules: graphApiCrawlRules }

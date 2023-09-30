@@ -1,5 +1,7 @@
 import { IGraphSchemaBaseType, GraphSchemaNodeType } from "./graphSchema.types"
 
+export const graphSchemaNodeKinds = ['root', 'args', 'arg', 'definition', 'property', 'items', 'allOf', 'oneOf']
+
 export const graphSchemaNodeKind = {
   root: 'root',
   args: 'args',

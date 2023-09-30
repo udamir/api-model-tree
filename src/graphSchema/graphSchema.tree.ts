@@ -5,19 +5,17 @@ import {
   GraphSchemaCrawlState, GraphSchemaNodeData, GraphSchemaComplexNode, GraphSchemaNode, 
   GraphSchemaTreeNode, GraphSchemaFragment, GraphSchemaNodeKind, GraphSchemaTransformFunc 
 } from "./graphSchema.types"
+import { graphSchemaNodeKind, graphSchemaNodeKinds, graphSchemaTypeProps } from "./graphSchema.consts"
 import { getNodeComplexityType, isObject, pick } from "../utils"
 import { graphSchemaCrawlRules } from "./graphSchema.rules"
-import { graphSchemaNodeKind, graphSchemaTypeProps } from "./graphSchema.consts"
 import { modelTreeNodeType } from "../consts"
 import { IModelTreeNode } from "../types"
 import { ModelTree } from "../modelTree"
 
-export const createTransformHook = (source: any): SyncCrawlHook => {
+export const createTransformHook = (source: any, kinds: string[] = graphSchemaNodeKinds): SyncCrawlHook => {
   return (value, { rules, state }) => {
     // skip if not object or current node graph-schema
-    const graphSchemaNodeKinds = Object.keys(graphSchemaNodeKind)
-
-    if ((!isObject(value) || Array.isArray(value)) || !rules?.kind || !graphSchemaNodeKinds.includes(rules.kind)) { 
+    if ((!isObject(value) || Array.isArray(value)) || !rules?.kind || !kinds.includes(rules.kind)) { 
       return { value, state } 
     }
 
