@@ -1,7 +1,6 @@
 import { isAnyOfNode, isOneOfNode } from "allof-merge"
 
-import { IModelStateNode, ModelTreeNodeType } from "./types"
-import { ModelStatePropNode } from "./modelState"
+import { IModelStateNode, IModelStatePropNode, ModelTreeNodeType } from "./types"
 
 export function isStringOrNumber(value: unknown): value is number | string {
   return typeof value === 'string' || typeof value === 'number'
@@ -64,6 +63,6 @@ export function pick<T extends object>(target: any, keys: readonly (keyof T)[]):
   return source
 }
 
-export const isModelStatePropNode = (node: IModelStateNode<any>): node is ModelStatePropNode<any> => {
-  return node instanceof ModelStatePropNode
+export const isModelStatePropNode = (node: IModelStateNode<any>): node is IModelStatePropNode<any> => {
+  return node.type === "basic" || node.type === "expandable"
 }

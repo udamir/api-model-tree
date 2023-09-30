@@ -3,7 +3,7 @@ import { buildSchema } from "graphql"
 import path from "path"
 import fs from "fs"
 
-import { createGraphSchemaTree, GraphSchemaFragment, ModelState, ModelStatePropNode } from "../src"
+import { createGraphSchemaTree, GraphSchemaFragment, GraphSchemaState, GraphSchemaStatePropNode } from "../src"
 
 const buildGraphApiSchema = (filename: string): GraphApiSchema => {
   const resPath = path.join(__dirname, "./resources/", filename)
@@ -67,7 +67,7 @@ describe("graphschema transformation tests", () => {
       const schema = source.queries!.todo as GraphSchemaFragment
 
       const tree = createGraphSchemaTree(schema)
-      const state = new ModelState(tree, 2)
+      const state = new GraphSchemaState(tree, 2)
       
       const nodes = state.modelStateNodes()
 
@@ -76,7 +76,7 @@ describe("graphschema transformation tests", () => {
       expect(nodes[2]).toMatchObject({ type: 'basic', first: false, node: { id: "#/args/properties/isCompleted", key: 'isCompleted', type: 'simple' }})
       expect(nodes[3]).toMatchObject({ type: 'combinary', node: { id: "#", type: "oneOf", parent: null }})
 
-      const root = nodes[0] as ModelStatePropNode<any>
+      const root = nodes[0] as GraphSchemaStatePropNode
       root.expanded = false
       
       const collapsedNodes = state.modelStateNodes()

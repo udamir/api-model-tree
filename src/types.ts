@@ -65,8 +65,13 @@ export interface IModelStatePropNode<T> {
   // all children count included children of all levels
   readonly allChildrenCount: number 
 
+  // sort child nodes
+  sort(dir?: number): void
+
   expand(value?: number): void 
   collapse(value?: number): void
+
+  setSelected(id: string): void
 }
 
 export interface IModelStateCombinaryNode<T> {
