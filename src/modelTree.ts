@@ -10,20 +10,20 @@ export class ModelTree<T extends object, K extends string> implements IModelTree
     return this.nodes.size ? this.nodes.get('#')! : null
   }
 
-  public createNode(id: string, kind: K, key: string | number, value: T | null, parent: ModelTreeNode<T, K> | null = null, count = true): ModelTreeNode<T, K> {
-    const node = new ModelTreeNode<T, K>(id, kind, key, value, parent, count)
+  public createNode(id: string, kind: K, key: string | number, value: T | null, parent: ModelTreeNode<T, K> | null = null, required = false, count = true): ModelTreeNode<T, K> {
+    const node = new ModelTreeNode<T, K>(id, kind, key, value, parent, required, count)
     this.nodes.set(id, node)
     return node
   }
 
-  public createComplexNode(id: string, kind: K, key: string | number, type: ModelTreeNodeType, parent: ModelTreeNode<T, K> | null = null): ModelTreeComplexNode<T, K> {
-    const node = new ModelTreeComplexNode<T, K>(id, kind, key, type, parent)
+  public createComplexNode(id: string, kind: K, key: string | number, type: ModelTreeNodeType, parent: ModelTreeNode<T, K> | null = null, required = false): ModelTreeComplexNode<T, K> {
+    const node = new ModelTreeComplexNode<T, K>(id, kind, key, type, parent, required)
     this.nodes.set(id, node)
     return node
   }
 
-  public createRefNode(id: string, kind: K, key: string | number, target: IModelTreeNode<T, K>, parent: IModelTreeNode<T, K> | null): ModelRefNode<T, K> {
-    const node = new ModelRefNode(id, kind, key, target, parent)
+  public createRefNode(id: string, kind: K, key: string | number, target: IModelTreeNode<T, K>, parent: IModelTreeNode<T, K> | null, required = false): ModelRefNode<T, K> {
+    const node = new ModelRefNode(id, kind, key, target, parent, required)
     return node
   }
 }
@@ -66,11 +66,12 @@ export class ModelRefNode<T extends object, K extends string> implements IModelR
   }
 
   constructor(
-    public id: string,
-    public kind: K,
-    public key: string | number,
+    public readonly id: string,
+    public readonly kind: K,
+    public readonly key: string | number,
     private _target: ModelDataNode<T, K>,
-    public parent: ModelDataNode<T, K> | null,
+    public readonly parent: ModelDataNode<T, K> | null,
+    public readonly required = false,
     private _countInDepth = true
   ) {}
 
@@ -86,15 +87,16 @@ export class ModelRefNode<T extends object, K extends string> implements IModelR
 
 export class ModelTreeNode<T extends object, K extends string> implements IModelTreeNode<T, K> { 
   private _children: ModelDataNode<T, K>[] = []
-  public nested: ModelDataNode<T, K>[] = []
-  public type: ModelTreeNodeType = modelTreeNodeType.simple
+  public readonly nested: ModelDataNode<T, K>[] = []
+  public readonly type: ModelTreeNodeType = modelTreeNodeType.simple
 
   constructor(
-    public id: string = "#",
-    public kind: K,
-    public key: string | number = "",
+    public readonly id: string = "#",
+    public readonly kind: K,
+    public readonly key: string | number = "",
     private _value: T | null,
-    public parent: ModelTreeNode<T, K> | null = null,
+    public readonly parent: ModelTreeNode<T, K> | null = null,
+    public readonly required = false,
     private _countInDepth = true
   ) {
   }
@@ -141,13 +143,14 @@ export class ModelTreeNode<T extends object, K extends string> implements IModel
 export class ModelTreeComplexNode<T extends object, K extends string> extends ModelTreeNode<T, K> {
 
   constructor(
-    public id: string = "#",
-    public kind: K,
-    public key: string | number = "",
-    public type: ModelTreeNodeType,
-    public parent: ModelTreeNode<T, K> | null = null
+    public readonly id: string = "#",
+    public readonly kind: K,
+    public readonly key: string | number = "",
+    public readonly type: ModelTreeNodeType,
+    public readonly parent: ModelTreeNode<T, K> | null = null,
+    public readonly required = false
   ) {
-    super(id, kind, key, null, parent)
+    super(id, kind, key, null, parent, required)
   }
 
   public value(nestedId?: string): T | null {

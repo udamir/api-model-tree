@@ -9,6 +9,7 @@ import { graphSchemaNodeKind, graphSchemaNodeKinds, graphSchemaTypeProps } from 
 import { getNodeComplexityType, isObject, pick } from "../utils"
 import { graphSchemaCrawlRules } from "./graphSchema.rules"
 import { modelTreeNodeType } from "../consts"
+import { isRequired } from "../jsonSchema"
 import { IModelTreeNode } from "../types"
 import { ModelTree } from "../modelTree"
 
@@ -46,12 +47,12 @@ export const createGraphSchemaNode = (
   count = true
 ): GraphSchemaNode<any> => {
   if (value === null) {
-    return tree.createNode(id, kind, key, null, parent)
+    return tree.createNode(id, kind, key, null, parent, isRequired(key, parent))
   }
 
   const complexityType = getNodeComplexityType(value)
   if (complexityType !== modelTreeNodeType.simple) {
-    return tree.createComplexNode(id, kind, key, complexityType, parent)
+    return tree.createComplexNode(id, kind, key, complexityType, parent, isRequired(key, parent))
   } else {
     const { type } = value
     if (!type || typeof type !== 'string') { 
@@ -65,7 +66,7 @@ export const createGraphSchemaNode = (
       _fragment: value
     } as GraphSchemaNodeData<typeof type>
 
-    return tree.createNode(id, kind, key, data, parent, count)
+    return tree.createNode(id, kind, key, data, parent, isRequired(key, parent), count)
   }
 }
 
@@ -95,10 +96,10 @@ export const createGraphSchemaTreeCrawlHook = (tree: ModelTree<GraphSchemaNodeDa
       }
 
       if (container) {
-        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, container.parent)
+        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, container.parent, isRequired(ctx.key, container.parent))
         container.addNestedNode(refNode)
       } else if (parent) {
-        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, parent)
+        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, parent, isRequired(ctx.key, parent))
         parent.addChild(refNode)
       }
         

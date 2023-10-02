@@ -8,7 +8,7 @@ import {
   JsonSchemaCrawlState, JsonSchemaNodeData, JsonSchemaNode, 
   JsonSchemaTreeNode, JsonSchemaFragment, JsonSchemaNodeKind, JsonSchemaComplexNode 
 } from "./jsonSchema.types"
-import { jsonSchemaTransormers, isValidType, transformTitle, isJsonSchemaTreeNode } from "./jsonSchema.utils"
+import { jsonSchemaTransormers, isValidType, transformTitle, isJsonSchemaTreeNode, isRequired } from "./jsonSchema.utils"
 import { jsonSchemaNodeKind, jsonSchemaTypeProps } from "./jsonSchema.consts"
 import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
 import { getNodeComplexityType, pick } from "../utils"
@@ -43,7 +43,7 @@ const createJsonSchemaNode = (
   parent: JsonSchemaTreeNode<any> | null = null
 ): JsonSchemaNode<any> => {
   if (value === null) {
-    return tree.createNode(id, kind, key, null, parent)
+    return tree.createNode(id, kind, key, null, parent, isRequired(key, parent))
   }
   
   const complexityType = getNodeComplexityType(value)
@@ -60,7 +60,7 @@ const createJsonSchemaNode = (
       _fragment: value
     } as JsonSchemaNodeData<typeof type>
 
-    return tree.createNode(id, kind, key, data, parent)
+    return tree.createNode(id, kind, key, data, parent, isRequired(key, parent))
   }
 }
 
@@ -97,10 +97,10 @@ export const createJsonSchemaTree = (schema: JsonSchemaFragment, source: any = s
       }
 
       if (container) {
-        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, container.parent)
+        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, container.parent, isRequired(ctx.key, container.parent))
         container.addNestedNode(refNode)
       } else if (parent) {
-        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, parent)
+        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, parent, isRequired(ctx.key, parent))
         parent.addChild(refNode)
       }
         

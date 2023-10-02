@@ -25,6 +25,7 @@ export interface IModelTreeNode<T, K extends string> {
   path: JsonPath
   parent: IModelTreeNode<T, K> | null
   nested: ModelDataNode<T, K>[]
+  required: boolean
   value(nestedId?: string): T | null
   children(nestedId?: string): ModelDataNode<T, K>[]
   nestedNode(nestedId?: string): ModelDataNode<T, K> | null

@@ -6,6 +6,7 @@ import { GraphSchemaFragment, GraphSchemaTreeNode, createGraphSchemaNode, create
 
 import { graphApiNodeKind, graphApiNodeKinds, graphqlEmbeddedDirectives } from "./graphapi.consts"
 import { graphApiCrawlRules } from "./graphapi.rules"
+import { isRequired } from "../jsonSchema"
 import { ModelTree } from "../modelTree"
 
 const createGraphApiTreeCrawlHook = (tree: ModelTree<any, any>): SyncCrawlHook => {
@@ -28,14 +29,14 @@ const createGraphApiTreeCrawlHook = (tree: ModelTree<any, any>): SyncCrawlHook =
       case graphApiNodeKind.schema: {
         const { description } = value as GraphApiSchema
         const data = { ...description ? { description } : {},_fragment: value }
-        node = tree.createNode(id, kind, ctx.key, data, parent, false)
+        node = tree.createNode(id, kind, ctx.key, data, parent, isRequired(ctx.key, parent), false)
         break;
       }
       case graphApiNodeKind.directive: {
         if (graphqlEmbeddedDirectives.includes(String(ctx.key))) { return null } 
         const { args, ...rest } = value as GraphApiDirectiveDefinition
         const data = { ...rest, _fragment: value }
-        node = tree.createNode(id, kind, ctx.key, data, parent)
+        node = tree.createNode(id, kind, ctx.key, data, parent, isRequired(ctx.key, parent))
         break;
       }
     }

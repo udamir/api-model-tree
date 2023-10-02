@@ -67,7 +67,7 @@ export interface IJsonSchemaNullType extends IJsonSchemaBaseType {
 
 export interface IJsonSchemaBooleanType extends IJsonSchemaBaseType {
   readonly type: 'boolean'
-  readonly default: boolean | null
+  readonly default?: boolean
 }
 
 export interface IJsonSchemaStringType extends IJsonSchemaBaseType {
