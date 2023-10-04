@@ -2,7 +2,7 @@ import {
   allOfResolverHook, buildPointer, isRefNode, 
   jsonSchemaMergeRules, parseRef, resolveRefNode 
 } from "allof-merge"
-import { SyncCloneHook, isObject, syncClone, syncCrawl } from 'json-crawl'
+import { SyncCloneHook, SyncCrawlHook, isObject, syncClone, syncCrawl } from 'json-crawl'
 
 import { 
   JsonSchemaCrawlState, JsonSchemaNodeData, JsonSchemaNode, 
@@ -34,7 +34,7 @@ export const transformJsonSchema = (schema: JsonSchemaFragment, source: any = sc
   return syncClone(schema, [transformHook, allOfResolverHook(options)], params)
 }
 
-const createJsonSchemaNode = (
+export const createJsonSchemaNode = (
   tree: ModelTree<JsonSchemaNodeData<any>, JsonSchemaNodeKind>,
   id: string,
   kind: JsonSchemaNodeKind,
@@ -43,12 +43,12 @@ const createJsonSchemaNode = (
   parent: JsonSchemaTreeNode<any> | null = null
 ): JsonSchemaNode<any> => {
   if (value === null) {
-    return tree.createNode(id, kind, key, null, parent, isRequired(key, parent))
+    return tree.createNode(id, kind, key, { parent, required: isRequired(key, parent) })
   }
   
   const complexityType = getNodeComplexityType(value)
   if (complexityType !== modelTreeNodeType.simple) {
-    return tree.createComplexNode(id, kind, key, complexityType, parent)
+    return tree.createComplexNode(id, kind, key, { type: complexityType, parent })
   } else {
     const { type = "any" } = value
     if (!type || typeof type !== 'string' || !isValidType(type)) { 
@@ -60,22 +60,12 @@ const createJsonSchemaNode = (
       _fragment: value
     } as JsonSchemaNodeData<typeof type>
 
-    return tree.createNode(id, kind, key, data, parent, isRequired(key, parent))
+    return tree.createNode(id, kind, key, { value: data, parent, required: isRequired(key, parent) })
   }
 }
 
-export const createJsonSchemaTree = (schema: JsonSchemaFragment, source: any = schema) => {
-
-  const tree = new ModelTree<JsonSchemaNodeData<any>, JsonSchemaNodeKind>()
-  if (!isObject(schema) || !isObject(source)) {
-    return tree
-  }
-
-  const data = transformJsonSchema(schema, source)
-
-  const crawlState: JsonSchemaCrawlState = { parent: null }
-
-  syncCrawl(data, (value, ctx) => {
+export const createJsonSchemaCrawlHook = (tree: ModelTree<JsonSchemaNodeData<any>, JsonSchemaNodeKind>, source: any): SyncCrawlHook => {
+  return (value, ctx) => {
     if (!ctx.rules) { return null }
     if (!("kind" in ctx.rules) || Array.isArray(value)) { return { value, state: ctx.state } }
 
@@ -97,10 +87,10 @@ export const createJsonSchemaTree = (schema: JsonSchemaFragment, source: any = s
       }
 
       if (container) {
-        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, container.parent, isRequired(ctx.key, container.parent))
+        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, { parent: container.parent, required: isRequired(ctx.key, container.parent) })
         container.addNestedNode(refNode)
       } else if (parent) {
-        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, parent, isRequired(ctx.key, parent))
+        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, { parent, required: isRequired(ctx.key, parent) })
         parent.addChild(refNode)
       }
         
@@ -121,7 +111,21 @@ export const createJsonSchemaTree = (schema: JsonSchemaFragment, source: any = s
     }
     const state = isJsonSchemaTreeNode(node) ? { parent: node } : { parent, container: node as JsonSchemaComplexNode<any> }
     return { value, state }
-  }, { state: crawlState, rules: jsonSchemaCrawlRules() })
+  }
+}
+
+export const createJsonSchemaTree = (schema: JsonSchemaFragment, source: any = schema) => {
+
+  const tree = new ModelTree<JsonSchemaNodeData<any>, JsonSchemaNodeKind>()
+  if (!isObject(schema) || !isObject(source)) {
+    return tree
+  }
+
+  const data = transformJsonSchema(schema, source)
+
+  const crawlState: JsonSchemaCrawlState = { parent: null }
+
+  syncCrawl(data, createJsonSchemaCrawlHook(tree, source), { state: crawlState, rules: jsonSchemaCrawlRules() })
 
   return tree
 }

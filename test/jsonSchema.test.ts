@@ -62,8 +62,8 @@ describe("jsonschema transformation tests", () => {
 
       const children = tree.root?.children()!
       expect(children).toMatchObject([
-        { id: "#/properties/id", kind: "property", key: "id", required: true, type: "simple", parent: tree.root },
-        { id: "#/properties/name", kind: "property", key: "name", required: false, type: "simple", parent: tree.root },
+        { id: "#/properties/id", kind: "property", key: "id", data: { required: true }, type: "simple", parent: tree.root },
+        { id: "#/properties/name", kind: "property", key: "name", data: { required: false }, type: "simple", parent: tree.root },
       ])
       expect(children[0].value()).toMatchObject({ _fragment: schema.properties!.id })
       expect(children[1].value()).toMatchObject({ _fragment: schema.properties!.name })
@@ -111,11 +111,11 @@ describe("jsonschema transformation tests", () => {
       expect(tree.root?.value("#/oneOf/1")).toMatchObject({ _fragment: { ...common, ...schema.oneOf![1] } })
 
       const n0 = tree.root?.nested[0].children()!
-      expect(n0[0]).toMatchObject({ key: "id", required: true })
-      expect(n0[1]).toMatchObject({ key: "name", required: false })
+      expect(n0[0]).toMatchObject({ key: "id", data: { required: true }})
+      expect(n0[1]).toMatchObject({ key: "name", data: { required: false }})
       const n1 = tree.root?.nested[1].children()!
-      expect(n1[0]).toMatchObject({ key: "id", required: false })
-      expect(n1[1]).toMatchObject({ key: "name", required: true })
+      expect(n1[0]).toMatchObject({ key: "id", data: { required: false }})
+      expect(n1[1]).toMatchObject({ key: "name", data: {required: true }})
     })
 
     it("should create tree from jsonSchema with nested oneOf obejct", () => {

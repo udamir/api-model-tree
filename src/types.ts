@@ -3,20 +3,20 @@ import { JsonPath } from 'json-crawl'
 
 import { modelStateNodeType, modelTreeNodeType } from './consts'
 
-export type ModelDataNode<T, K extends string> = IModelTreeNode<T, K> | IModelRefNode<T, K>
+export type ModelDataNode<T, K extends string, D = any> = IModelTreeNode<T, K, D> | IModelRefNode<T, K, D>
 export type ModelTreeNodeType = keyof typeof modelTreeNodeType
 
-export interface IModelRefNode<T, K extends string> extends IModelTreeNode<T, K> {
+export interface IModelRefNode<T, K extends string, D = any> extends IModelTreeNode<T, K, D> {
   ref: string
   isCycle: boolean
 }
 
-export interface IModelTree<T, K extends string> {
-  root: IModelTreeNode<T, K> | null
-  nodes: Map<string, IModelTreeNode<T, K>>
+export interface IModelTree<T, K extends string, D = any> {
+  root: IModelTreeNode<T, K, D> | null
+  nodes: Map<string, IModelTreeNode<T, K, D>>
 }
 
-export interface IModelTreeNode<T, K extends string> {
+export interface IModelTreeNode<T, K extends string, D = any> {
   id: string
   key: string | number
   kind: K
@@ -25,11 +25,19 @@ export interface IModelTreeNode<T, K extends string> {
   path: JsonPath
   parent: IModelTreeNode<T, K> | null
   nested: ModelDataNode<T, K>[]
-  required: boolean
+  data: D 
   value(nestedId?: string): T | null
   children(nestedId?: string): ModelDataNode<T, K>[]
-  nestedNode(nestedId?: string): ModelDataNode<T, K> | null
+  nestedNode(nestedId?: string, deep?: boolean): ModelDataNode<T, K> | null
 }
+
+export type ModelTreeNodeParams<T extends object, K extends string, D = any> = {
+  type?: ModelTreeNodeType
+  value?: T
+  parent?: IModelTreeNode<T, K, D>
+  required?: boolean
+  countInDepth?: boolean
+} & (D extends object ? D : {})
 
 export type ModelStateNodeType = keyof typeof modelStateNodeType
 

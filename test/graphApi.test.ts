@@ -5,7 +5,7 @@ import { GraphApiState, createGraphApiTree } from "../src"
 
 describe("graphapi transformation tests", () => {
   describe("simple graphapi", () => {
-    it("should create tree from simple graphapi", () => {
+    it("should create tree from simple graphapi query", () => {
 
       const raw = `
       type Query {
@@ -25,6 +25,32 @@ describe("graphapi transformation tests", () => {
       const children = tree.root!.children()
       expect(children[0]).toMatchObject({ id: "#/queries/todo", kind: "query", type: "simple", depth: 0, parent: tree.root })
       expect(children.length).toEqual(1)
+    })
+
+    it("should create tree from simple graphapi mutation", () => {
+
+      const raw = `
+      type Mutation {
+        "A Mutation with 1 required argument and 1 optional argument"
+        todo(
+          id: ID!
+      
+          "A default value of false"
+          isCompleted: Boolean = false
+        ): String
+      }
+      `
+      const source = buildFromSchema(buildSchema(raw, { noLocation: true }))
+      const tree = createGraphApiTree(source)
+
+      expect(tree.root).toMatchObject({ id: "#", kind: "schema", type: "simple", parent: null })
+      const children = tree.root!.children()
+      expect(children[0]).toMatchObject({ id: "#/mutations/todo", kind: "mutation", type: "oneOf", depth: 0, parent: tree.root })
+      expect(children.length).toEqual(1)
+      const nested = children[0].nested
+      expect(nested[-1]).toMatchObject({ id: "#/mutations/todo/args", kind: "args", type: "simple", depth: 0 })
+      expect(nested[0]).toMatchObject({ id: "#/mutations/todo/oneOf/0", kind: "oneOf", type: "simple", depth: 1 })
+      expect(nested[1]).toMatchObject({ id: "#/mutations/todo/oneOf/1", kind: "oneOf", type: "simple", depth: 1 })
     })
 
     it("should create state from simple graphapi", () => {
