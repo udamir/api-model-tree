@@ -1,9 +1,9 @@
 import { buildPointer, isRefNode, parseRef, resolvePointer, resolveRefNode } from "allof-merge"
-import { SyncCrawlHook, syncCrawl } from 'json-crawl'
+import { CrawlContext, SyncCrawlHook, syncCrawl } from 'json-crawl'
 
 import { 
   GraphSchemaCrawlState, GraphSchemaNodeData, GraphSchemaComplexNode, GraphSchemaNode, 
-  GraphSchemaTreeNode, GraphSchemaFragment, GraphSchemaNodeKind, GraphSchemaTransformFunc 
+  GraphSchemaTreeNode, GraphSchemaFragment, GraphSchemaNodeKind, GraphSchemaTransformFunc, GraphSchemaCrawlRule 
 } from "./graphSchema.types"
 import { graphSchemaNodeKind, graphSchemaNodeKinds, graphSchemaTypeProps } from "./graphSchema.consts"
 import { getNodeComplexityType, isObject, pick } from "../utils"
@@ -73,7 +73,7 @@ export const createGraphSchemaNode = (
 export const createGraphSchemaTreeCrawlHook = (tree: ModelTree<GraphSchemaNodeData<any>, GraphSchemaNodeKind>, source: any): SyncCrawlHook => {
   const graphSchemaNodeKinds = Object.keys(graphSchemaNodeKind)
 
-  return (value, ctx) => {
+  return (value, ctx: CrawlContext<GraphSchemaCrawlState, GraphSchemaCrawlRule>) => {
     if (!ctx.rules) { return null }
     if (!("kind" in ctx.rules) || !graphSchemaNodeKinds.includes(ctx.rules.kind) || Array.isArray(value)) { return { value, state: ctx.state } }
 
@@ -81,6 +81,8 @@ export const createGraphSchemaTreeCrawlHook = (tree: ModelTree<GraphSchemaNodeDa
     const { parent, container } = ctx.state
     const { kind } = ctx.rules
 
+    const countInDepth = container ? container.depth !== container.parent?.depth : true
+ 
     if (isRefNode(value)) {
       let refData = null
       // check if node in cache
@@ -96,7 +98,7 @@ export const createGraphSchemaTreeCrawlHook = (tree: ModelTree<GraphSchemaNodeDa
       }
 
       if (container) {
-        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, { parent: container.parent, required: isRequired(ctx.key, container.parent) })
+        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, { parent: container.parent, required: isRequired(ctx.key, container.parent), countInDepth })
         container.addNestedNode(refNode)
       } else if (parent) {
         const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, { parent, required: isRequired(ctx.key, parent) })
@@ -111,7 +113,7 @@ export const createGraphSchemaTreeCrawlHook = (tree: ModelTree<GraphSchemaNodeDa
       }
     } 
         
-    const node = createGraphSchemaNode(tree, id, kind, ctx.key, value as GraphSchemaFragment, parent, kind !== 'args')
+    const node = createGraphSchemaNode(tree, id, kind, ctx.key, value as GraphSchemaFragment, parent, kind !== 'args' && countInDepth)
 
     if (node.kind === 'args') {
       const nested = container ? container.nested : parent!.nested

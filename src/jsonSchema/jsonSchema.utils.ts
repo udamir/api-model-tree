@@ -9,9 +9,8 @@ import { isAllOfNode, isStringOrNumber, keys, pick } from '../utils'
 import { validators } from './jsonSchema.validators'
 import { modelTreeNodeType } from '../consts'
 import { IModelTreeNode } from '../types'
-import { ModelTreeNode } from '../modelTree'
 
-export const isRequired = (key: string | number, parent: ModelTreeNode<any, any> | null): boolean => {
+export const isRequired = (key: string | number, parent: IModelTreeNode<any, any> | null): boolean => {
   if (!parent || typeof key === "number" || !key) { return false }
   const value = parent?.value()
   return !!value && ("required" in value) && Array.isArray(value.required) && value.required.includes(key)

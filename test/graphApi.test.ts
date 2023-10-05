@@ -37,7 +37,12 @@ describe("graphapi transformation tests", () => {
       
           "A default value of false"
           isCompleted: Boolean = false
-        ): String
+        ): Object
+      }
+
+      type Object {
+        id: ID!
+        count: Int 
       }
       `
       const source = buildFromSchema(buildSchema(raw, { noLocation: true }))
@@ -49,8 +54,11 @@ describe("graphapi transformation tests", () => {
       expect(children.length).toEqual(1)
       const nested = children[0].nested
       expect(nested[-1]).toMatchObject({ id: "#/mutations/todo/args", kind: "args", type: "simple", depth: 0 })
-      expect(nested[0]).toMatchObject({ id: "#/mutations/todo/oneOf/0", kind: "oneOf", type: "simple", depth: 1 })
-      expect(nested[1]).toMatchObject({ id: "#/mutations/todo/oneOf/1", kind: "oneOf", type: "simple", depth: 1 })
+      expect(nested[0]).toMatchObject({ id: "#/mutations/todo/oneOf/0", kind: "oneOf", type: "simple", depth: 0 })
+      expect(nested[1]).toMatchObject({ id: "#/mutations/todo/oneOf/1", kind: "oneOf", type: "simple", depth: 0 })
+      const obj = children[0].children()
+      expect(obj[0]).toMatchObject({ id: "#/mutations/todo/oneOf/0/properties/id", kind: "property", type: "simple", depth: 1 })
+
     })
 
     it("should create state from simple graphapi", () => {

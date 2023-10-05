@@ -113,7 +113,7 @@ describe("graphschema transformation tests", () => {
       
           "A default value of false"
           isCompleted: Boolean = false
-        ): Object!
+        ): Object
       }
       `
       const source = buildFromSchema(buildSchema(raw, { noLocation: true }))
