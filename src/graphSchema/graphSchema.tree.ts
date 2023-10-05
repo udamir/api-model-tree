@@ -81,6 +81,7 @@ export const createGraphSchemaTreeCrawlHook = (tree: ModelTree<GraphSchemaNodeDa
     const { parent, container } = ctx.state
     const { kind } = ctx.rules
 
+    // do not count depth for nested nodes if depth of the container is not counted
     const countInDepth = container ? container.depth !== container.parent?.depth : true
  
     if (isRefNode(value)) {
@@ -117,6 +118,7 @@ export const createGraphSchemaTreeCrawlHook = (tree: ModelTree<GraphSchemaNodeDa
 
     if (node.kind === 'args') {
       const nested = container ? container.nested : parent!.nested
+      // put args node as nested with index -1
       nested[-1] = node
     } else if (container) {
       container.addNestedNode(node)
