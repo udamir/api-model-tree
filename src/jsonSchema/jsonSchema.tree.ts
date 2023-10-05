@@ -8,7 +8,7 @@ import {
   JsonSchemaCrawlState, JsonSchemaNodeData, JsonSchemaNode, 
   JsonSchemaTreeNode, JsonSchemaFragment, JsonSchemaNodeKind, JsonSchemaComplexNode 
 } from "./jsonSchema.types"
-import { jsonSchemaTransormers, isValidType, transformTitle, isJsonSchemaTreeNode } from "./jsonSchema.utils"
+import { jsonSchemaTransormers, isValidType, transformTitle, isJsonSchemaTreeNode, isRequired } from "./jsonSchema.utils"
 import { jsonSchemaNodeKind, jsonSchemaTypeProps } from "./jsonSchema.consts"
 import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
 import { getNodeComplexityType, pick } from "../utils"
@@ -34,7 +34,7 @@ export const transformJsonSchema = (schema: JsonSchemaFragment, source: any = sc
   return syncClone(schema, [transformHook, allOfResolverHook(options)], params)
 }
 
-const createJsonSchemaNode = (
+export const createJsonSchemaNode = (
   tree: ModelTree<JsonSchemaNodeData<any>, JsonSchemaNodeKind>,
   id: string,
   kind: JsonSchemaNodeKind,
@@ -43,12 +43,12 @@ const createJsonSchemaNode = (
   parent: JsonSchemaTreeNode<any> | null = null
 ): JsonSchemaNode<any> => {
   if (value === null) {
-    return tree.createNode(id, kind, key, null, parent)
+    return tree.createNode(id, kind, key, { parent, required: isRequired(key, parent) })
   }
   
   const complexityType = getNodeComplexityType(value)
   if (complexityType !== modelTreeNodeType.simple) {
-    return tree.createComplexNode(id, kind, key, complexityType, parent)
+    return tree.createComplexNode(id, kind, key, { type: complexityType, parent })
   } else {
     const { type = "any" } = value
     if (!type || typeof type !== 'string' || !isValidType(type)) { 
@@ -60,11 +60,11 @@ const createJsonSchemaNode = (
       _fragment: value
     } as JsonSchemaNodeData<typeof type>
 
-    return tree.createNode(id, kind, key, data, parent)
+    return tree.createNode(id, kind, key, { value: data, parent, required: isRequired(key, parent) })
   }
 }
 
-export const createJsonSchemaTreeCrawlHook = (tree: ModelTree<JsonSchemaNodeData<any>, JsonSchemaNodeKind>, source: any): SyncCrawlHook => {
+export const createJsonSchemaCrawlHook = (tree: ModelTree<JsonSchemaNodeData<any>, JsonSchemaNodeKind>, source: any): SyncCrawlHook => {
   return (value, ctx) => {
     if (!ctx.rules) { return null }
     if (!("kind" in ctx.rules) || Array.isArray(value)) { return { value, state: ctx.state } }
@@ -87,10 +87,10 @@ export const createJsonSchemaTreeCrawlHook = (tree: ModelTree<JsonSchemaNodeData
       }
 
       if (container) {
-        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, container.parent)
+        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, { parent: container.parent, required: isRequired(ctx.key, container.parent) })
         container.addNestedNode(refNode)
       } else if (parent) {
-        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, parent)
+        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, { parent, required: isRequired(ctx.key, parent) })
         parent.addChild(refNode)
       }
         
@@ -125,7 +125,7 @@ export const createJsonSchemaTree = (schema: JsonSchemaFragment, source: any = s
 
   const crawlState: JsonSchemaCrawlState = { parent: null }
 
-  syncCrawl(data, createJsonSchemaTreeCrawlHook(tree, source), { state: crawlState, rules: jsonSchemaCrawlRules() })
+  syncCrawl(data, createJsonSchemaCrawlHook(tree, source), { state: crawlState, rules: jsonSchemaCrawlRules() })
 
   return tree
 }

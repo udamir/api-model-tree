@@ -43,7 +43,7 @@ export interface IGraphSchemaNullType extends IGraphSchemaBaseType {
 
 export interface IGraphSchemaBooleanType extends IGraphSchemaBaseType {
   readonly type: 'boolean'
-  readonly default?: string
+  readonly default?: boolean
 }
 
 export interface IGraphSchemaStringType extends IGraphSchemaBaseType {

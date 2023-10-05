@@ -10,6 +10,12 @@ import { validators } from './jsonSchema.validators'
 import { modelTreeNodeType } from '../consts'
 import { IModelTreeNode } from '../types'
 
+export const isRequired = (key: string | number, parent: IModelTreeNode<any, any> | null): boolean => {
+  if (!parent || typeof key === "number" || !key) { return false }
+  const value = parent?.value()
+  return !!value && ("required" in value) && Array.isArray(value.required) && value.required.includes(key)
+}
+
 export const isValidType = (maybeType: unknown): maybeType is JsonSchemaNodeType =>
   typeof maybeType === 'string' && jsonSchemaNodeTypes.includes(maybeType as JsonSchemaNodeType)
 

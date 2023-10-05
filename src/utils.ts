@@ -52,11 +52,18 @@ export const keys = <T extends object>(value: T): (keyof T)[] => {
 }
 
 export function pick<T extends object>(target: any, keys: readonly (keyof T)[]): Partial<T> {
-  const source: Partial<T> = {}
+  const source: any = {}
 
   for (const key of keys) {
     if (key in target) {
-      source[key] = target[key]
+      const value = target[key]
+      if (Array.isArray(value)) {
+        source[key] = [...value]
+      } else if (typeof value === "object") {
+        source[key] = {...value}
+      } else {
+        source[key] = value
+      }
     }
   }
 
