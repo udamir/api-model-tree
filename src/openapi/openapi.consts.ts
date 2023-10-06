@@ -1,11 +1,8 @@
 import { jsonSchemaNodeKind } from "../jsonSchema";
 
-export const openApiNodeKinds = ['operation', 'service', 'parameters', 'parameter', 'requestBody', 'oneOfContent', 'body', 'responses', 'oneOfResponse', 'response']
-
-export const openApiNodeKind = {
-  ...jsonSchemaNodeKind,
-  service: 'service',
+export const openApiSpecificNodeKind = {
   operation: 'operation',
+  service: 'service',
   parameters: 'parameters',
   parameter: 'parameter',
   requestBody: 'requestBody',
@@ -14,4 +11,11 @@ export const openApiNodeKind = {
   responses: 'responses',
   oneOfResponse: 'oneOfResponse',
   response: 'response',
+} as const
+
+export const openApiSpecificNodeKinds = Object.keys(openApiSpecificNodeKind)
+
+export const openApiNodeKind = {
+  ...jsonSchemaNodeKind,
+  ...openApiSpecificNodeKind,
 } as const

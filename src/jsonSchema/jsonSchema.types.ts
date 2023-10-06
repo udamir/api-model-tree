@@ -1,7 +1,7 @@
 import type { JSONSchema4, JSONSchema6 } from 'json-schema'
 
 import { jsonSchemaNodeKind, jsonSchemaNodeTypes } from './jsonSchema.consts'
-import { ModelTreeComplexNode, ModelTreeNode } from '../modelTree'
+import { ModelTree, ModelTreeComplexNode, ModelTreeNode } from '../modelTree'
 import { SchemaCrawlRule } from '../types'
 
 export type JsonSchemaNodeKind = keyof typeof jsonSchemaNodeKind
@@ -10,6 +10,7 @@ export type JsonSchemaNodeType = typeof jsonSchemaNodeTypes[number]
 export type JsonSchemaFragment<T = {}> = (JSONSchema6 | JSONSchema4) & T
 
 export type JsonSchemaCrawlRule = SchemaCrawlRule<any, JsonSchemaNodeKind> 
+export type JsonSchemaModelTree = ModelTree<JsonSchemaNodeData<any>, JsonSchemaNodeKind>
 
 export type JsonSchemaTreeNode<T extends JsonSchemaNodeType> = ModelTreeNode<JsonSchemaNodeData<T>, JsonSchemaNodeKind>
 export type JsonSchemaComplexNode<T extends JsonSchemaNodeType> = ModelTreeComplexNode<JsonSchemaNodeData<T>, JsonSchemaNodeKind>

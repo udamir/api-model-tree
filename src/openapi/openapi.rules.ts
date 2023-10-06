@@ -1,9 +1,13 @@
 import { CrawlRules } from "json-crawl"
+import { merge } from "allof-merge"
 
-import { jsonSchemaCrawlRules, transformJsonSchema } from "../jsonSchema"
+import { OpenApiCrawlRule, OpenApiTransformFunc } from "./openapi.types"
+import { jsonSchemaCrawlRules } from "../jsonSchema"
 import { openApiNodeKind } from "./openapi.consts"
-import { OpenApiCrawlRule } from "./openapi.types"
 
+const allOfMerge: OpenApiTransformFunc = (value, {source}) => {
+  return merge(value, { source, mergeRefSibling: true, mergeCombinarySibling: true })
+}
 
 const transformPathParameters = () => {
   // copy path parameters to all methods
@@ -31,7 +35,7 @@ export const graphApiCrawlRules: CrawlRules<OpenApiCrawlRule> = {
             "/schema": {
               ...jsonSchemaCrawlRules(),
               kind: openApiNodeKind.parameter,
-              transformers: [transformJsonSchema]
+              transformers: [allOfMerge]
             },
             transformers: [transformParameterToJsonSchema]
           },
@@ -43,7 +47,7 @@ export const graphApiCrawlRules: CrawlRules<OpenApiCrawlRule> = {
               "/schema": {
                 ...jsonSchemaCrawlRules(),
                 kind: openApiNodeKind.body,
-                transformers: [transformJsonSchema]
+                transformers: [allOfMerge]
               },
               kind: openApiNodeKind.oneOfContent,
               transformers: [transformContentToJsonSchema]
@@ -58,7 +62,7 @@ export const graphApiCrawlRules: CrawlRules<OpenApiCrawlRule> = {
                 "/schema": {
                   ...jsonSchemaCrawlRules(),
                   kind: openApiNodeKind.response,
-                  transformers: [transformJsonSchema]
+                  transformers: [allOfMerge]
                 },
                 kind: openApiNodeKind.oneOfContent
               }
@@ -76,18 +80,3 @@ export const graphApiCrawlRules: CrawlRules<OpenApiCrawlRule> = {
   kind: openApiNodeKind.service,
   transformers: []
 }
-
-
-/**
- * service
- *   operation (child)
- *     parameters (child)
- *       parameter (child)
- *     requestBody [complex] 
- *       oneOfContent (nested)
- *         content (child)
- *     responses [complex]
- *       oneOfresponse (nested)
- *         oneOfContent (nested)
- *           content (child)
- */

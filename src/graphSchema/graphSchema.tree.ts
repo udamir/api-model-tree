@@ -3,7 +3,8 @@ import { CrawlContext, SyncCrawlHook, syncCrawl } from 'json-crawl'
 
 import { 
   GraphSchemaCrawlState, GraphSchemaNodeData, GraphSchemaComplexNode, GraphSchemaNode, 
-  GraphSchemaTreeNode, GraphSchemaFragment, GraphSchemaNodeKind, GraphSchemaTransformFunc, GraphSchemaCrawlRule 
+  GraphSchemaTreeNode, GraphSchemaFragment, GraphSchemaNodeKind, GraphSchemaTransformFunc, 
+  GraphSchemaCrawlRule, GraphSchemaModelTree 
 } from "./graphSchema.types"
 import { graphSchemaNodeKind, graphSchemaNodeKinds, graphSchemaTypeProps } from "./graphSchema.consts"
 import { getNodeComplexityType, isObject, pick } from "../utils"
@@ -46,13 +47,16 @@ export const createGraphSchemaNode = (
   parent: GraphSchemaTreeNode<any> | null = null,
   countInDepth = true
 ): GraphSchemaNode<any> => {
+  const required = isRequired(key, parent)
+
   if (value === null) {
-    return tree.createNode(id, kind, key, { value: null, parent, required: isRequired(key, parent), countInDepth })
+    return tree.createNode(id, kind, key, { value: null, parent, required, countInDepth })
   }
 
   const complexityType = getNodeComplexityType(value)
   if (complexityType !== modelTreeNodeType.simple) {
-    return tree.createComplexNode(id, kind, key, { type: complexityType, parent, required: isRequired(key, parent), countInDepth })
+    const params = { type: complexityType, parent, required, countInDepth }
+    return tree.createComplexNode(id, kind, key, params)
   } else {
     const { type } = value
     if (!type || typeof type !== 'string') { 
@@ -66,16 +70,18 @@ export const createGraphSchemaNode = (
       _fragment: value
     } as GraphSchemaNodeData<typeof type>
 
-    return tree.createNode(id, kind, key, { value: data, parent, required: isRequired(key, parent), countInDepth })
+    return tree.createNode(id, kind, key, { value: data, parent, required, countInDepth })
   }
 }
 
-export const createGraphSchemaTreeCrawlHook = (tree: ModelTree<GraphSchemaNodeData<any>, GraphSchemaNodeKind>, source: any): SyncCrawlHook => {
+export const createGraphSchemaTreeCrawlHook = (tree: GraphSchemaModelTree, source: any): SyncCrawlHook => {
   const graphSchemaNodeKinds = Object.keys(graphSchemaNodeKind)
 
   return (value, ctx: CrawlContext<GraphSchemaCrawlState, GraphSchemaCrawlRule>) => {
     if (!ctx.rules) { return null }
-    if (!("kind" in ctx.rules) || !graphSchemaNodeKinds.includes(ctx.rules.kind) || Array.isArray(value)) { return { value, state: ctx.state } }
+    if (!("kind" in ctx.rules) || !graphSchemaNodeKinds.includes(ctx.rules.kind) || Array.isArray(value)) { 
+      return { value, state: ctx.state }
+    }
 
     const id = "#" + buildPointer(ctx.path)
     const { parent, container } = ctx.state
@@ -95,19 +101,23 @@ export const createGraphSchemaTreeCrawlHook = (tree: ModelTree<GraphSchemaNodeDa
         refData = resolveRefNode(source, value)
         const { normalized } = parseRef(value.$ref)
 
-        node = createGraphSchemaNode(tree, normalized, "definition", "", refData ?? null)
+        node = createGraphSchemaNode(tree, normalized, graphSchemaNodeKind.definition, "", refData ?? null)
       }
 
       if (container) {
-        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, { parent: container.parent, required: isRequired(ctx.key, container.parent), countInDepth })
+        const params = { parent: container.parent, required: isRequired(ctx.key, container.parent), countInDepth }
+        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, params)
         container.addNestedNode(refNode)
       } else if (parent) {
-        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, { parent, required: isRequired(ctx.key, parent) })
+        const params = { parent, required: isRequired(ctx.key, parent) }
+        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, params)
         parent.addChild(refNode)
       }
         
       if (refData) {
-        const state = node.type === 'simple' ? { parent: node as GraphSchemaTreeNode<any> } : { parent, container: node as GraphSchemaComplexNode<any> }
+        const state = node.type === modelTreeNodeType.simple 
+          ? { parent: node as GraphSchemaTreeNode<any> }
+          : { parent, container: node as GraphSchemaComplexNode<any> }
         return { value: refData, state }
       } else {
         return null
@@ -126,7 +136,9 @@ export const createGraphSchemaTreeCrawlHook = (tree: ModelTree<GraphSchemaNodeDa
       parent?.addChild(node)
     }
 
-    const state = node.type === 'simple' ? { parent: node as GraphSchemaTreeNode<any> } : { parent, container: node as GraphSchemaComplexNode<any> }
+    const state = node.type === modelTreeNodeType.simple
+      ? { parent: node as GraphSchemaTreeNode<any> }
+      : { parent, container: node as GraphSchemaComplexNode<any> }
     return { value, state }
   }
 }

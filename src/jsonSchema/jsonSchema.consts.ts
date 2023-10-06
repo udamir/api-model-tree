@@ -14,6 +14,8 @@ export const jsonSchemaNodeKind = {
   oneOf: "oneOf",
 } as const
 
+export const jsonSchemaNodeKinds = Object.keys(jsonSchemaNodeKind)
+
 export const jsonSchemaNodeTypes = [
   'any', 'string', 'number', 'integer', 'boolean', 'null', 'array', 'object'
 ] as const 

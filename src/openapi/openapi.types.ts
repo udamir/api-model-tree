@@ -1,11 +1,19 @@
 import { GraphSchema } from 'gqlapi'
+import { JsonPath } from 'json-crawl'
 
+import { SchemaCrawlRule, SchemaTransformFunc } from '../types'
 import { openApiNodeKind } from './openapi.consts'
 import { GraphSchemaNodeData } from '../graphSchema'
 import { ModelTreeNode } from '../modelTree'
-import { SchemaCrawlRule } from '../types'
 
 export type OpenApiNodeKind = keyof typeof openApiNodeKind
+
+export interface OpenApiTransformFuncContext {
+  source: any
+  path: JsonPath
+}
+
+export type OpenApiTransformFunc = SchemaTransformFunc<any, OpenApiTransformFuncContext>
 
 export type OpenApiCrawlRule = SchemaCrawlRule<any, OpenApiNodeKind>
 

@@ -1,6 +1,6 @@
 import { JSONSchema4 } from "json-schema"
 
-import { transformJsonSchema } from "../../src"
+import { filterValidProps, transformAdditionalProperties, transformTypeOfArray } from "../../src"
 
 describe('json-schema with complex type should be simplified', () => {
   it('should simplify array type with scalars', () => {
@@ -11,7 +11,7 @@ describe('json-schema with complex type should be simplified', () => {
       minimum: 0
     }
 
-    const result = transformJsonSchema(schema)
+    const result = transformTypeOfArray(schema)
 
     expect(result).toMatchObject({
       anyOf: [
@@ -38,7 +38,7 @@ describe('json-schema with complex type should be simplified', () => {
       minimum: 0
     }
 
-    const result = transformJsonSchema(schema)
+    const result = transformTypeOfArray(schema)
 
     expect(result).toMatchObject({
       anyOf: [
@@ -75,7 +75,7 @@ describe('json-schema with complex type should be simplified', () => {
       uniqueItems: true
     }
 
-    const result = transformJsonSchema(schema)
+    const result = transformTypeOfArray(schema)
 
     expect(result).toMatchObject({
       anyOf: [
@@ -114,7 +114,7 @@ describe('json-schema with complex type should be simplified', () => {
       },
     }
 
-    const result = transformJsonSchema(schema)
+    const result = transformTypeOfArray(schema)
 
     const { nullable, ...rest } = schema
     expect(result).toMatchObject(rest)
@@ -132,7 +132,7 @@ describe('json-schema with complex type should be simplified', () => {
       maximum: 5
     }
 
-    const result = transformJsonSchema(schema)
+    const result = filterValidProps(schema)
 
     const { maximum, uniqueItems, ...rest } = schema
 
@@ -153,7 +153,7 @@ describe('json-schema with complex type should be simplified', () => {
       maximum: 5
     }
 
-    const result = transformJsonSchema(schema)
+    const result = transformAdditionalProperties(filterValidProps(schema))
 
     const { maximum, uniqueItems, ...rest } = schema
 

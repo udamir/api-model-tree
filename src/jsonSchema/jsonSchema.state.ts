@@ -111,7 +111,8 @@ export class JsonSchemaStatePropNode<T = JsonSchemaNodeData<any>> implements IMo
   }
 
   constructor (public readonly node: ModelDataNode<T, any>, public readonly first = false) {
-    this.type = node.children().length || node.nested.length || node.nested[-1] ? modelStateNodeType.expandable : modelStateNodeType.basic
+    this.type = node.children().length || node.nested.length || node.nested[-1] 
+      ? modelStateNodeType.expandable : modelStateNodeType.basic
   }
 
   protected buildCombinaryNodes() {
