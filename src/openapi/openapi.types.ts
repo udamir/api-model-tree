@@ -13,9 +13,9 @@ export interface OpenApiTransformFuncContext {
   path: JsonPath
 }
 
-export type OpenApiTransformFunc = SchemaTransformFunc<any, OpenApiTransformFuncContext>
+export type OpenApiTransformFunc = SchemaTransformFunc<any, [OpenApiTransformFuncContext]>
 
-export type OpenApiCrawlRule = SchemaCrawlRule<any, OpenApiNodeKind>
+export type OpenApiCrawlRule = SchemaCrawlRule<any, OpenApiNodeKind, [OpenApiTransformFuncContext]>
 
 export type GraphapiTreeNode = ModelTreeNode<GraphApiNodeData, OpenApiNodeKind>
 
