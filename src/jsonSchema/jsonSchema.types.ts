@@ -44,16 +44,18 @@ export interface IJsonSchemaBaseType {
   // readonly nullable: boolean | null 
   readonly type: JsonSchemaNodeType // type: [string, number] => anyOf: [ { type: string }, { type: number }]
   readonly title?: string
-  readonly deprecated?: boolean | Record<string, string> // x-deprecated => deprecated
-  readonly readOnly?: boolean
-  readonly writeOnly?: boolean
   readonly description?: string
   readonly examples?: any[]
   // example: value => examples: [value]
   readonly enum?: any[]
-  readonly default?: any
-  readonly externalDocs?: any
   // const: value => enum: [value]
+  readonly default?: any
+
+  // TODO move to meta
+  readonly deprecated?: boolean | Record<string, string> // x-deprecated => deprecated
+  readonly readOnly?: boolean
+  readonly writeOnly?: boolean
+  readonly externalDocs?: any
   readonly _fragment?: JsonSchemaTransformedFragment
 }
 

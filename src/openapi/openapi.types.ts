@@ -41,3 +41,31 @@ export interface GraphApiDirectiveNodeData {
   // isRepeatable
   repeatable: boolean
 }
+
+// export interface IOpenApiService {
+//   name: string;
+//   version: string;
+//   servers?: IServer[];
+//   security?: HttpSecurityScheme[][];
+//   securitySchemes?: HttpSecurityScheme[];
+//   termsOfService?: string;
+//   contact?: {
+//     name?: string;
+//     url?: string;
+//     email?: string;
+//   };
+//   license?: {
+//     name: string;
+//     url?: string;
+//     identifier?: string;
+//   };
+//   logo?: {
+//     altText: string;
+//     href?: string;
+//     url?: string;
+//     backgroundColor?: string;
+//   };
+//   infoExtensions?: Extensions;
+//   internal?: boolean;
+//   externalDocs?: IExternalDocs;
+// }
