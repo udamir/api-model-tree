@@ -2,7 +2,7 @@ import { isAnyOfNode, isOneOfNode, isRefNode, parsePointer } from 'allof-merge'
 
 import type { 
   JsonSchemaFragment, JsonSchemaNodeData, JsonSchemaNodeKind, JsonSchemaNodeType, 
-  JsonSchemaTransformFunc, JsonSchemaTransformedFragment, JsonSchemaTreeNode 
+  JsonSchemaTransformedFragment, JsonSchemaTreeNode 
 } from './jsonSchema.types'
 import { jsonSchemaCommonProps, jsonSchemaTypeProps, jsonSchemaNodeTypes } from './jsonSchema.consts'
 import { isAllOfNode, isStringOrNumber, keys, pick } from '../utils'
@@ -219,17 +219,3 @@ export const filterValidProps = (value: JsonSchemaFragment<any>): JsonSchemaTran
 
   return result
 }
-
-export const jsonSchemaTransormers: JsonSchemaTransformFunc[] = [
-  filterValidProps,
-  transformDiscriminator,
-  transformRequred,
-  transformConst,
-  transformExample,
-  transformDeprecated,
-  transformExclusiveMinimum,
-  transformExclusiveMaximum,
-  transformTypeOfArray,
-  transformAdditionalItems,
-  transformAdditionalProperties,
-]

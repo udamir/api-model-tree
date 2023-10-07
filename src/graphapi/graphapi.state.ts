@@ -5,7 +5,7 @@ import { graphApiNodeKind } from "./graphapi.consts"
 import { modelStateNodeType } from "../consts"
 
 const isGraphApiOperationNode = (node: ModelDataNode<any, any>): boolean => {
-  return ['query', 'mutation', 'subscription'].includes(node.kind)
+  return [graphApiNodeKind.query, graphApiNodeKind.mutation, graphApiNodeKind.subscription].includes(node.kind)
 } 
 
 export class GraphApiStateCombinaryNode<T = GraphApiNodeData> extends GraphSchemaStateCombinaryNode<T> {

@@ -1,49 +1,42 @@
-import * as treeify from 'treeify';
+import * as treeify from 'treeify'
 
-import { IJsonNodeData, IModelRefNode, IModelTreeNode, JsonSchemaTree, ModelDataNode, SchemaFragment } from '../../src';
+import { IModelRefNode, IModelTreeNode, ModelDataNode, ModelTree } from '../../src'
 
-export function printTree(schema: SchemaFragment) {
-  const tree = new JsonSchemaTree()
+export function printTree({ root }: ModelTree<any, any>): string {
+  if (!root) { return "" }
 
-  tree.load(schema)
+  const _root = root.children().length > 1
+      ? root.children().map(child => prepareTree(child))
+      : root.children().length === 1
+        ? prepareTree(root.children()[0])
+        : {};
 
-  if (!tree.root) { return "" }
-
-  const root: unknown =
-    tree.root.children().length > 1
-      ? tree.root.children().map(child => prepareTree(child))
-      : tree.root.children().length === 1
-      ? prepareTree(tree.root.children()[0])
-      : {};
-
-  return treeify.asTree(root as treeify.TreeObject, true, true);
+  return treeify.asTree(_root as treeify.TreeObject, true, true);
 }
 
-function printNode(node: IModelTreeNode<IJsonNodeData>): any {
+function printNode(node: IModelTreeNode<any, any>): any {
+  const { _fragment, ...rest } = node.value() ?? {}
   return {
-    ...(node.value()?.types !== null ? { types: node.value()?.types } : null),
-    ...(node.value()?.primaryType !== null ? { primaryType: node.value()?.primaryType } : null),
-    // ...(node.value.combiners !== null ? { combiners: node.combiners } : null),
-    ...(node.value()?.enum !== null ? { enum: node.value()?.enum } : null),
-    ...(node.children().length ? { children: node.children().map(prepareTree) } : null)
-  };
+    ...rest,
+    ...(node.children().length ? { children: node.children().map(prepareTree) } : {})
+  }
 }
 
-function printRefNode(node: IModelRefNode<IJsonNodeData>): any {
+function printRefNode(node: IModelRefNode<any, any>): any {
   return {
-    $ref: node.ref,
-    ...printNode(node as IModelTreeNode<IJsonNodeData>)
-  };
+    $ref: node.ref + node.isCycle ? " (cycle)" : "",
+    ...printNode(node as IModelTreeNode<any, any>)
+  }
 }
 
-function printDataNode(node: ModelDataNode<IJsonNodeData>) {
-  return "isRef" in node 
-    ? printRefNode(node as IModelRefNode<IJsonNodeData>)
-    : printNode(node as IModelTreeNode<IJsonNodeData>)
+function printDataNode(node: ModelDataNode<any, any>) {
+  return "ref" in node 
+    ? printRefNode(node as IModelRefNode<any, any>)
+    : printNode(node as IModelTreeNode<any, any>)
 }
 
-function prepareTree(node: ModelDataNode<IJsonNodeData>) {
+function prepareTree(node: ModelDataNode<any, any>) {
   return {
     [node.id]: printDataNode(node),
-  };
+  }
 }

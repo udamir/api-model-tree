@@ -1,7 +1,7 @@
 import type { JSONSchema4, JSONSchema6 } from 'json-schema'
 
 import { jsonSchemaNodeKind, jsonSchemaNodeTypes } from './jsonSchema.consts'
-import { ModelTreeComplexNode, ModelTreeNode } from '../modelTree'
+import { ModelTree, ModelTreeComplexNode, ModelTreeNode } from '../modelTree'
 import { SchemaCrawlRule } from '../types'
 
 export type JsonSchemaNodeKind = keyof typeof jsonSchemaNodeKind
@@ -10,6 +10,7 @@ export type JsonSchemaNodeType = typeof jsonSchemaNodeTypes[number]
 export type JsonSchemaFragment<T = {}> = (JSONSchema6 | JSONSchema4) & T
 
 export type JsonSchemaCrawlRule = SchemaCrawlRule<any, JsonSchemaNodeKind> 
+export type JsonSchemaModelTree = ModelTree<JsonSchemaNodeData<any>, JsonSchemaNodeKind>
 
 export type JsonSchemaTreeNode<T extends JsonSchemaNodeType> = ModelTreeNode<JsonSchemaNodeData<T>, JsonSchemaNodeKind>
 export type JsonSchemaComplexNode<T extends JsonSchemaNodeType> = ModelTreeComplexNode<JsonSchemaNodeData<T>, JsonSchemaNodeKind>
@@ -43,16 +44,18 @@ export interface IJsonSchemaBaseType {
   // readonly nullable: boolean | null 
   readonly type: JsonSchemaNodeType // type: [string, number] => anyOf: [ { type: string }, { type: number }]
   readonly title?: string
-  readonly deprecated?: boolean | Record<string, string> // x-deprecated => deprecated
-  readonly readOnly?: boolean
-  readonly writeOnly?: boolean
   readonly description?: string
   readonly examples?: any[]
   // example: value => examples: [value]
   readonly enum?: any[]
-  readonly default?: any
-  readonly externalDocs?: any
   // const: value => enum: [value]
+  readonly default?: any
+
+  // TODO move to meta
+  readonly deprecated?: boolean | Record<string, string> // x-deprecated => deprecated
+  readonly readOnly?: boolean
+  readonly writeOnly?: boolean
+  readonly externalDocs?: any
   readonly _fragment?: JsonSchemaTransformedFragment
 }
 
