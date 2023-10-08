@@ -1,49 +1,63 @@
-import { 
-  allOfResolverHook, buildPointer, isRefNode, 
-  jsonSchemaMergeRules, merge, parseRef, resolveRefNode 
-} from "allof-merge"
-import { SyncCloneHook, SyncCrawlHook, isObject, syncClone, syncCrawl } from 'json-crawl'
+import { buildPointer, isOneOfNode, isRefNode, merge, parseRef, resolveRefNode } from "allof-merge"
+import { SyncCrawlHook, isObject, syncCrawl } from 'json-crawl'
 
 import { 
-  JsonSchemaCrawlState, JsonSchemaNodeData, JsonSchemaNode, 
-  JsonSchemaTreeNode, JsonSchemaFragment, JsonSchemaNodeKind, JsonSchemaComplexNode, JsonSchemaModelTree 
+  JsonSchemaCrawlState, JsonSchemaNodeValue, JsonSchemaNode, 
+  JsonSchemaTreeNode, JsonSchemaFragment, JsonSchemaNodeKind, JsonSchemaComplexNode, JsonSchemaModelTree, JsonSchemaNodeMeta 
 } from "./jsonSchema.types"
+import { jsonSchemaNodeKind, jsonSchemaNodeKinds, jsonSchemaNodeMetaProps, jsonSchemaNodeValueProps } from "./jsonSchema.consts"
 import { isValidType, transformTitle, isJsonSchemaTreeNode, isRequired } from "./jsonSchema.utils"
-import { jsonSchemaNodeKind, jsonSchemaNodeKinds, jsonSchemaTypeProps } from "./jsonSchema.consts"
+import { ModelDataNode, SchemaTransformFunc } from "../types"
 import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
 import { getNodeComplexityType, pick } from "../utils"
 import { modelTreeNodeType } from "../consts"
-import { IModelTreeNode, SchemaTransformFunc } from "../types"
 import { ModelTree } from "../modelTree"
 
+export const nestedMeta = (_fragment: JsonSchemaFragment, meta: JsonSchemaNodeMeta = {}) => {
+  const complexityType = getNodeComplexityType(_fragment)
+  if (complexityType !== modelTreeNodeType.simple) {
+    let _meta = meta
+    for (const item of _fragment[complexityType]!) {
+      _meta = nestedMeta(item as JsonSchemaFragment, _meta)
+    }
+    return _meta
+  } else {
+    return { ...pick<any>(_fragment, jsonSchemaNodeMetaProps), ...meta}
+  }
+}
 
 export const createJsonSchemaNode = (
-  tree: ModelTree<JsonSchemaNodeData<any>, JsonSchemaNodeKind>,
+  tree: ModelTree<JsonSchemaNodeValue, JsonSchemaNodeKind, JsonSchemaNodeMeta>,
   id: string,
   kind: JsonSchemaNodeKind,
   key: string | number,
-  value: JsonSchemaFragment | null, 
-  parent: JsonSchemaTreeNode<any> | null = null
-): JsonSchemaNode<any> => {
-  if (value === null) {
-    return tree.createNode(id, kind, key, { parent, required: isRequired(key, parent) })
+  _fragment: JsonSchemaFragment | null, 
+  parent: JsonSchemaTreeNode | null = null
+): JsonSchemaNode => {
+  const required = isRequired(key, parent)
+
+  if (_fragment === null) {
+    return tree.createNode(id, kind, key, { parent, meta: { required }})
   }
   
-  const complexityType = getNodeComplexityType(value)
+  const complexityType = getNodeComplexityType(_fragment)
   if (complexityType !== modelTreeNodeType.simple) {
-    return tree.createComplexNode(id, kind, key, { type: complexityType, parent })
+    return tree.createComplexNode(id, kind, key, { type: complexityType, parent, meta: { ...nestedMeta(_fragment), required, _fragment } })
   } else {
-    const { type = "any" } = value
-    if (!type || typeof type !== 'string' || !isValidType(type)) { 
+    const { type = "any" } = _fragment
+    if (Array.isArray(type) || !type || typeof type !== 'string' || !isValidType(type)) { 
       throw new Error (`Schema should have type: ${id}`)
     }
-    
-    const data = { 
-      ...pick<any>(value, jsonSchemaTypeProps[type]),
-      _fragment: value
-    } as JsonSchemaNodeData<typeof type>
 
-    return tree.createNode(id, kind, key, { value: data, parent, required: isRequired(key, parent) })
+    const meta = { 
+      ...pick<any>(_fragment, jsonSchemaNodeMetaProps),
+      required,
+      _fragment
+    } as JsonSchemaNodeMeta
+    
+    const value = pick<any>(_fragment, jsonSchemaNodeValueProps[type]) as JsonSchemaNodeValue
+
+    return tree.createNode(id, kind, key, { value, meta, parent })
   }
 }
 
@@ -64,7 +78,7 @@ export const createJsonSchemaTreeCrawlHook = (tree: JsonSchemaModelTree, source:
     if (isRefNode(value)) {
       let refData = null
       // check if node in cache
-      let node: IModelTreeNode<JsonSchemaNodeData<any>, JsonSchemaNodeKind> | undefined
+      let node: ModelDataNode<JsonSchemaNodeValue<any>, JsonSchemaNodeKind, JsonSchemaNodeMeta> | undefined
       if (tree.nodes.has(value.$ref)) {
         node = tree.nodes.get(value.$ref)!
       } else {
@@ -76,11 +90,11 @@ export const createJsonSchemaTreeCrawlHook = (tree: JsonSchemaModelTree, source:
       }
 
       if (container) {
-        const params = { parent: container.parent, required: isRequired(ctx.key, container.parent) }
+        const params = { parent: container.parent, meta: { required: isRequired(ctx.key, container.parent) }}
         const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, params)
         container.addNestedNode(refNode)
       } else if (parent) {
-        const params = { parent, required: isRequired(ctx.key, parent) }
+        const params = { parent, meta: { required: isRequired(ctx.key, parent) }}
         const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, params)
         parent.addChild(refNode)
       }
@@ -107,7 +121,7 @@ export const createJsonSchemaTreeCrawlHook = (tree: JsonSchemaModelTree, source:
 
 export const createJsonSchemaTree = (schema: JsonSchemaFragment, source: any = schema) => {
 
-  const tree = new ModelTree<JsonSchemaNodeData<any>, JsonSchemaNodeKind>()
+  const tree = new ModelTree<JsonSchemaNodeValue, JsonSchemaNodeKind, JsonSchemaNodeMeta>()
   if (!isObject(schema) || !isObject(source)) {
     return tree
   }

@@ -1,13 +1,14 @@
-import { IModelStateCombinaryNode, IModelStateNode, IModelStatePropNode, IModelTree, ModelDataNode, ModelStateNodeType } from "../types"
-import { JsonSchemaNodeData } from "./jsonSchema.types"
+import { IModelStateCombinaryNode, IModelStateNode, IModelStatePropNode, ModelDataNode, ModelStateNodeType } from "../types"
+import { JsonSchemaNode, JsonSchemaNodeValue, JsonSchemaTreeNode } from "./jsonSchema.types"
 import { isModelStatePropNode } from "../utils"
 import { modelStateNodeType } from "../consts"
+import { ModelTree } from "../modelTree"
 
-export class JsonSchemaStateCombinaryNode<T = JsonSchemaNodeData<any>> implements IModelStateCombinaryNode<T> {
+export class JsonSchemaStateCombinaryNode<T extends ModelDataNode<any, any, any> = JsonSchemaTreeNode> implements IModelStateCombinaryNode<T> {
   public readonly type = modelStateNodeType.combinary
   protected _selected: string | undefined
 
-  constructor (public readonly node: ModelDataNode<T, any>, private _parent: IModelStatePropNode<T>, selected?: string) {
+  constructor (public readonly node: T, private _parent: IModelStatePropNode<T>, selected?: string) {
     this.node.nestedNode(selected)
   }
   
@@ -25,7 +26,7 @@ export class JsonSchemaStateCombinaryNode<T = JsonSchemaNodeData<any>> implement
   }
 }
 
-export class JsonSchemaStatePropNode<T = JsonSchemaNodeData<any>> implements IModelStatePropNode<T>{
+export class JsonSchemaStatePropNode<T extends ModelDataNode<any, any, any> = JsonSchemaTreeNode> implements IModelStatePropNode<T>{
   private _combinaryNodes: IModelStateCombinaryNode<T>[] = []
   private _childrenNodes: IModelStatePropNode<T>[] = []
 
@@ -93,12 +94,16 @@ export class JsonSchemaStatePropNode<T = JsonSchemaNodeData<any>> implements IMo
     }
   }
 
-  get value(): T | null {
+  get value() {
     return this.node.value(this.selected)
   }
 
-  get nestedNode(): ModelDataNode<T, any> | null {
-    return this.node.nestedNode(this.selected)
+  get meta() {
+    return this.node.meta
+  }
+
+  get nestedNode(): T | null {
+    return this.node.nestedNode(this.selected) as T 
   }
   
   public sort(dir = 0) {
@@ -110,7 +115,7 @@ export class JsonSchemaStatePropNode<T = JsonSchemaNodeData<any>> implements IMo
     }
   }
 
-  constructor (public readonly node: ModelDataNode<T, any>, public readonly first = false) {
+  constructor (public readonly node: T, public readonly first = false) {
     this.type = node.children().length || node.nested.length || node.nested[-1] 
       ? modelStateNodeType.expandable : modelStateNodeType.basic
   }
@@ -123,7 +128,7 @@ export class JsonSchemaStatePropNode<T = JsonSchemaNodeData<any>> implements IMo
     let node = this.node
     for (let i = 0; node.nested.length > 0; i++) {
       const combinary = this._combinaryNodes[i] ?? this.createStateCombinaryNode(node)
-      node = node.nestedNode(combinary.selected) ?? node.nested[0]
+      node = node.nestedNode(combinary.selected) as T ?? node.nested[0]
       _combinary.push(combinary)
     }
 
@@ -132,7 +137,7 @@ export class JsonSchemaStatePropNode<T = JsonSchemaNodeData<any>> implements IMo
   }
 
   protected buildChildrenNodes(): IModelStateNode<T>[] {
-    const children = this.node.children(this.selected)
+    const children = this.node.children(this.selected) as T[]
     this._childrenNodes = children.length ? children.map((prop, i) => this.createStatePropNode(prop, i === 0)) : []
     return this._childrenNodes
   }
@@ -141,24 +146,24 @@ export class JsonSchemaStatePropNode<T = JsonSchemaNodeData<any>> implements IMo
     return [...this.buildCombinaryNodes(), ...this.buildChildrenNodes()]
   }
 
-  protected createStatePropNode(prop: ModelDataNode<T, any>, first = false): IModelStatePropNode<T> {
+  protected createStatePropNode(prop: T, first = false): IModelStatePropNode<T> {
     return new JsonSchemaStatePropNode(prop, first)
   }
 
-  protected createStateCombinaryNode(node: ModelDataNode<T, any>): IModelStateCombinaryNode<T> {
+  protected createStateCombinaryNode(node: T): IModelStateCombinaryNode<T> {
     return new JsonSchemaStateCombinaryNode(node, this)
   }
 }
 
-export class JsonSchemaState<T = JsonSchemaNodeData<any>> {
+export class JsonSchemaState<T extends ModelDataNode<any, any, any> = JsonSchemaNode> {
   public readonly root: IModelStatePropNode<T> | null
 
-  protected createStatePropNode(node: ModelDataNode<T, any>): IModelStatePropNode<T> {
+  protected createStatePropNode(node: T): IModelStatePropNode<T> {
     return new JsonSchemaStatePropNode(node)
   } 
 
-  constructor(public tree: IModelTree<T, any>, expandDepth = 1) {
-    this.root = tree.root ? this.createStatePropNode(tree.root) : null
+  constructor(public tree: ModelTree<ReturnType<T['value']>, T['kind'], T['meta']>, expandDepth = 1) {
+    this.root = tree.root ? this.createStatePropNode(tree.root as T) : null
     this.root?.expand(expandDepth)
   }
 

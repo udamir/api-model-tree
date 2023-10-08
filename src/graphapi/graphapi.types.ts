@@ -1,9 +1,8 @@
 import { GraphSchema } from 'gqlapi'
 
 import { graphApiNodeKind } from './graphapi.consts'
-import { GraphSchemaNodeData } from '../graphSchema'
+import { GraphSchemaNodeMeta, GraphSchemaNodeValue } from '../graphSchema'
 import { ModelTreeNode } from '../modelTree'
-import { ModelDataNode } from '../types'
 
 export type GraphApiNodeKind = keyof typeof graphApiNodeKind
 
@@ -11,11 +10,11 @@ export type GraphApiCrawlRule = {
   kind: GraphApiNodeKind
 }
 
-export type GraphOperationsFilter<T> = (node: ModelDataNode<T, any>) => boolean
+export type GraphOperationsFilter = (node: GraphapiTreeNode) => boolean
 
-export type GraphapiTreeNode = ModelTreeNode<GraphApiNodeData, GraphApiNodeKind>
+export type GraphapiTreeNode = ModelTreeNode<GraphApiNodeData, GraphApiNodeKind, GraphSchemaNodeMeta>
 
-export type GraphApiNodeData = GraphApiSchemaNodeData | GraphApiDirectiveNodeData | GraphSchemaNodeData<any>
+export type GraphApiNodeData = GraphApiSchemaNodeData | GraphApiDirectiveNodeData | GraphSchemaNodeValue<any>
 
 export interface GraphApiSchemaNodeData {
   description?: string
