@@ -13,18 +13,25 @@ export type GraphSchemaFragment = GraphSchema
 export type GraphSchemaTransformFunc = SchemaTransformFunc<GraphSchemaFragment>
 export type GraphSchemaCrawlRule = SchemaCrawlRule<GraphSchemaFragment, GraphSchemaNodeKind>
 
-export type GraphSchemaModelTree = ModelTree<GraphSchemaNodeData<any>, GraphSchemaNodeKind>
+export type GraphSchemaNodeMeta = {
+  readonly required?: boolean
+  readonly args?: Record<string, IGraphSchemaObjectType>
+  readonly directives?: Record<string, any> // TODO
+  readonly deprecated?: boolean | { reason: string }
+}
 
-export type GraphSchemaTreeNode<T extends GraphSchemaNodeType> = ModelTreeNode<GraphSchemaNodeData<T>, GraphSchemaNodeKind>
-export type GraphSchemaComplexNode<T extends GraphSchemaNodeType> = ModelTreeComplexNode<GraphSchemaNodeData<T>, GraphSchemaNodeKind>
-export type GraphSchemaNode<T extends GraphSchemaNodeType> = GraphSchemaTreeNode<T> | GraphSchemaComplexNode<T>
+export type GraphSchemaModelTree = ModelTree<GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta>
+
+export type GraphSchemaTreeNode<T extends GraphSchemaNodeType = any> = ModelTreeNode<GraphSchemaNodeValue<T>, GraphSchemaNodeKind, GraphSchemaNodeMeta>
+export type GraphSchemaComplexNode<T extends GraphSchemaNodeType = any> = ModelTreeComplexNode<GraphSchemaNodeValue<T>, GraphSchemaNodeKind, GraphSchemaNodeMeta>
+export type GraphSchemaNode<T extends GraphSchemaNodeType = any> = GraphSchemaTreeNode<T> | GraphSchemaComplexNode<T>
 
 export interface GraphSchemaCrawlState {
   parent: GraphSchemaTreeNode<any> | null
   container?: GraphSchemaComplexNode<any>
 }
 
-export type GraphSchemaNodeData<T extends GraphSchemaNodeType> = 
+export type GraphSchemaNodeValue<T extends GraphSchemaNodeType = any> = 
   T extends 'number' ? IGraphSchemaNumberType :
   T extends 'string' ? IGraphSchemaStringType : 
   T extends 'boolean' ? IGraphSchemaBooleanType :
@@ -33,10 +40,6 @@ export type GraphSchemaNodeData<T extends GraphSchemaNodeType> =
   T extends 'null' ? IGraphSchemaNullType : never
 
 export interface IGraphSchemaBaseType extends IJsonSchemaBaseType {
-  readonly directives?: Record<string, any> // TODO
-  readonly args?: Record<string, IGraphSchemaObjectType>
-  readonly values?: Record<string, IGraphSchemaEnumValueType>
-  readonly deprecated?: boolean | { reason: string }
 }
 
 export interface IGraphSchemaNullType extends IGraphSchemaBaseType {

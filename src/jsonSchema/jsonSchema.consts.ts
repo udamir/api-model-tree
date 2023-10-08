@@ -1,4 +1,4 @@
-import { IJsonSchemaBaseType, JsonSchemaNodeType } from "./jsonSchema.types"
+import { IJsonSchemaBaseType, JsonSchemaNodeMeta, JsonSchemaNodeType } from "./jsonSchema.types"
 
 export const jsonSchemaNodeKind = {
   root: 'root',
@@ -20,12 +20,15 @@ export const jsonSchemaNodeTypes = [
   'any', 'string', 'number', 'integer', 'boolean', 'null', 'array', 'object'
 ] as const 
 
-export const jsonSchemaCommonProps: (keyof IJsonSchemaBaseType)[]  = [
-  'type', 'description', 'title', 'deprecated', 'readOnly', 
-  'writeOnly', 'enum', 'default', 'examples'
+export const jsonSchemaNodeMetaProps: (keyof JsonSchemaNodeMeta)[]  = [
+  'deprecated', 'readOnly', 'writeOnly', 'externalDocs'
 ]
 
-export const jsonSchemaTypeProps: Record<JsonSchemaNodeType, readonly string[]> = {
+export const jsonSchemaCommonProps: (keyof IJsonSchemaBaseType)[]  = [
+  'type', 'description', 'title', 'enum', 'default', 'examples'
+]
+
+export const jsonSchemaNodeValueProps: Record<JsonSchemaNodeType, readonly string[]> = {
   any: [...jsonSchemaCommonProps],
   boolean: [...jsonSchemaCommonProps],
   null: [...jsonSchemaCommonProps],

@@ -11,57 +11,59 @@ export type SchemaCrawlRule<T, K extends string, C extends Array<any> = []> = {
   transformers: SchemaTransformFunc<T, C>[]
 }
 
-export type ModelDataNode<T, K extends string, D = any> = IModelTreeNode<T, K, D> | IModelRefNode<T, K, D>
+export type ModelDataNode<T, K extends string, M> = IModelTreeNode<T, K, M> | IModelRefNode<T, K, M>
 export type ModelTreeNodeType = keyof typeof modelTreeNodeType
 
-export interface IModelRefNode<T, K extends string, D = any> extends IModelTreeNode<T, K, D> {
+export interface IModelRefNode<T, K extends string, M> extends IModelTreeNode<T, K, M> {
   ref: string
   isCycle: boolean
 }
 
-export interface IModelTree<T, K extends string, D = any> {
-  root: IModelTreeNode<T, K, D> | null
-  nodes: Map<string, IModelTreeNode<T, K, D>>
+export interface IModelTree<T, K extends string, M> {
+  root: IModelTreeNode<T, K, M> | null
+  nodes: Map<string, IModelTreeNode<T, K, M>>
 }
 
-export interface IModelTreeNode<T, K extends string, D = any> {
+export interface IModelTreeNode<T, K extends string, M> {
   id: string
   key: string | number
   kind: K
   type: ModelTreeNodeType
   depth: number
   path: JsonPath
-  parent: IModelTreeNode<T, K> | null
-  nested: ModelDataNode<T, K>[]
-  data: D 
+  parent: IModelTreeNode<T, K, M> | null
+  nested: ModelDataNode<T, K, M>[]
+  meta: M 
   value(nestedId?: string): T | null
-  children(nestedId?: string): ModelDataNode<T, K>[]
-  nestedNode(nestedId?: string, deep?: boolean): ModelDataNode<T, K> | null
+  children(nestedId?: string): ModelDataNode<T, K, M>[]
+  nestedNode(nestedId?: string, deep?: boolean): ModelDataNode<T, K, M> | null
 }
 
-export type ModelTreeNodeParams<T extends object, K extends string, D = any> = {
+export type ModelTreeNodeParams<T extends object, K extends string, M> = {
   type?: ModelTreeNodeType
   value?: T
-  parent?: IModelTreeNode<T, K, D>
-  required?: boolean
+  meta?: M
+  parent?: IModelTreeNode<T, K, M> | null
   countInDepth?: boolean
-} & (D extends object ? D : {})
+}
 
 export type ModelStateNodeType = keyof typeof modelStateNodeType
 
-export type IModelStateNode<T> = IModelStateCombinaryNode<T> | IModelStatePropNode<T>
+export type IModelStateNode<T extends IModelTreeNode<any, any, any>> = IModelStateCombinaryNode<T> | IModelStatePropNode<T>
 
-export interface IModelStatePropNode<T> {
+export interface IModelStatePropNode<T extends IModelTreeNode<any, any, any>> {
   readonly type: Exclude<ModelStateNodeType, 'combinary'>
-  readonly node: ModelDataNode<T, any>
+  readonly node: T
 
   // selected combinary item id (for nodes with combinary children)
   readonly selected: string | undefined
 
+  // node.meta
+  readonly meta: T['meta']
   // node.value(selected)
-  readonly value: T | null
+  readonly value: ReturnType<T['value']> | null
   // node.nestedNode(selected)
-  readonly nestedNode: ModelDataNode<T, any> | null
+  readonly nestedNode: T | null
   // list of child state nodes
   readonly children: IModelStateNode<T>[] 
   // if true - this is the first child of group (args/properties/items)
@@ -83,9 +85,9 @@ export interface IModelStatePropNode<T> {
   setSelected(id: string): void
 }
 
-export interface IModelStateCombinaryNode<T> {
+export interface IModelStateCombinaryNode<T extends IModelTreeNode<any, any, any>> {
   readonly type: Exclude<ModelStateNodeType, 'basic' | 'expandable'>
-  readonly node: ModelDataNode<T, any>
+  readonly node: T
 
   // selected combinary item id
   readonly selected: string | undefined

@@ -1,8 +1,8 @@
 import type { JSONSchema4, JSONSchema6 } from 'json-schema'
 
 import { jsonSchemaNodeKind, jsonSchemaNodeTypes } from './jsonSchema.consts'
-import { ModelTree, ModelTreeComplexNode, ModelTreeNode } from '../modelTree'
-import { SchemaCrawlRule } from '../types'
+import { ModelTree, ModelTreeComplexNode } from '../modelTree'
+import { ModelDataNode, SchemaCrawlRule } from '../types'
 
 export type JsonSchemaNodeKind = keyof typeof jsonSchemaNodeKind
 export type JsonSchemaNodeType = typeof jsonSchemaNodeTypes[number]
@@ -10,15 +10,24 @@ export type JsonSchemaNodeType = typeof jsonSchemaNodeTypes[number]
 export type JsonSchemaFragment<T = {}> = (JSONSchema6 | JSONSchema4) & T
 
 export type JsonSchemaCrawlRule = SchemaCrawlRule<any, JsonSchemaNodeKind> 
-export type JsonSchemaModelTree = ModelTree<JsonSchemaNodeData<any>, JsonSchemaNodeKind>
+export type JsonSchemaModelTree = ModelTree<JsonSchemaNodeValue, JsonSchemaNodeKind, JsonSchemaNodeMeta>
 
-export type JsonSchemaTreeNode<T extends JsonSchemaNodeType> = ModelTreeNode<JsonSchemaNodeData<T>, JsonSchemaNodeKind>
-export type JsonSchemaComplexNode<T extends JsonSchemaNodeType> = ModelTreeComplexNode<JsonSchemaNodeData<T>, JsonSchemaNodeKind>
-export type JsonSchemaNode<T extends JsonSchemaNodeType> = JsonSchemaTreeNode<T> | JsonSchemaComplexNode<T>
+export type JsonSchemaNodeMeta = {
+  readonly required?: boolean
+  readonly deprecated?: boolean | Record<string, string> // x-deprecated => deprecated
+  readonly readOnly?: boolean
+  readonly writeOnly?: boolean
+  readonly externalDocs?: any
+  readonly _fragment?: JsonSchemaFragment
+}
+
+export type JsonSchemaTreeNode<T extends JsonSchemaNodeType = any> = ModelDataNode<JsonSchemaNodeValue<T>, JsonSchemaNodeKind, JsonSchemaNodeMeta>
+export type JsonSchemaComplexNode<T extends JsonSchemaNodeType = any> = ModelTreeComplexNode<JsonSchemaNodeValue<T>, JsonSchemaNodeKind, JsonSchemaNodeMeta>
+export type JsonSchemaNode<T extends JsonSchemaNodeType = any> = JsonSchemaTreeNode<T> | JsonSchemaComplexNode<T>
 
 export interface JsonSchemaCrawlState {
-  parent: JsonSchemaTreeNode<any> | null
-  container?: JsonSchemaComplexNode<any>
+  parent: JsonSchemaTreeNode | null
+  container?: JsonSchemaComplexNode
 }
 
 export type JsonSchemaTransformedFragment = JsonSchemaFragment & { 
@@ -29,7 +38,7 @@ export type JsonSchemaTransformedFragment = JsonSchemaFragment & {
 
 export type JsonSchemaTransformFunc = (value: JsonSchemaFragment) => JsonSchemaTransformedFragment
 
-export type JsonSchemaNodeData<T extends JsonSchemaNodeType> = 
+export type JsonSchemaNodeValue<T extends JsonSchemaNodeType = any> = 
   T extends 'any' ? IJsonSchemaAnyType :
   T extends 'number' ? IJsonSchemaNumberType :
   T extends 'string' ? IJsonSchemaStringType : 
@@ -40,7 +49,6 @@ export type JsonSchemaNodeData<T extends JsonSchemaNodeType> =
 
 export interface IJsonSchemaBaseType {
   // readonly $id: string
-  // readonly style: string | null
   // readonly nullable: boolean | null 
   readonly type: JsonSchemaNodeType // type: [string, number] => anyOf: [ { type: string }, { type: number }]
   readonly title?: string
@@ -50,13 +58,6 @@ export interface IJsonSchemaBaseType {
   readonly enum?: any[]
   // const: value => enum: [value]
   readonly default?: any
-
-  // TODO move to meta
-  readonly deprecated?: boolean | Record<string, string> // x-deprecated => deprecated
-  readonly readOnly?: boolean
-  readonly writeOnly?: boolean
-  readonly externalDocs?: any
-  readonly _fragment?: JsonSchemaTransformedFragment
 }
 
 export interface IJsonSchemaAnyType extends IJsonSchemaBaseType {

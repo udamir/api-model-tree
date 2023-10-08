@@ -17,11 +17,15 @@ export const graphSchemaNodeTypes = [
   'string', 'number', 'integer', 'boolean', 'null', 'array', 'object'
 ] as const 
 
-export const graphSchemaCommonProps: (keyof IGraphSchemaBaseType)[]  = [
-  'type', 'description', 'title', 'deprecated', 'examples', 'default', 'args', 'directives'
+export const graphSchemaNodeMetaProps = [
+  'required', 'deprecated', 'directives', 'args',
 ]
 
-export const graphSchemaTypeProps: Record<GraphSchemaNodeType, readonly string[]> = {
+export const graphSchemaCommonProps: (keyof IGraphSchemaBaseType)[]  = [
+  'type', 'description', 'title', 'examples', 'default', 
+]
+
+export const graphSchemaNodeValueProps: Record<GraphSchemaNodeType, readonly string[]> = {
   boolean: [...graphSchemaCommonProps],
   null: [...graphSchemaCommonProps],
   string: [...graphSchemaCommonProps, 'format', 'enum', 'values'],

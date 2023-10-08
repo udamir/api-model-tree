@@ -3,7 +3,7 @@ import { SyncCrawlHook, syncCrawl } from 'json-crawl'
 import { buildPointer } from "allof-merge"
 
 import { 
-  GraphSchemaComplexNode, GraphSchemaFragment, GraphSchemaTreeNode, createGraphSchemaNode, 
+  GraphSchemaComplexNode, GraphSchemaFragment, GraphSchemaModelTree, GraphSchemaNodeMeta, GraphSchemaTreeNode, createGraphSchemaNode, 
   createGraphSchemaTreeCrawlHook, createTransformHook, graphSchemaNodeKinds 
 } from "../graphSchema"
 
@@ -12,8 +12,9 @@ import { graphApiCrawlRules } from "./graphapi.rules"
 import { modelTreeNodeType } from "../consts"
 import { isRequired } from "../jsonSchema"
 import { ModelTree } from "../modelTree"
+import { GraphApiNodeData, GraphApiNodeKind } from "./graphapi.types"
 
-const createGraphApiTreeCrawlHook = (tree: ModelTree<any, any>): SyncCrawlHook => {
+const createGraphApiTreeCrawlHook = (tree: ModelTree<GraphApiNodeData, GraphApiNodeKind, GraphSchemaNodeMeta>): SyncCrawlHook => {
   return (value, ctx) => {
     if (!ctx.rules) { return null }
     if (!("kind" in ctx.rules) || !(graphApiNodeKinds.includes(ctx.rules.kind))) { 
@@ -29,7 +30,7 @@ const createGraphApiTreeCrawlHook = (tree: ModelTree<any, any>): SyncCrawlHook =
       case graphApiNodeKind.query: 
       case graphApiNodeKind.mutation: 
       case graphApiNodeKind.subscription: {
-        node = createGraphSchemaNode(tree, id, kind, ctx.key, value as GraphSchemaFragment, parent, false)
+        node = createGraphSchemaNode(tree as GraphSchemaModelTree, id, kind, ctx.key, value as GraphSchemaFragment, parent, false)
         break;
       }
       case graphApiNodeKind.schema: {
@@ -37,7 +38,7 @@ const createGraphApiTreeCrawlHook = (tree: ModelTree<any, any>): SyncCrawlHook =
         const params = {
           value: { ...description ? { description } : {}, _fragment: value }, 
           parent, 
-          required: isRequired(ctx.key, parent), 
+          meta: { required: isRequired(ctx.key, parent) }, 
           countInDepth: false
         }
         node = tree.createNode(id, kind, ctx.key, params)
@@ -49,7 +50,7 @@ const createGraphApiTreeCrawlHook = (tree: ModelTree<any, any>): SyncCrawlHook =
         const params = {
           value: { ...rest, _fragment: value },
           parent,
-          required: isRequired(ctx.key, parent)
+          meta: { required: isRequired(ctx.key, parent) }
         }
         node = tree.createNode(id, kind, ctx.key, params)
         break;
@@ -66,7 +67,7 @@ const createGraphApiTreeCrawlHook = (tree: ModelTree<any, any>): SyncCrawlHook =
 
 
 export const createGraphApiTree = (schema: GraphApiSchema) => {
-  const tree = new ModelTree<any, any>()
+  const tree = new ModelTree<GraphApiNodeData, GraphApiNodeKind, GraphSchemaNodeMeta>()
   const crawlState = { parent: null }
 
   syncCrawl(
@@ -79,7 +80,7 @@ export const createGraphApiTree = (schema: GraphApiSchema) => {
         graphApiNodeKind.mutation
       ]),
       createGraphApiTreeCrawlHook(tree),
-      createGraphSchemaTreeCrawlHook(tree, schema)
+      createGraphSchemaTreeCrawlHook(tree as GraphSchemaModelTree, schema)
     ], 
     { state: crawlState, rules: graphApiCrawlRules }
   )

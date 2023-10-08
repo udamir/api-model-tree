@@ -35,18 +35,21 @@ describe("graphschema transformation tests", () => {
       const { nullable, args, ...rest } = schema 
 
       expect(tree.root).toMatchObject({ id: "#", type: "oneOf", parent: null })
-      expect(tree.root?.value()).toMatchObject({ type: 'string', _fragment: rest })
+      expect(tree.root?.value()).toMatchObject({ type: 'string' })
+      expect(tree.root?.meta).toMatchObject({ _fragment: { args, oneOf: [rest, { type: "null" }]} })
 
       const argsNode = tree.root?.nested[-1]!
-      expect(argsNode.value()).toMatchObject({ _fragment: args })
+      expect(argsNode.meta).toMatchObject({ _fragment: args })
       
       const argsList = argsNode.children()
       expect(argsList[0]).toMatchObject({ key: 'id', type: 'simple', depth: 1 })
-      expect(argsList[0].value()).toMatchObject({ type: 'string', format: 'ID', _fragment: args?.properties?.id })
+      expect(argsList[0].value()).toMatchObject({ type: 'string', format: 'ID' })
+      expect(argsList[0].meta).toMatchObject({ _fragment: args?.properties?.id })
       expect(argsList[1]).toMatchObject({ key: 'isCompleted', type: 'simple', depth: 1 })
-      expect(argsList[1].value()).toMatchObject({ type: 'boolean', default: false, _fragment: args?.properties?.isCompleted })
+      expect(argsList[1].value()).toMatchObject({ type: 'boolean', default: false })
+      expect(argsList[1].meta).toMatchObject({ _fragment: args?.properties?.isCompleted })
 
-      expect(tree.root?.value('#/oneOf/0')).toMatchObject({ _fragment: rest })
+      expect(tree.root?.value('#/oneOf/0')).toMatchObject(rest)
       expect(tree.root?.value('#/oneOf/1')).toMatchObject({ type: 'null' })
     })
 
@@ -124,7 +127,8 @@ describe("graphschema transformation tests", () => {
 
       const children = tree.root!.children()
       expect(children[1]).toMatchObject({ key: 'count', type: 'simple' })
-      expect(children[1].value()).toMatchObject({ type: 'integer', directives: { limit: {} } })      
+      expect(children[1].value()).toMatchObject({ type: 'integer' })      
+      expect(children[1].meta).toMatchObject({ directives: { limit: {} } })      
     })
 
     it("should create tree from graphSchema with directive in enum", () => {
@@ -162,8 +166,10 @@ describe("graphschema transformation tests", () => {
       expect(tree.root!.value()).toMatchObject({ type: 'object', title: 'Object' })
 
       const children = tree.root!.children()
-      expect(children[0].value()).toMatchObject({ type: 'string', format: 'ID', deprecated: true })      
-      expect(children[1].value()).toMatchObject({ type: 'string', deprecated: true, examples: ['dog'] })      
+      expect(children[0].value()).toMatchObject({ type: 'string', format: 'ID' })      
+      expect(children[0].meta).toMatchObject({ deprecated: true })      
+      expect(children[1].value()).toMatchObject({ type: 'string', examples: ['dog'] })      
+      expect(children[1].meta).toMatchObject({ deprecated: true })      
       expect(children[2].value()).toMatchObject({ type: 'string', enum: ['NEWHOPE', 'EMPIRE', 'JEDI', 'NEWEPISOE'], values: { EMPIRE: { deprecated: {reason: 'was deleted' }}}})      
     })
 
