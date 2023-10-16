@@ -1,15 +1,15 @@
-import type { JSONSchema4, JSONSchema6 } from 'json-schema'
+import type { JSONSchema4, JSONSchema6 } from "json-schema"
 
-import { jsonSchemaNodeKind, jsonSchemaNodeTypes } from './jsonSchema.consts'
-import { ModelTree, ModelTreeComplexNode } from '../modelTree'
-import { ModelDataNode, SchemaCrawlRule } from '../types'
+import { jsonSchemaNodeKind, jsonSchemaNodeTypes } from "./jsonSchema.consts"
+import { ModelTree, ModelTreeComplexNode } from "../modelTree"
+import { ModelDataNode, SchemaCrawlRule } from "../types"
 
 export type JsonSchemaNodeKind = keyof typeof jsonSchemaNodeKind
-export type JsonSchemaNodeType = typeof jsonSchemaNodeTypes[number]
+export type JsonSchemaNodeType = (typeof jsonSchemaNodeTypes)[number]
 
 export type JsonSchemaFragment<T = {}> = (JSONSchema6 | JSONSchema4) & T
 
-export type JsonSchemaCrawlRule = SchemaCrawlRule<JsonSchemaNodeKind, JsonSchemaCrawlState> 
+export type JsonSchemaCrawlRule = SchemaCrawlRule<JsonSchemaNodeKind, JsonSchemaCrawlState>
 export type JsonSchemaModelTree = ModelTree<JsonSchemaNodeValue, JsonSchemaNodeKind, JsonSchemaNodeMeta>
 
 export type JsonSchemaNodeMeta = {
@@ -21,8 +21,16 @@ export type JsonSchemaNodeMeta = {
   readonly _fragment?: JsonSchemaFragment
 }
 
-export type JsonSchemaTreeNode<T extends JsonSchemaNodeType = any> = ModelDataNode<JsonSchemaNodeValue<T>, JsonSchemaNodeKind, JsonSchemaNodeMeta>
-export type JsonSchemaComplexNode<T extends JsonSchemaNodeType = any> = ModelTreeComplexNode<JsonSchemaNodeValue<T>, JsonSchemaNodeKind, JsonSchemaNodeMeta>
+export type JsonSchemaTreeNode<T extends JsonSchemaNodeType = any> = ModelDataNode<
+  JsonSchemaNodeValue<T>,
+  JsonSchemaNodeKind,
+  JsonSchemaNodeMeta
+>
+export type JsonSchemaComplexNode<T extends JsonSchemaNodeType = any> = ModelTreeComplexNode<
+  JsonSchemaNodeValue<T>,
+  JsonSchemaNodeKind,
+  JsonSchemaNodeMeta
+>
 export type JsonSchemaNode<T extends JsonSchemaNodeType = any> = JsonSchemaTreeNode<T> | JsonSchemaComplexNode<T>
 
 export interface JsonSchemaCrawlState {
@@ -31,7 +39,7 @@ export interface JsonSchemaCrawlState {
   source?: any
 }
 
-export type JsonSchemaTransformedFragment = JsonSchemaFragment & { 
+export type JsonSchemaTransformedFragment = JsonSchemaFragment & {
   type: JsonSchemaNodeType
   exclusiveMinimum: number | undefined
   exclusiveMaximum: number | undefined
@@ -48,7 +56,7 @@ export type JsonSchemaNodeValue<T extends JsonSchemaNodeType = any> =
 
 export interface IJsonSchemaBaseType {
   // readonly $id: string
-  // readonly nullable: boolean | null 
+  // readonly nullable: boolean | null
   readonly type: JsonSchemaNodeType // type: [string, number] => anyOf: [ { type: string }, { type: number }]
   readonly title?: string
   readonly description?: string
@@ -60,20 +68,20 @@ export interface IJsonSchemaBaseType {
 }
 
 export interface IJsonSchemaAnyType extends IJsonSchemaBaseType {
-  readonly type: 'any'
+  readonly type: "any"
 }
 
 export interface IJsonSchemaNullType extends IJsonSchemaBaseType {
-  readonly type: 'null'
+  readonly type: "null"
 }
 
 export interface IJsonSchemaBooleanType extends IJsonSchemaBaseType {
-  readonly type: 'boolean'
+  readonly type: "boolean"
   readonly default?: boolean
 }
 
 export interface IJsonSchemaStringType extends IJsonSchemaBaseType {
-  readonly type: 'string'
+  readonly type: "string"
   readonly format?: string
   readonly enum?: string[]
   readonly minLength?: number
@@ -83,11 +91,11 @@ export interface IJsonSchemaStringType extends IJsonSchemaBaseType {
 }
 
 export interface IJsonSchemaNumberType extends IJsonSchemaBaseType {
-  readonly type: 'number' | 'integer'
+  readonly type: "number" | "integer"
   readonly format?: string
   readonly enum?: number[]
   readonly multipleOf?: number
-  readonly minimum?: number  // remove if exclusiveMinimum
+  readonly minimum?: number // remove if exclusiveMinimum
   readonly exclusiveMinimum?: number // boolean => number
   readonly maximum?: number // remove if exclusiveMaximum
   readonly exclusiveMaximum?: number // boolean => number
@@ -95,7 +103,7 @@ export interface IJsonSchemaNumberType extends IJsonSchemaBaseType {
 }
 
 export interface IJsonSchemaObjectType extends IJsonSchemaBaseType {
-  readonly type: 'object'
+  readonly type: "object"
   readonly minProperties?: number
   readonly maxProperties?: number
   readonly required?: string[]
@@ -105,7 +113,7 @@ export interface IJsonSchemaObjectType extends IJsonSchemaBaseType {
 }
 
 export interface IJsonSchemaArrayType extends IJsonSchemaBaseType {
-  readonly type: 'array'
+  readonly type: "array"
   readonly minItems?: number
   readonly maxItems?: number
   readonly uniqueItems?: boolean

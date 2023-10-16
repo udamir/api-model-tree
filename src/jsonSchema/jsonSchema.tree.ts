@@ -2,7 +2,8 @@ import { isObject, syncCrawl } from 'json-crawl'
 import { merge } from "allof-merge"
 
 import { 
-  JsonSchemaCrawlState, JsonSchemaNodeValue, JsonSchemaFragment, JsonSchemaNodeKind, JsonSchemaNodeMeta 
+  JsonSchemaCrawlState, JsonSchemaNodeValue, JsonSchemaFragment, 
+  JsonSchemaNodeKind, JsonSchemaNodeMeta 
 } from "./jsonSchema.types"
 import { createJsonSchemaTreeCrawlHook } from "./jsonSchema.node"
 import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
