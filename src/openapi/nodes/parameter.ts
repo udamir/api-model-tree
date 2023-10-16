@@ -25,20 +25,8 @@ export const createOpenApiParamNode = (
     _fragment: _parameter
   } 
 
-  const res: any = { value: schema, node: null }
-  if (isRefNode(schema)) {
-    const { normalized } = parseRef(schema.$ref)
-    if (tree.nodes.has(normalized)) {
-      res.value = null
-      res.node = tree.nodes.get(normalized)!
-    } else {
-      res.value = resolveRefNode(source, schema)
-      res.node = createJsonSchemaNode(tree as JsonSchemaModelTree, normalized, 'definition', '', res.value)
-    }
-  } else {
-    res.node = createJsonSchemaNode(tree as JsonSchemaModelTree, `${id}/schema`, 'definition', '', schema)
-  }
-  
+  const res = createJsonSchemaNode(tree as JsonSchemaModelTree, `${id}/schema`, 'definition', key, schema, source)
+
   const node = tree.createRefNode(id, kind, key, res.node ?? null, { parent, meta }) as OpenApiParameterNode
   return { value: res.value, node }
 }

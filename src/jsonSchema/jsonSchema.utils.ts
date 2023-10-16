@@ -54,9 +54,9 @@ export const isJsonSchemaComplexNode = (node?: ModelDataNode<JsonSchemaNodeValue
   return !!node && node.type !== modelTreeNodeType.simple
 }
 
-export const transformTitle = (value: JsonSchemaFragment, ref?: string): JsonSchemaTransformedFragment => {
+export const transformTitle = (value: unknown, ref?: string): JsonSchemaTransformedFragment => {
   // 1. transform $ref key into title
-  if (!value || 'title' in value || !ref) {
+  if (!value || typeof value !== 'object' || 'title' in value || !ref) {
     return value as JsonSchemaTransformedFragment
   }
 

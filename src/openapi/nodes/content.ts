@@ -1,4 +1,4 @@
-import { buildPointer, isRefNode, parseRef, resolveRefNode } from "allof-merge"
+import { buildPointer } from "allof-merge"
 
 import { JsonSchemaModelTree, createJsonSchemaNode, jsonSchemaNodeMetaProps } from "../../jsonSchema"
 import { CreateNodeResult, HttpOperationNode, IContentMeta, OpenApiParameterNode } from "./types"
@@ -23,19 +23,7 @@ export const createOpenApiContentNode = (
     _fragment: _content
   } 
 
-  const res: any = { value: schema, node: null }
-  if (isRefNode(schema)) {
-    const { normalized } = parseRef(schema.$ref)
-    if (tree.nodes.has(normalized)) {
-      res.value = null
-      res.node = tree.nodes.get(normalized)!
-    } else {
-      res.value = resolveRefNode(source, schema)
-      res.node = createJsonSchemaNode(tree as JsonSchemaModelTree, normalized, 'definition', '', res.value)
-    }
-  } else {
-    res.node = createJsonSchemaNode(tree as JsonSchemaModelTree, `${id}/schema`, 'definition', '', schema, parent)
-  }
+  const res = createJsonSchemaNode(tree as JsonSchemaModelTree, `${id}/schema`, 'definition', 'body', schema, source)
   
   const node = tree.createRefNode(id, 'oneOfContent', '', res.node ?? null, { parent, meta }) as OpenApiParameterNode
   return { value: res.value, node }

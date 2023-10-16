@@ -11,6 +11,11 @@ export type SchemaCrawlRule<K extends string, S> = {
   transformers: SchemaTransformFunc<S>[]
 }
 
+export interface CreateNodeResult<T extends IModelTreeNode<any, any, any>> {
+  value: any | null
+  node: T
+}
+
 export type ModelDataNode<T, K extends string, M> = IModelTreeNode<T, K, M> | IModelRefNode<T, K, M>
 export type ModelTreeNodeType = keyof typeof modelTreeNodeType
 

@@ -1,9 +1,9 @@
 import { CrawlContext, SyncCrawlHook, syncCrawl } from 'json-crawl'
 import { buildPointer, isRefNode } from "allof-merge"
 
-import { crawlJsonSchemaRefNode, createJsonSchemaNode, createJsonSchemaTreeCrawlHook } from '../jsonSchema'
 import { openApiNodeKindValueKeys, openApiSpecificNodeKind, openApiSpecificNodeKinds } from './openapi.consts'
 import { OpenApiCrawlRule, OpenApiCrawlState, OpenApiModelTree, OpenApiNodeKind } from './openapi.types'
+import { createJsonSchemaNode, createJsonSchemaTreeCrawlHook } from '../jsonSchema'
 import { createOpenApiParamCrawlHook } from './nodes/parameter'
 import { createOpenApiContentCrawlHook } from './nodes/content'
 import { JsonSchemaModelTree } from '../jsonSchema'
@@ -55,36 +55,37 @@ const createOpenApiTreeCrawlHook = (tree: ModelTree<any, any, any>): SyncCrawlHo
     const { parent, container, source } = ctx.state
     const { kind } = ctx.rules
  
-    let node
+    let res: any = { node: null, value }
     if (kind === openApiSpecificNodeKind.responses || kind === openApiSpecificNodeKind.requestBody || kind === openApiSpecificNodeKind.oneOfResponse ) {
-      node = tree.createComplexNode(id, kind, ctx.key, { 
+      res.node = tree.createComplexNode(id, kind, ctx.key, { 
         type: "oneOf", 
         parent, 
         meta: { _fragment: value }
       })
     } else if (kind === openApiSpecificNodeKind.response || kind === openApiSpecificNodeKind.body || kind === openApiSpecificNodeKind.parameter) {
-      if (isRefNode(value)) {
-        return crawlJsonSchemaRefNode(tree, value.$ref, ctx)
-      } 
-      node = createJsonSchemaNode(tree as JsonSchemaModelTree, id, kind, ctx.key, value as any, parent)
-      node.meta
+      res = createJsonSchemaNode(tree as JsonSchemaModelTree, id, kind, ctx.key, value as any, parent)
+
     } else {
       const params = {
         value: getNodeValue(kind, value, ctx),
         parent,
         meta: { _fragment: value },
       }
-      node = tree.createNode(id, kind, ctx.key, params)
+      res.node = tree.createNode(id, kind, ctx.key, params)
     }
 
     if (container) {
-      container.addNestedNode(node)
+      container.addNestedNode(res.node)
     } else {
-      parent?.addChild(node)
+      parent?.addChild(res.node)
     }
 
-    const state = node.type !== "oneOf" ? { parent: node, source } : { parent, container: node, source }
-    return { value, state }
+    if (res.value) {
+      const state = res.node.type !== "oneOf" ? { parent: res.node, source } : { parent, container: res.node, source }
+      return { value: res.value, state }
+    } else {
+      return null
+    }
   }
 }
 
