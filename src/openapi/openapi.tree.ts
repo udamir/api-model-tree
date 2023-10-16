@@ -10,7 +10,7 @@ import { JsonSchemaModelTree } from '../jsonSchema'
 import { openApiCrawlRules } from "./openapi.rules"
 import { transformCrawlHook } from '../transform'
 import { ModelTree } from "../modelTree"
-import { pick } from '../utils'
+import { getTargetNode, pick } from '../utils'
 
 const getNodeValue = (kind: OpenApiNodeKind, value: any, ctx: CrawlContext<OpenApiCrawlState, OpenApiCrawlRule> ) => {
   switch (kind) {
@@ -81,7 +81,8 @@ const createOpenApiTreeCrawlHook = (tree: ModelTree<any, any, any>): SyncCrawlHo
     }
 
     if (res.value) {
-      const state = res.node.type !== "oneOf" ? { parent: res.node, source } : { parent, container: res.node, source }
+      const _node = getTargetNode(tree, res.node)
+      const state = res.node.type !== "oneOf" ? { parent: _node, source } : { parent, container: _node, source }
       return { value: res.value, state }
     } else {
       return null

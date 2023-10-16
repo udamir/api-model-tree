@@ -100,9 +100,7 @@ export const createJsonSchemaTreeCrawlHook = (tree: JsonSchemaModelTree): SyncCr
 
     if (res.value) {
       const _node = getTargetNode(tree, res.node)
-      const state = isJsonSchemaTreeNode(res.node) 
-        ? { parent: _node, source } 
-        : { parent, container: _node as JsonSchemaComplexNode<any>, source }
+      const state = isJsonSchemaTreeNode(res.node) ? { parent: _node, source } : { parent, container: _node, source }
       return { value: res.value, state }
     } else {
       return null

@@ -1,12 +1,12 @@
+import { SyncCrawlHook } from "json-crawl"
 import { buildPointer } from "allof-merge"
 
 import { JsonSchemaModelTree, createJsonSchemaNode, jsonSchemaNodeMetaProps } from "../../jsonSchema"
 import { CreateNodeResult, HttpOperationNode, IContentMeta, OpenApiParameterNode } from "./types"
 import { OpenApiNodeKind, OpenApiNodeMeta, OpenApiNodeValue } from "../openapi.types"
+import { getTargetNode, pick } from "../../utils"
 import { modelTreeNodeType } from "../../consts"
 import { ModelTree } from "../../modelTree"
-import { SyncCrawlHook } from "json-crawl"
-import { pick } from "../../utils"
 
 export const createOpenApiContentNode = (
   tree: ModelTree<OpenApiNodeValue, OpenApiNodeKind, OpenApiNodeMeta>,
@@ -44,9 +44,10 @@ export const createOpenApiContentCrawlHook = (tree: ModelTree<any, any, any>): S
     parent?.addChild(res.node)
 
     if (res.value) {
+      const _node = getTargetNode(tree, res.node)
       const state = res.node.type === modelTreeNodeType.simple 
-        ? { parent: res.node, source }
-        : { parent, container: res.node as any, source }
+        ? { parent: _node, source }
+        : { parent, container: _node, source }
       return { value: res.value, state }
     } else {
       return null
