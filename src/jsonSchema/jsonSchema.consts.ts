@@ -35,6 +35,17 @@ export const jsonSchemaNodeValueProps: Record<JsonSchemaNodeType, readonly strin
   string: [...jsonSchemaCommonProps, 'format', 'minLength', 'maxLength', 'pattern'],
   number: [...jsonSchemaCommonProps, 'format','multipleOf', 'minimum', 'exclusiveMinimum', 'maximum', 'exclusiveMaximum'],
   integer: [...jsonSchemaCommonProps, 'format','multipleOf', 'minimum', 'exclusiveMinimum', 'maximum', 'exclusiveMaximum'],
+  object: [...jsonSchemaCommonProps, 'required', 'minProperties', 'maxProperties', 'propertyNames'],
+  array: [...jsonSchemaCommonProps, 'minItems', 'maxItems', 'uniqueItems'],
+} 
+
+export const jsonSchemaTypeProps: Record<JsonSchemaNodeType, readonly string[]> = {
+  any: [...jsonSchemaCommonProps],
+  boolean: [...jsonSchemaCommonProps],
+  null: [...jsonSchemaCommonProps],
+  string: [...jsonSchemaCommonProps, 'format', 'minLength', 'maxLength', 'pattern'],
+  number: [...jsonSchemaCommonProps, 'format','multipleOf', 'minimum', 'exclusiveMinimum', 'maximum', 'exclusiveMaximum'],
+  integer: [...jsonSchemaCommonProps, 'format','multipleOf', 'minimum', 'exclusiveMinimum', 'maximum', 'exclusiveMaximum'],
   object: [...jsonSchemaCommonProps, 'properties', 'required', 'patternProperties', 'additionalProperties', 'minProperties', 'maxProperties', 'propertyNames'],
   array: [...jsonSchemaCommonProps, 'items', 'additionalItems', 'minItems', 'maxItems', 'uniqueItems'],
 } 

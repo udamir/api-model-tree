@@ -1,7 +1,6 @@
-import { JsonSchemaModelTree, JsonSchemaTreeNode } from "../jsonSchema"
 import { JsonSchemaState, JsonSchemaStateCombinaryNode, JsonSchemaStatePropNode } from "../jsonSchema/jsonSchema.state"
 import { IModelStateCombinaryNode, IModelStateNode, IModelStatePropNode, ModelDataNode } from "../types"
-import { GraphSchemaModelTree, GraphSchemaNode } from "./graphSchema.types"
+import { GraphSchemaNode } from "./graphSchema.types"
 
 export class GraphSchemaStateCombinaryNode<T extends ModelDataNode<any, any, any> = GraphSchemaNode> extends JsonSchemaStateCombinaryNode<T> {
 }

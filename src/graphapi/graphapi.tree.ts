@@ -4,7 +4,7 @@ import { buildPointer } from "allof-merge"
 
 import { 
   GraphSchemaComplexNode, GraphSchemaFragment, GraphSchemaModelTree, GraphSchemaNodeMeta, GraphSchemaTreeNode, createGraphSchemaNode, 
-  createGraphSchemaTreeCrawlHook, createTransformHook, graphSchemaNodeKinds 
+  createGraphSchemaTreeCrawlHook 
 } from "../graphSchema"
 
 import { graphApiNodeKind, graphApiNodeKinds, graphqlEmbeddedDirectives } from "./graphapi.consts"
@@ -13,6 +13,8 @@ import { modelTreeNodeType } from "../consts"
 import { isRequired } from "../jsonSchema"
 import { ModelTree } from "../modelTree"
 import { GraphApiNodeData, GraphApiNodeKind } from "./graphapi.types"
+import { ModelTreeNodeParams } from "../types"
+import { transformCrawlHook } from "../transform"
 
 const createGraphApiTreeCrawlHook = (tree: ModelTree<GraphApiNodeData, GraphApiNodeKind, GraphSchemaNodeMeta>): SyncCrawlHook => {
   return (value, ctx) => {
@@ -22,7 +24,7 @@ const createGraphApiTreeCrawlHook = (tree: ModelTree<GraphApiNodeData, GraphApiN
     }
 
     const id = "#" + buildPointer(ctx.path)
-    const { parent } = ctx.state
+    const { parent, source } = ctx.state
     const { kind } = ctx.rules
  
     let node
@@ -35,10 +37,10 @@ const createGraphApiTreeCrawlHook = (tree: ModelTree<GraphApiNodeData, GraphApiN
       }
       case graphApiNodeKind.schema: {
         const { description } = value as GraphApiSchema
-        const params = {
-          value: { ...description ? { description } : {}, _fragment: value }, 
+        const params: ModelTreeNodeParams<GraphApiNodeData, GraphApiNodeKind, GraphSchemaNodeMeta> = {
+          value: { ...description ? { description } : {} }, 
           parent, 
-          meta: { required: isRequired(ctx.key, parent) }, 
+          meta: { required: isRequired(ctx.key, parent), _fragment: value }, 
           countInDepth: false
         }
         node = tree.createNode(id, kind, ctx.key, params)
@@ -47,10 +49,10 @@ const createGraphApiTreeCrawlHook = (tree: ModelTree<GraphApiNodeData, GraphApiN
       case graphApiNodeKind.directive: {
         if (graphqlEmbeddedDirectives.includes(String(ctx.key))) { return null } 
         const { args, ...rest } = value as GraphApiDirectiveDefinition
-        const params = {
-          value: { ...rest, _fragment: value },
+        const params: ModelTreeNodeParams<GraphApiNodeData, GraphApiNodeKind, GraphSchemaNodeMeta> = {
+          value: rest,
           parent,
-          meta: { required: isRequired(ctx.key, parent) }
+          meta: { required: isRequired(ctx.key, parent), _fragment: value }
         }
         node = tree.createNode(id, kind, ctx.key, params)
         break;
@@ -59,8 +61,8 @@ const createGraphApiTreeCrawlHook = (tree: ModelTree<GraphApiNodeData, GraphApiN
 
     parent?.addChild(node)
     const state = node!.type === modelTreeNodeType.simple 
-      ? { parent: node as GraphSchemaTreeNode<any> } 
-      : { parent, container: node as GraphSchemaComplexNode<any> }
+      ? { parent: node as GraphSchemaTreeNode<any>, source } 
+      : { parent, container: node as GraphSchemaComplexNode<any>, source }
     return { value, state }
   }
 }
@@ -68,19 +70,14 @@ const createGraphApiTreeCrawlHook = (tree: ModelTree<GraphApiNodeData, GraphApiN
 
 export const createGraphApiTree = (schema: GraphApiSchema) => {
   const tree = new ModelTree<GraphApiNodeData, GraphApiNodeKind, GraphSchemaNodeMeta>()
-  const crawlState = { parent: null }
+  const crawlState = { parent: null, source: schema }
 
   syncCrawl(
     schema,
     [
-      createTransformHook(schema, [
-        ...graphSchemaNodeKinds, 
-        graphApiNodeKind.query, 
-        graphApiNodeKind.subscription, 
-        graphApiNodeKind.mutation
-      ]),
+      transformCrawlHook, 
       createGraphApiTreeCrawlHook(tree),
-      createGraphSchemaTreeCrawlHook(tree as GraphSchemaModelTree, schema)
+      createGraphSchemaTreeCrawlHook(tree as GraphSchemaModelTree)
     ], 
     { state: crawlState, rules: graphApiCrawlRules }
   )

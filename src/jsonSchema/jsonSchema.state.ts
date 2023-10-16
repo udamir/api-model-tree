@@ -1,5 +1,5 @@
 import { IModelStateCombinaryNode, IModelStateNode, IModelStatePropNode, ModelDataNode, ModelStateNodeType } from "../types"
-import { JsonSchemaNode, JsonSchemaNodeValue, JsonSchemaTreeNode } from "./jsonSchema.types"
+import { JsonSchemaNode, JsonSchemaTreeNode } from "./jsonSchema.types"
 import { isModelStatePropNode } from "../utils"
 import { modelStateNodeType } from "../consts"
 import { ModelTree } from "../modelTree"

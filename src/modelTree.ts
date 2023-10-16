@@ -117,6 +117,8 @@ export class ModelTreeComplexNode<T extends object, K extends string, M> extends
 }
 
 export class ModelRefNode<T extends object, K extends string, M> extends ModelTreeNode<T, K, M>  implements IModelRefNode<T, K, M> {
+  private _target: ModelDataNode<T, K, M>
+
   public get depth(): number {
     return this.parent === null ? 0 : this.parent.depth + (this._countInDepth ? 1 : 0)
   }
@@ -149,11 +151,12 @@ export class ModelRefNode<T extends object, K extends string, M> extends ModelTr
     public readonly id: string,
     public readonly kind: K,
     public readonly key: string | number,
-    private _target: ModelDataNode<T, K, M>,
+    _target: ModelDataNode<T, K, M>,
     params: ModelTreeNodeParams<T, K, M>
   ) {
     super(id, kind, key, { ...params, type: _target.type })
-    this.nested = _target.nested
+    this._target = _target instanceof ModelRefNode ? _target._target : _target
+    this.nested = this._target.nested
   }
 
   public children(nested?: string): ModelDataNode<T, K, M>[] {

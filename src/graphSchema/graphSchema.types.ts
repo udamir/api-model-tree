@@ -11,13 +11,14 @@ export type GraphSchemaNodeType = typeof graphSchemaNodeTypes[number]
 export type GraphSchemaFragment = GraphSchema
 
 export type GraphSchemaTransformFunc = SchemaTransformFunc<GraphSchemaFragment>
-export type GraphSchemaCrawlRule = SchemaCrawlRule<GraphSchemaFragment, GraphSchemaNodeKind>
+export type GraphSchemaCrawlRule = SchemaCrawlRule<GraphSchemaNodeKind, GraphSchemaCrawlState>
 
 export type GraphSchemaNodeMeta = {
   readonly required?: boolean
   readonly args?: Record<string, IGraphSchemaObjectType>
   readonly directives?: Record<string, any> // TODO
   readonly deprecated?: boolean | { reason: string }
+  readonly _fragment?: any
 }
 
 export type GraphSchemaModelTree = ModelTree<GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta>
@@ -29,6 +30,7 @@ export type GraphSchemaNode<T extends GraphSchemaNodeType = any> = GraphSchemaTr
 export interface GraphSchemaCrawlState {
   parent: GraphSchemaTreeNode<any> | null
   container?: GraphSchemaComplexNode<any>
+  source: any
 }
 
 export type GraphSchemaNodeValue<T extends GraphSchemaNodeType = any> = 

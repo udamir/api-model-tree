@@ -1,11 +1,7 @@
 import { CrawlRules } from "json-crawl"
 
-import { 
-  filterValidProps, transformAdditionalItems, transformAdditionalProperties, transformConst, transformDeprecated, 
-  transformDiscriminator, transformExample, transformExclusiveMaximum, transformExclusiveMinimum, transformRequred,
-  transformTypeOfArray
-} from "./jsonSchema.utils"
 import { JsonSchemaCrawlRule, JsonSchemaNodeKind } from "./jsonSchema.types"
+import { jsonSchemaTransformers} from "./jsonSchema.transform"
 import { isNumber } from "../utils"
 
 export const jsonSchemaCrawlRules = (kind: JsonSchemaNodeKind = "root"): CrawlRules<JsonSchemaCrawlRule> => ({
@@ -38,17 +34,5 @@ export const jsonSchemaCrawlRules = (kind: JsonSchemaNodeKind = "root"): CrawlRu
   //   "/*": () => jsonSchemaCrawlRules("dependency"),
   // },
   kind,
-  transformers: [
-    filterValidProps,
-    transformDiscriminator,
-    transformRequred,
-    transformConst,
-    transformExample,
-    transformDeprecated,
-    transformExclusiveMinimum,
-    transformExclusiveMaximum,
-    transformTypeOfArray,
-    transformAdditionalItems,
-    transformAdditionalProperties,
-  ]
+  transformers: jsonSchemaTransformers
 })

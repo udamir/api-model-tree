@@ -4,11 +4,11 @@ import { JsonPath } from 'json-crawl'
 import { modelStateNodeType, modelTreeNodeType } from './consts'
 
 
-export type SchemaTransformFunc<T, C extends Array<any> = []> = (value: T, ...ctx: C) => any
+export type SchemaTransformFunc<S> = (value: unknown, path: JsonPath, state: S) => any
 
-export type SchemaCrawlRule<T, K extends string, C extends Array<any> = []> = {
+export type SchemaCrawlRule<K extends string, S> = {
   kind: K
-  transformers: SchemaTransformFunc<T, C>[]
+  transformers: SchemaTransformFunc<S>[]
 }
 
 export type ModelDataNode<T, K extends string, M> = IModelTreeNode<T, K, M> | IModelRefNode<T, K, M>
@@ -37,6 +37,9 @@ export interface IModelTreeNode<T, K extends string, M> {
   value(nestedId?: string): T | null
   children(nestedId?: string): ModelDataNode<T, K, M>[]
   nestedNode(nestedId?: string, deep?: boolean): ModelDataNode<T, K, M> | null
+
+  addChild(node: ModelDataNode<T, K, M>): void
+  addNestedNode(node: ModelDataNode<T, K, M>): void
 }
 
 export type ModelTreeNodeParams<T extends object, K extends string, M> = {

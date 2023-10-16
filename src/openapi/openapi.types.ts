@@ -1,10 +1,9 @@
-import { GraphSchema } from 'gqlapi'
 import { JsonPath } from 'json-crawl'
 
-import { SchemaCrawlRule, SchemaTransformFunc } from '../types'
+import { JsonSchemaNodeMeta, JsonSchemaNodeValue } from '../jsonSchema'
+import { ModelTree, ModelTreeComplexNode } from '../modelTree'
+import { ModelDataNode, SchemaCrawlRule } from '../types'
 import { openApiNodeKind } from './openapi.consts'
-import { GraphSchemaNodeData } from '../graphSchema'
-import { ModelTreeNode } from '../modelTree'
 
 export type OpenApiNodeKind = keyof typeof openApiNodeKind
 
@@ -13,59 +12,46 @@ export interface OpenApiTransformFuncContext {
   path: JsonPath
 }
 
-export type OpenApiTransformFunc = SchemaTransformFunc<any, [OpenApiTransformFuncContext]>
-
-export type OpenApiCrawlRule = SchemaCrawlRule<any, OpenApiNodeKind, [OpenApiTransformFuncContext]>
-
-export type GraphapiTreeNode = ModelTreeNode<GraphApiNodeData, OpenApiNodeKind>
-
-export type GraphApiNodeData = GraphApiSchemaNodeData | GraphApiDirectiveNodeData | GraphSchemaNodeData<any>
-
-export interface GraphApiSchemaNodeData {
-  description?: string
+export interface OpenApiCrawlState {
+  parent: OpenApiTreeNode | null
+  container?: OpenApiComplexNode
+  source: any
 }
 
-export interface GraphApiDirectiveNodeData {
-  // name
-  title: string
+export type OpenApiCrawlRule = SchemaCrawlRule<OpenApiNodeKind, OpenApiCrawlState>
 
-  // description
-  description?: string
+export type OpenApiNodeValue<T extends OpenApiNodeKind = any> = IOpenApiServiceNodeValue | IOperationNodeValue | JsonSchemaNodeValue<any>
+export type OpenApiNodeMeta<T extends OpenApiNodeKind = any> = any | JsonSchemaNodeMeta
 
-  // locations
-  locations: string[]
+export type OpenApiTreeNode<T extends OpenApiNodeKind = any> = ModelDataNode<OpenApiNodeValue<T>, OpenApiNodeKind, OpenApiNodeMeta<T>>
+export type OpenApiComplexNode<T extends OpenApiNodeKind = any> = ModelTreeComplexNode<OpenApiNodeValue<T>, OpenApiNodeKind, OpenApiNodeMeta<T>>
 
-  // args[]
-  args?: GraphSchema
+export type OpenApiModelTree = ModelTree<OpenApiNodeValue, OpenApiNodeKind, OpenApiNodeMeta>
 
-  // isRepeatable
-  repeatable: boolean
+export interface IOpenApiServiceNodeValue {
+  info: any
+  security?: any[][]
+  securitySchemes?: any[]
+  externalDocs?: {
+    description?: string
+    url: string
+  }
 }
 
-// export interface IOpenApiService {
-//   name: string;
-//   version: string;
-//   servers?: IServer[];
-//   security?: HttpSecurityScheme[][];
-//   securitySchemes?: HttpSecurityScheme[];
-//   termsOfService?: string;
-//   contact?: {
-//     name?: string;
-//     url?: string;
-//     email?: string;
-//   };
-//   license?: {
-//     name: string;
-//     url?: string;
-//     identifier?: string;
-//   };
-//   logo?: {
-//     altText: string;
-//     href?: string;
-//     url?: string;
-//     backgroundColor?: string;
-//   };
-//   infoExtensions?: Extensions;
-//   internal?: boolean;
-//   externalDocs?: IExternalDocs;
-// }
+export interface IOperationNodeValue {
+  method: string
+  path: string
+  servers?: {
+    url: string
+    name?: string
+    description?: string
+    variables?: Record<string, any>
+  }[]
+  security?: any[][]
+  securityDeclarationType?: any
+  deprecated?: boolean
+  externalDocs?: {
+    description?: string
+    url: string
+  }
+}

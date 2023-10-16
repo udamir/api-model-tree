@@ -9,7 +9,7 @@ export type JsonSchemaNodeType = typeof jsonSchemaNodeTypes[number]
 
 export type JsonSchemaFragment<T = {}> = (JSONSchema6 | JSONSchema4) & T
 
-export type JsonSchemaCrawlRule = SchemaCrawlRule<any, JsonSchemaNodeKind> 
+export type JsonSchemaCrawlRule = SchemaCrawlRule<JsonSchemaNodeKind, JsonSchemaCrawlState> 
 export type JsonSchemaModelTree = ModelTree<JsonSchemaNodeValue, JsonSchemaNodeKind, JsonSchemaNodeMeta>
 
 export type JsonSchemaNodeMeta = {
@@ -28,6 +28,7 @@ export type JsonSchemaNode<T extends JsonSchemaNodeType = any> = JsonSchemaTreeN
 export interface JsonSchemaCrawlState {
   parent: JsonSchemaTreeNode | null
   container?: JsonSchemaComplexNode
+  source?: any
 }
 
 export type JsonSchemaTransformedFragment = JsonSchemaFragment & { 
@@ -35,8 +36,6 @@ export type JsonSchemaTransformedFragment = JsonSchemaFragment & {
   exclusiveMinimum: number | undefined
   exclusiveMaximum: number | undefined
 }
-
-export type JsonSchemaTransformFunc = (value: JsonSchemaFragment) => JsonSchemaTransformedFragment
 
 export type JsonSchemaNodeValue<T extends JsonSchemaNodeType = any> = 
   T extends 'any' ? IJsonSchemaAnyType :
