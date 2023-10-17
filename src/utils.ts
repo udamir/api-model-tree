@@ -75,7 +75,7 @@ export const isModelStatePropNode = (node: IModelStateNode<any>): node is IModel
 }
 
 export const getTargetNode = <T, K extends string, M>(tree: IModelTree<T, K, M>, node: ModelDataNode<T, K, M>): IModelTreeNode<T, K, M> | null => {
-  if ('ref' in node) {
+  if (typeof node === 'object' && node && 'ref' in node) {
     const _node = tree.nodes.get(node.ref)
     if (_node) {
       return getTargetNode(tree, _node)

@@ -1,33 +1,15 @@
-import { CrawlContext, SyncCrawlHook, syncCrawl } from 'json-crawl'
+import { SyncCrawlHook, syncCrawl } from 'json-crawl'
 import { buildPointer } from "allof-merge"
 
-import { openApiNodeKindValueKeys, openApiSpecificNodeKind, openApiSpecificNodeKinds } from './openapi.consts'
-import { OpenApiCrawlRule, OpenApiCrawlState, OpenApiModelTree, OpenApiNodeKind } from './openapi.types'
-import { createOpenApiContentNode, createOpenApiParamNode } from './openapi.node'
+import { createOpenApiContentNode, createOpenApiOperationNode, createOpenApiParamNode, createOpenApiResponseNode, createOpenApiServiceNode } from './openapi.node'
+import { openApiSpecificNodeKind, openApiSpecificNodeKinds } from './openapi.consts'
+import { OpenApiCrawlState, OpenApiModelTree } from './openapi.types'
 import { createJsonSchemaTreeCrawlHook } from '../jsonSchema'
 import { JsonSchemaModelTree } from '../jsonSchema'
 import { openApiCrawlRules } from "./openapi.rules"
 import { transformCrawlHook } from '../transform'
 import { getTargetNode, pick } from '../utils'
 import { ModelTree } from "../modelTree"
-
-const getNodeValue = (kind: OpenApiNodeKind, value: any, ctx: CrawlContext<OpenApiCrawlState, OpenApiCrawlRule> ) => {
-  switch (kind) {
-    case 'service':
-      return {
-        ...pick(value, openApiNodeKindValueKeys[kind]),
-        ...value?.components?.securitySchemes ? value.components.securitySchemes : {}
-      }
-    case 'operation': 
-      return {
-        ...pick(value, openApiNodeKindValueKeys[kind]),
-        path: ctx.path[1],
-        method: ctx.path[2]
-      }
-    default:
-      break;
-  }
-}
 
 /**
  * service [simple]
@@ -40,13 +22,12 @@ const getNodeValue = (kind: OpenApiNodeKind, value: any, ctx: CrawlContext<OpenA
  *         - header (schema)
  *         - responseBody [oneOf]
  *           = oneOfcontent (schema)
- *           
  */
 
 const createOpenApiTreeCrawlHook = (tree: ModelTree<any, any, any>): SyncCrawlHook => {
   return (value, ctx) => {
     if (!ctx.rules) { return null }
-    if (!("kind" in ctx.rules) || !(openApiSpecificNodeKinds.includes(ctx.rules.kind)) || ctx.rules.kind === 'parameter') { 
+    if (!("kind" in ctx.rules) || !(openApiSpecificNodeKinds.includes(ctx.rules.kind))) { 
       return { value, state: ctx.state }
     }
 
@@ -56,25 +37,38 @@ const createOpenApiTreeCrawlHook = (tree: ModelTree<any, any, any>): SyncCrawlHo
  
     let res: any = { node: null, value }
     switch (kind) {
-      case openApiSpecificNodeKind.response:
-      case openApiSpecificNodeKind.requestBody:
-      case openApiSpecificNodeKind.responseBody:
+      case openApiSpecificNodeKind.requestBody: {
+        const meta = { ...pick(value, ['description', 'required']), _fragment: value }
+        res.node = tree.createComplexNode(id, kind, ctx.key, { type: "oneOf", parent, meta })
+        break
+      }
+      case openApiSpecificNodeKind.response: {
         res.node = tree.createComplexNode(id, kind, ctx.key, { type: "oneOf", parent, meta: { _fragment: value }})
-        break;
+        break
+      }
+      case openApiSpecificNodeKind.responseBody: {
+        const meta = { ...pick(value, ['description']), _fragment: value }
+        res.node = tree.createComplexNode(id, kind, ctx.key, { type: "oneOf", parent, meta })
+        break
+      }
       case openApiSpecificNodeKind.parameter:
       case openApiSpecificNodeKind.header:
         res = createOpenApiParamNode(tree, id, kind, String(ctx.key), value as any, source, parent)
-        break;
+        break
       case openApiSpecificNodeKind.oneOfContent:
         res = createOpenApiContentNode(tree, id, value, source, parent)
-        break;
+        break
+      case openApiSpecificNodeKind.operation:
+        res = createOpenApiOperationNode(tree, id, ctx.path, value, parent)
+        break
+      case openApiSpecificNodeKind.service:
+        res = createOpenApiServiceNode(tree, value)
+        break
+      case openApiSpecificNodeKind.oneOfResponse:
+        res = createOpenApiResponseNode(tree, id, String(ctx.key), value, source, parent)
+        break
       default:
-        const params = {
-          value: getNodeValue(kind, value, ctx),
-          parent,
-          meta: { _fragment: value },
-        }
-        res.node = tree.createNode(id, kind, ctx.key, params)
+        throw new Error('unknown kind')
     }
 
     if (container) {

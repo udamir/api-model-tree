@@ -2,8 +2,8 @@ import { isRefNode, parseRef, resolveRefNode } from "allof-merge"
 import { JsonPath } from "json-crawl"
 
 import { 
-  OpenApiOperationNode, IParameterMeta, OpenApiParameterNode, IContentMeta, 
-  IOperationNodeMeta, OpenApiServiceNode, OpenApiModelTree, OpenApiContentNode
+  OpenApiOperationNode, IParameterMeta, OpenApiParameterNode, IContentMeta, OpenApiResponseNode,
+  IOperationNodeMeta, OpenApiServiceNode, OpenApiModelTree, OpenApiContentNode, IServiceNodeMeta 
 } from "./openapi.types"
 import { JsonSchemaModelTree, createJsonSchemaNode, jsonSchemaNodeMetaProps } from "../jsonSchema"
 import { openApiNodeKindValueKeys } from "./openapi.consts"
@@ -76,9 +76,9 @@ export const createOpenApiContentNode = (
     _fragment: _content
   } 
 
-  const res = createJsonSchemaNode(tree as JsonSchemaModelTree, `${id}/schema`, 'definition', 'body', schema, source)
+  const res = createJsonSchemaNode(tree as JsonSchemaModelTree, `${id}/schema`, 'definition', '', schema, source)
   
-  const node = tree.createRefNode(id, 'oneOfContent', '', res.node ?? null, { parent, meta }) as OpenApiContentNode
+  const node = tree.createRefNode(id, 'oneOfContent', 'body', res.node ?? null, { parent, meta }) as OpenApiContentNode
   return { value: res.value, node }
 }
 
@@ -99,6 +99,52 @@ export const createOpenApiOperationNode = (
 
   return { 
     value: _operation,
-    node: tree.createNode(id, 'operation', `${meta.path}~1${meta.method}`, { parent, meta }) as OpenApiOperationNode
+    node: tree.createNode(id, 'operation', `${meta.path}/${meta.method}`, { parent, meta }) as OpenApiOperationNode
   }
+}
+export const createOpenApiServiceNode = (
+  tree: OpenApiModelTree,
+  _service: any, 
+): CreateNodeResult<OpenApiServiceNode> => {
+
+  const meta: IServiceNodeMeta = {
+    ...pick(_service, openApiNodeKindValueKeys.service),
+    ..._service?.components?.securitySchemes ? _service.components.securitySchemes : {},
+    _fragment: _service
+  } 
+
+  return { 
+    value: _service,
+    node: tree.createNode("#", 'service', '', { parent: null, meta }) as OpenApiServiceNode
+  }
+}
+
+export const createOpenApiResponseNode = (
+  tree: OpenApiModelTree,
+  id: string,
+  key: string,
+  value: any, 
+  source: any,
+  parent: OpenApiOperationNode | null = null 
+): CreateNodeResult<OpenApiResponseNode> => {
+  let res: CreateNodeResult<OpenApiResponseNode> = { value, node: null as any }
+  if (isRefNode(value)) {
+    const { normalized } = parseRef(value.$ref)
+    if (tree.nodes.has(normalized)) {
+      res.value = null
+      res.node = tree.nodes.get(normalized)! as OpenApiResponseNode
+    } else {
+      res.value = resolveRefNode(source, value)
+      const meta = { ...pick(res.value, ['description']), _fragment: res.value }
+      res.node = tree.createNode(id, 'definition', '', { parent, meta }) as OpenApiResponseNode
+    }
+
+    const params = { parent, ...res.node ? { meta: res.node.meta } : {}}
+    res.node = tree.createRefNode(id, 'oneOfResponse', key, res.node, params) as OpenApiResponseNode
+  } else {
+    const meta = { ...pick(res.value, ['description']), _fragment: res.value }
+    res.node = tree.createNode(id, 'oneOfResponse', key, { parent, meta }) as OpenApiResponseNode
+  }
+    
+  return res
 }

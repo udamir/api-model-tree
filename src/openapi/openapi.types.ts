@@ -1,8 +1,8 @@
 import { JsonPath } from 'json-crawl'
 
 import { JsonSchemaComplexNode, JsonSchemaNode, JsonSchemaNodeMeta, JsonSchemaNodeValue } from '../jsonSchema'
-import { ModelTree, ModelTreeComplexNode } from '../modelTree'
 import { IModelTreeNode, ModelDataNode, SchemaCrawlRule } from '../types'
+import { ModelTree, ModelTreeComplexNode } from '../modelTree'
 import { openApiNodeKind } from './openapi.consts'
 
 export type OpenApiNodeKind = keyof typeof openApiNodeKind
@@ -17,6 +17,8 @@ export interface OpenApiCrawlState {
   container?: OpenApiComplexNode | null
   source: any
 }
+
+export type OpenApiOperationsFilter = (node: OpenApiTreeNode) => boolean
 
 export type OpenApiCrawlRule = SchemaCrawlRule<OpenApiNodeKind, OpenApiCrawlState>
 
@@ -87,6 +89,7 @@ export interface IContentMeta extends JsonSchemaNodeMeta {
 }
 
 export interface IResponseMeta {
+  description?: string
   _fragment: any
 }
 

@@ -1,6 +1,6 @@
 import { CrawlRules } from "json-crawl"
 
-import { allOfMerge, transformGlobalSecurity, transformPathParameters } from "./openapi.transform"
+import { allOfMerge, resolveRef, transformGlobalSecurity, transformPathItems } from "./openapi.transform"
 import { jsonSchemaCrawlRules } from "../jsonSchema"
 import { OpenApiCrawlRule } from "./openapi.types"
 import { openApiNodeKind } from "./openapi.consts"
@@ -25,7 +25,8 @@ export const openApiCrawlRules: CrawlRules<OpenApiCrawlRule> = {
             }
           },
           // oneOf Content
-          kind: openApiNodeKind.requestBody
+          kind: openApiNodeKind.requestBody,
+          transformers: [resolveRef]
         },
         "/responses": {
           "/*": {
@@ -54,7 +55,7 @@ export const openApiCrawlRules: CrawlRules<OpenApiCrawlRule> = {
         kind: openApiNodeKind.operation,
         transformers: [transformGlobalSecurity]
       },
-      transformers: [transformPathParameters]
+      transformers: [resolveRef, transformPathItems]
     }
   },
   kind: openApiNodeKind.service,
