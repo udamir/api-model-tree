@@ -17,11 +17,3 @@ export const transformGlobalSecurity: SchemaTransformFunc<OpenApiCrawlState> = (
   // TODO: copy global security to operation
   return value
 }
-
-export const transformParameterToJsonSchema: SchemaTransformFunc<OpenApiCrawlState> = (value) => {
-  return value
-}
-
-export const transformContentToJsonSchema: SchemaTransformFunc<OpenApiCrawlState> = (value) => {
-  return value
-}

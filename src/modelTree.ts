@@ -3,7 +3,7 @@ import { JsonPath } from "json-crawl"
 import type { ModelDataNode, IModelTree, IModelRefNode, IModelTreeNode, ModelTreeNodeType, ModelTreeNodeParams } from "./types"
 import { modelTreeNodeType } from "./consts"
 
-export class ModelTree<T extends object, K extends string, M> implements IModelTree<T, K, M> {
+export class ModelTree<T, K extends string, M> implements IModelTree<T, K, M> {
   public nodes: Map<string, IModelTreeNode<T, K, M>> = new Map()
 
   get root() {
@@ -28,7 +28,7 @@ export class ModelTree<T extends object, K extends string, M> implements IModelT
   }
 }
 
-export class ModelTreeNode<T extends object, K extends string, M> implements IModelTreeNode<T, K, M> { 
+export class ModelTreeNode<T, K extends string, M> implements IModelTreeNode<T, K, M> { 
   private readonly _children: ModelDataNode<T, K, M>[] = []
   public nested: ModelDataNode<T, K, M>[] = []
   private readonly _value: T | null = null
@@ -95,7 +95,7 @@ export class ModelTreeNode<T extends object, K extends string, M> implements IMo
   }
 }
 
-export class ModelTreeComplexNode<T extends object, K extends string, M> extends ModelTreeNode<T, K, M> {
+export class ModelTreeComplexNode<T, K extends string, M> extends ModelTreeNode<T, K, M> {
 
   constructor(
     public readonly id: string = "#",
@@ -116,7 +116,7 @@ export class ModelTreeComplexNode<T extends object, K extends string, M> extends
   }
 }
 
-export class ModelRefNode<T extends object, K extends string, M> extends ModelTreeNode<T, K, M>  implements IModelRefNode<T, K, M> {
+export class ModelRefNode<T, K extends string, M> extends ModelTreeNode<T, K, M>  implements IModelRefNode<T, K, M> {
   private _target: ModelDataNode<T, K, M>
 
   public get depth(): number {

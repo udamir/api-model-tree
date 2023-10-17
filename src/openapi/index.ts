@@ -1,4 +1,6 @@
 export * from "./openapi.consts"
 export * from "./openapi.rules"
 export * from "./openapi.tree"
+export * from "./openapi.node"
+export * from "./openapi.transform"
 export * from "./openapi.types"

@@ -47,11 +47,11 @@ export interface IModelTreeNode<T, K extends string, M> {
   addNestedNode(node: ModelDataNode<T, K, M>): void
 }
 
-export type ModelTreeNodeParams<T extends object, K extends string, M> = {
+export type ModelTreeNodeParams<T, K extends string, M> = {
   type?: ModelTreeNodeType
   value?: T
   meta?: M
-  parent?: IModelTreeNode<T, K, M> | null
+  parent?: IModelTreeNode<any, any, any> | null
   countInDepth?: boolean
 }
 

@@ -1,16 +1,15 @@
 import { CrawlContext, SyncCrawlHook, syncCrawl } from 'json-crawl'
-import { buildPointer, isRefNode } from "allof-merge"
+import { buildPointer } from "allof-merge"
 
 import { openApiNodeKindValueKeys, openApiSpecificNodeKind, openApiSpecificNodeKinds } from './openapi.consts'
 import { OpenApiCrawlRule, OpenApiCrawlState, OpenApiModelTree, OpenApiNodeKind } from './openapi.types'
-import { createJsonSchemaNode, createJsonSchemaTreeCrawlHook } from '../jsonSchema'
-import { createOpenApiParamCrawlHook } from './nodes/parameter'
-import { createOpenApiContentCrawlHook } from './nodes/content'
+import { createOpenApiContentNode, createOpenApiParamNode } from './openapi.node'
+import { createJsonSchemaTreeCrawlHook } from '../jsonSchema'
 import { JsonSchemaModelTree } from '../jsonSchema'
 import { openApiCrawlRules } from "./openapi.rules"
 import { transformCrawlHook } from '../transform'
-import { ModelTree } from "../modelTree"
 import { getTargetNode, pick } from '../utils'
+import { ModelTree } from "../modelTree"
 
 const getNodeValue = (kind: OpenApiNodeKind, value: any, ctx: CrawlContext<OpenApiCrawlState, OpenApiCrawlRule> ) => {
   switch (kind) {
@@ -56,22 +55,26 @@ const createOpenApiTreeCrawlHook = (tree: ModelTree<any, any, any>): SyncCrawlHo
     const { kind } = ctx.rules
  
     let res: any = { node: null, value }
-    if (kind === openApiSpecificNodeKind.responses || kind === openApiSpecificNodeKind.requestBody || kind === openApiSpecificNodeKind.oneOfResponse ) {
-      res.node = tree.createComplexNode(id, kind, ctx.key, { 
-        type: "oneOf", 
-        parent, 
-        meta: { _fragment: value }
-      })
-    } else if (kind === openApiSpecificNodeKind.response || kind === openApiSpecificNodeKind.body || kind === openApiSpecificNodeKind.parameter) {
-      res = createJsonSchemaNode(tree as JsonSchemaModelTree, id, kind, ctx.key, value as any, parent)
-
-    } else {
-      const params = {
-        value: getNodeValue(kind, value, ctx),
-        parent,
-        meta: { _fragment: value },
-      }
-      res.node = tree.createNode(id, kind, ctx.key, params)
+    switch (kind) {
+      case openApiSpecificNodeKind.response:
+      case openApiSpecificNodeKind.requestBody:
+      case openApiSpecificNodeKind.responseBody:
+        res.node = tree.createComplexNode(id, kind, ctx.key, { type: "oneOf", parent, meta: { _fragment: value }})
+        break;
+      case openApiSpecificNodeKind.parameter:
+      case openApiSpecificNodeKind.header:
+        res = createOpenApiParamNode(tree, id, kind, String(ctx.key), value as any, source, parent)
+        break;
+      case openApiSpecificNodeKind.oneOfContent:
+        res = createOpenApiContentNode(tree, id, value, source, parent)
+        break;
+      default:
+        const params = {
+          value: getNodeValue(kind, value, ctx),
+          parent,
+          meta: { _fragment: value },
+        }
+        res.node = tree.createNode(id, kind, ctx.key, params)
     }
 
     if (container) {
@@ -90,7 +93,6 @@ const createOpenApiTreeCrawlHook = (tree: ModelTree<any, any, any>): SyncCrawlHo
   }
 }
 
-
 export const createOpenApiTree = (schema: any) => {
   const tree: OpenApiModelTree = new ModelTree()
   const crawlState: OpenApiCrawlState  = { parent: null, source: schema }
@@ -100,8 +102,6 @@ export const createOpenApiTree = (schema: any) => {
     [
       transformCrawlHook,
       createOpenApiTreeCrawlHook(tree),
-      createOpenApiParamCrawlHook(tree),
-      createOpenApiContentCrawlHook(tree),
       createJsonSchemaTreeCrawlHook(tree as JsonSchemaModelTree)
     ], 
     { state: crawlState, rules: openApiCrawlRules }
