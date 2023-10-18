@@ -11,19 +11,6 @@ import { openApiCrawlRules } from "./openapi.rules"
 import { transformCrawlHook } from '../transform'
 import { ModelTree } from "../modelTree"
 
-/**
- * service [simple]
- *   - operation [simple]
- *     - parameter (schema)
- *     - requestBody [oneOf]
- *       = oneOfcontent (schema)
- *     - response [oneOf]
- *       = oneOfresponse [simple]
- *         - header (schema)
- *         - responseBody [oneOf]
- *           = oneOfcontent (schema)
- */
-
 const createOpenApiTreeCrawlHook = (tree: ModelTree<any, any, any>): SyncCrawlHook => {
   return (value, ctx) => {
     if (!ctx.rules) { return null }

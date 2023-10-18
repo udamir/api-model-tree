@@ -200,6 +200,7 @@ export const transformTypeOfArray: SchemaTransformFunc<JsonSchemaCrawlState> = (
   if (typeSet.size === 1) {
     const [type] = [...typeSet.values()]
     return {
+      // TODO: save custom properties
       ...pick<any>(value, jsonSchemaTypeProps[type]),
       type,
     }

@@ -36,7 +36,7 @@ export class OpenApiStatePropNode extends JsonSchemaStatePropNode<OpenApiTreeNod
   }
 }
 
-export class GraphApiState {
+export class OpenApiState {
   public readonly root: IModelStatePropNode<OpenApiTreeNode> | null
 
   constructor(tree: OpenApiModelTree, operationId?: string, expandDepth = 1) {
