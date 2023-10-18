@@ -19,6 +19,21 @@ describe("jsonschema transformation tests", () => {
       expect(tree.root?.meta).toMatchObject({ _fragment: { ...rest, examples: [schema.example] } })
     })
 
+    it("should create tree from simple jsonSchema with meta", () => {
+      const schema: JSONSchema4 = {
+        title: "test",
+        type: "string",
+        description: "test description",
+        deprecated: true,
+        readOnly: true
+      }
+
+      const tree = createJsonSchemaTree(schema)
+
+      expect(tree.root).toMatchObject({ id: "#", type: "simple", parent: null })
+      expect(tree.root?.meta).toMatchObject({ deprecated: true, readOnly: true })
+    })
+
     it("should create tree from simple number jsonSchema with validations", () => {
       const schema: JSONSchema4 = {
         title: "Amount",

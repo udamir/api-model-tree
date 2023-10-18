@@ -40,12 +40,12 @@ export const jsonSchemaNodeValueProps: Record<JsonSchemaNodeType, readonly strin
 } 
 
 export const jsonSchemaTypeProps: Record<JsonSchemaNodeType, readonly string[]> = {
-  any: [...jsonSchemaCommonProps],
-  boolean: [...jsonSchemaCommonProps],
-  null: [...jsonSchemaCommonProps],
-  string: [...jsonSchemaCommonProps, 'format', 'minLength', 'maxLength', 'pattern'],
-  number: [...jsonSchemaCommonProps, 'format','multipleOf', 'minimum', 'exclusiveMinimum', 'maximum', 'exclusiveMaximum'],
-  integer: [...jsonSchemaCommonProps, 'format','multipleOf', 'minimum', 'exclusiveMinimum', 'maximum', 'exclusiveMaximum'],
-  object: [...jsonSchemaCommonProps, 'properties', 'required', 'patternProperties', 'additionalProperties', 'minProperties', 'maxProperties', 'propertyNames'],
-  array: [...jsonSchemaCommonProps, 'items', 'additionalItems', 'minItems', 'maxItems', 'uniqueItems'],
+  any: [...jsonSchemaNodeValueProps.any, ...jsonSchemaNodeMetaProps],
+  boolean: [...jsonSchemaNodeValueProps.boolean, ...jsonSchemaNodeMetaProps],
+  null: [...jsonSchemaNodeValueProps.null, ...jsonSchemaNodeMetaProps],
+  string: [...jsonSchemaNodeValueProps.string, ...jsonSchemaNodeMetaProps],
+  number: [...jsonSchemaNodeValueProps.number, ...jsonSchemaNodeMetaProps],
+  integer: [...jsonSchemaNodeValueProps.integer, ...jsonSchemaNodeMetaProps],
+  object: [...jsonSchemaNodeValueProps.object, ...jsonSchemaNodeMetaProps, 'properties', 'patternProperties', 'additionalProperties'],
+  array: [...jsonSchemaNodeValueProps.array, ...jsonSchemaNodeMetaProps, 'items', 'additionalItems'],
 } 
