@@ -16,13 +16,11 @@ export const resolveRef: SchemaTransformFunc<OpenApiCrawlState> = (value, path, 
 export const transformPathItems: SchemaTransformFunc<OpenApiCrawlState> = (value) => {
   if (typeof value !== 'object' || !value) { return value }
   
-  const result: Record<string, any> = {...value}
-
   const methods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace']
   
-  const _value = objectKeys(result).reduce((res, key) => {
+  const _value = objectKeys(value).reduce((res, key) => {
     if (methods.includes(key)) { return res }
-    res[key] = result[key]
+    res[key] = value[key]
     return res
   }, {} as any)
 
@@ -30,9 +28,11 @@ export const transformPathItems: SchemaTransformFunc<OpenApiCrawlState> = (value
     return value
   }
 
+  const result: Record<string, any> = {}
+
   for (const method of methods) {
-    if (!isKey(result, method)) { continue }
-    const data = { ...result[method] }
+    if (!isKey(value, method) || typeof value[method] !== 'object' || !value[method]) { continue }
+    const data = {...value[method] as any}
 
     const { parameters, servers, ...rest } = _value
 
