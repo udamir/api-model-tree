@@ -56,7 +56,7 @@ export const openApiCrawlRules: CrawlRules<OpenApiCrawlRule> = {
         transformers: [transformGlobalSecurity]
       },
       transformers: [resolveRef, transformPathItems]
-    }
+    },
   },
   kind: openApiNodeKind.service,
   transformers: []

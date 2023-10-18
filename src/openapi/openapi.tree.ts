@@ -2,13 +2,13 @@ import { SyncCrawlHook, syncCrawl } from 'json-crawl'
 import { buildPointer } from "allof-merge"
 
 import { createOpenApiContentNode, createOpenApiOperationNode, createOpenApiParamNode, createOpenApiResponseNode, createOpenApiServiceNode } from './openapi.node'
-import { openApiSpecificNodeKind, openApiSpecificNodeKinds } from './openapi.consts'
+import { openApiNodeKindMetaKeys, openApiSpecificNodeKind, openApiSpecificNodeKinds } from './openapi.consts'
 import { OpenApiCrawlState, OpenApiModelTree } from './openapi.types'
 import { createJsonSchemaTreeCrawlHook } from '../jsonSchema'
+import { getTargetNode, isObject, pick } from '../utils'
 import { JsonSchemaModelTree } from '../jsonSchema'
 import { openApiCrawlRules } from "./openapi.rules"
 import { transformCrawlHook } from '../transform'
-import { getTargetNode, pick } from '../utils'
 import { ModelTree } from "../modelTree"
 
 /**
@@ -27,7 +27,7 @@ import { ModelTree } from "../modelTree"
 const createOpenApiTreeCrawlHook = (tree: ModelTree<any, any, any>): SyncCrawlHook => {
   return (value, ctx) => {
     if (!ctx.rules) { return null }
-    if (!("kind" in ctx.rules) || !(openApiSpecificNodeKinds.includes(ctx.rules.kind))) { 
+    if (!("kind" in ctx.rules) || !(openApiSpecificNodeKinds.includes(ctx.rules.kind)) || !isObject(value)) { 
       return { value, state: ctx.state }
     }
 
@@ -38,7 +38,7 @@ const createOpenApiTreeCrawlHook = (tree: ModelTree<any, any, any>): SyncCrawlHo
     let res: any = { node: null, value }
     switch (kind) {
       case openApiSpecificNodeKind.requestBody: {
-        const meta = { ...pick(value, ['description', 'required']), _fragment: value }
+        const meta = { ...pick(value, openApiNodeKindMetaKeys.requestBody), _fragment: value }
         res.node = tree.createComplexNode(id, kind, ctx.key, { type: "oneOf", parent, meta })
         break
       }
@@ -47,7 +47,7 @@ const createOpenApiTreeCrawlHook = (tree: ModelTree<any, any, any>): SyncCrawlHo
         break
       }
       case openApiSpecificNodeKind.responseBody: {
-        const meta = { ...pick(value, ['description']), _fragment: value }
+        const meta = { ...pick(value, openApiNodeKindMetaKeys.requestBody), _fragment: value }
         res.node = tree.createComplexNode(id, kind, ctx.key, { type: "oneOf", parent, meta })
         break
       }

@@ -6,7 +6,11 @@ export function isStringOrNumber(value: unknown): value is number | string {
   return typeof value === 'string' || typeof value === 'number'
 }
 
-export function isObject(maybeObj: unknown): maybeObj is object {
+export const isKey = <T extends object>(x: T, k: PropertyKey): k is keyof T => {
+  return k in x;
+}
+
+export function isObject(maybeObj: unknown): maybeObj is Record<any, unknown> {
   return maybeObj !== void 0 && maybeObj !== null && typeof maybeObj === 'object'
 }
 
@@ -26,7 +30,7 @@ export function isNonNullable<T = unknown>(maybeNullable: T): maybeNullable is N
   return maybeNullable !== void 0 && maybeNullable !== null
 }
 
-export function isAllOfNode(value: any) {
+export function isAllOfNode(value: any): value is { allOf: any[] } {
   return value && value.allOf && Array.isArray(value.allOf)
 }
 
@@ -47,23 +51,24 @@ export function getNodeComplexityType(value: any): ModelTreeNodeType {
   return "simple"
 }
 
-export const keys = <T extends object>(value: T): (keyof T)[] => {
+export const objectKeys = <T extends object>(value: T): (keyof T)[] => {
   return Object.keys(value) as (keyof T)[]
 }
 
-export function pick<T extends object>(target: any, keys: readonly (keyof T)[]): Partial<T> {
-  const source: any = {}
+export function pick<T extends object>(target: unknown, keys: readonly (keyof T)[]): Partial<T> {
+  if (!isObject(target)) { return {} }
+  const source: Partial<T> = {}
 
   for (const key of keys) {
-    if (key in target) {
-      const value = target[key]
-      if (Array.isArray(value)) {
-        source[key] = [...value]
-      } else if (typeof value === "object") {
-        source[key] = {...value}
-      } else {
-        source[key] = value
-      }
+    if (!(key in target)) { continue }
+    
+    const value = target[key]
+    if (Array.isArray(value)) {
+      source[key] = [...value] as any
+    } else if (typeof value === "object") {
+      source[key] = {...value}
+    } else {
+      source[key] = value
     }
   }
 

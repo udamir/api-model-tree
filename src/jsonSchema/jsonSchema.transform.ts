@@ -1,7 +1,7 @@
 import { isAnyOfNode, isOneOfNode, isRefNode } from "allof-merge"
 
 import type { JsonSchemaCrawlState } from "./jsonSchema.types"
-import { isAllOfNode, isObject, keys, pick } from "../utils"
+import { isAllOfNode, isObject, objectKeys, pick } from "../utils"
 import { inferTypes, isValidType } from "./jsonSchema.utils"
 import { jsonSchemaTypeProps } from "./jsonSchema.consts"
 import type { SchemaTransformFunc } from "../types"
@@ -233,7 +233,7 @@ export const filterValidProps: SchemaTransformFunc<JsonSchemaCrawlState> = (valu
 
   const result: any = { ...value }
 
-  for (const prop of keys(validators)) {
+  for (const prop of objectKeys(validators)) {
     if (prop in result) {
       const isValidProp = validators[prop]
       if (!isValidProp(result[prop])) {
