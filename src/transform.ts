@@ -3,8 +3,7 @@ import { CrawlContext, CrawlHookResponse } from "json-crawl"
 import { SchemaCrawlRule, SchemaTransformFunc } from "./types"
 
 export const transformCrawlHook = <T>(value: unknown, ctx: CrawlContext<T, SchemaCrawlRule<any, any>>): CrawlHookResponse<T> | null => {
-  if (!ctx.rules) { return null }
-  if (!("transformers" in ctx.rules) || !Array.isArray(ctx.rules.transformers)) { 
+  if (!ctx.rules || !("transformers" in ctx.rules) || !Array.isArray(ctx.rules.transformers) || Array.isArray(value)) { 
     return { value: value, state: ctx.state }
   }
 

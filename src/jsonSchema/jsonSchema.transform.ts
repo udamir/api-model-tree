@@ -43,10 +43,18 @@ export const transformAdditionalItems: SchemaTransformFunc<JsonSchemaCrawlState>
   if (typeof value !== "object" || !value) {
     return value
   }
+
+  const { aditionalItems, ...rest } = value as any
   // transform aditionalItems: true into aditionalItems with type: any
-  if ("type" in value && value.type === "array" && "aditionalItems" in value && value.aditionalItems === true) {
+  if ("type" in value && value.type === "array" && aditionalItems === true) {
     return { ...value, aditionalItems: { type: "any" } }
   }
+
+  // remove additionalItems: false
+  if (!aditionalItems) {
+    return rest
+  }
+
   return value
 }
 
@@ -54,15 +62,18 @@ export const transformAdditionalProperties: SchemaTransformFunc<JsonSchemaCrawlS
   if (typeof value !== "object" || !value) {
     return value
   }
+
+  const { additionalProperties, ...rest } = value as any
   // transform additionalProperties: true into additionalProperties with type: any
-  if (
-    "type" in value &&
-    value.type === "object" &&
-    "additionalProperties" in value &&
-    value.additionalProperties === true
-  ) {
+  if ("type" in value && value.type === "object" && additionalProperties === true) {
     return { ...value, additionalProperties: { type: "any" } }
   }
+
+  // remove additionalProperties: false
+  if (!additionalProperties) {
+    return rest
+  }
+
   return value
 }
 
