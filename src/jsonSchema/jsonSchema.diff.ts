@@ -9,10 +9,10 @@ import {
 import { jsonSchemaNodeKinds, jsonSchemaNodeMetaProps, jsonSchemaNodeValueProps } from "./jsonSchema.consts"
 import { isValidType, transformTitle, isJsonSchemaTreeNode, isRequired } from "./jsonSchema.utils"
 import { getNodeComplexityType, getTargetNode, isObject, objectKeys, pick } from "../utils"
+import { ModelTree, ModelTreeComplexNode } from "../modelTree"
 import { CreateNodeResult, ModelDataNode } from "../types"
 import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
 import { modelTreeNodeType } from "../consts"
-import { ModelTree, ModelTreeComplexNode } from "../modelTree"
 
 export type JsonSchemaDiffTreeNode<T extends JsonSchemaNodeType = any> = ModelDataNode<
   JsonSchemaDiffNodeValue<T>,
@@ -28,16 +28,19 @@ export type JsonSchemaComplexNode<T extends JsonSchemaNodeType = any> = ModelTre
 export type JsonSchemaDiffCrawlState = { 
   parent: JsonSchemaDiffTreeNode | null
   container?: JsonSchemaComplexNode
-  source?: any
+  source?: unknown
   metaKey: symbol
 }
 
-export type JsonSchemaDiffNodeValue<T extends JsonSchemaNodeType = any> = JsonSchemaNodeValue<T> & { $changes?: any }
+export type JsonSchemaDiffNodeValue<T extends JsonSchemaNodeType = any> = JsonSchemaNodeValue<T> & { 
+  $changes?: Record<string, Diff>
+}
+
 export type JsonSchemaDiffNodeMeta = JsonSchemaNodeMeta & { 
-  $nodeChanges?: any,
-  $metaChanges?: any,
-  $childrenChanges?: any,
-  $nestedChanges?: any
+  $nodeChanges?: Diff
+  $metaChanges?: Record<string, Diff>
+  $childrenChanges?: Record<string, Diff>
+  $nestedChanges?: Record<string, Diff>
 }
 
 export const getRequiredChange = (key: string | number, parent: ModelDataNode<any, any, any> | null): Diff | null => {
@@ -227,7 +230,7 @@ export const createJsonSchemaDiffTreeCrawlHook = (tree: JsonSchemaModelTree): Sy
     }
 
     const id = "#" + buildPointer(ctx.path)
-    const { parent, container, source } = ctx.state
+    const { parent, container } = ctx.state
     const { kind } = ctx.rules
 
     const res = createJsonSchemaDiffNode(tree, id, kind, ctx.key, value as JsonSchemaFragment, ctx.state)
