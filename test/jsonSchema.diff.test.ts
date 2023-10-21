@@ -474,7 +474,7 @@ describe("jsonschema diff tree tests", () => {
     })
   })
 
-  describe.skip("schema with references", () => {
+  describe("schema with references", () => {
     it("should create diff tree for jsonSchema with refs", () => {
       const before: JSONSchema4 = {
         type: "object",
@@ -513,11 +513,54 @@ describe("jsonschema diff tree tests", () => {
 
       const merged = mergeSchemas(before, after)
       const tree = createJsonSchemaDiffTree(merged, metaKey)
-      expect(tree.root?.meta).toMatchObject({ $childrenChanges: { name: { action: 'add' }} })
+      expect(tree.root?.meta).toMatchObject({ $childrenChanges: { "#/properties/name": { action: 'add' }} })
+      expect(tree.root?.children()[0].value()).toMatchObject({ $changes: { type: { action: 'replace' }} })
+      expect(tree.root?.children()[1].meta).toMatchObject({ $nodeChanges: { action: 'add' } })
     })
 
-    it("should create tree for jsonSchema with cycle refs", () => {
-      const schema: JSONSchema4 = {
+    it("should create diff tree for jsonSchema with refs change", () => {
+      const before: JSONSchema4 = {
+        type: "object",
+        properties: {
+          id: { $ref: "#/defs/id" },
+          name: {
+            type: "string",
+          }
+        },
+        defs: {
+          id: {
+            title: "id",
+            type: "string",
+          }
+        },
+      }
+
+      const after: JSONSchema4 = {
+        type: "object",
+        properties: {
+          id: { $ref: "#/defs/id" },
+          name: { $ref: "#/defs/name" },
+        },
+        defs: {
+          id: {
+            title: "id",
+            type: "number",
+          },
+          name: {
+            title: "name",
+            type: "string",
+          },
+        },
+      }
+
+      const merged = mergeSchemas(before, after)
+      const tree = createJsonSchemaDiffTree(merged, metaKey)
+      expect(tree.root?.children()[0].value()).toMatchObject({ $changes: { type: { action: 'replace' }} })
+      expect(tree.root?.children()[1].value()).toMatchObject({ $changes: { title: { action: 'add' }} })
+    })
+
+    it("should create diff tree for jsonSchema with cycle refs", () => {
+      const before: JSONSchema4 = {
         type: "object",
         properties: {
           model: { $ref: "#/defs/model" },
@@ -541,80 +584,56 @@ describe("jsonschema diff tree tests", () => {
         },
       }
 
-      const tree = createJsonSchemaTree(schema)
-
-      expect(tree.root).toMatchObject({ id: "#", type: "simple", parent: null })
-
-      const model = tree.root?.children()![0]!
-      expect(model).toMatchObject({
-        id: "#/properties/model",
-        type: "simple",
-        key: "model",
-        kind: "property",
-        parent: tree.root,
-        ref: "#/defs/model",
-      })
-
-      const children = model?.children()
-      expect(children).toMatchObject([
-        { id: "#/properties/model/properties/id", type: "simple", parent: model, ref: "#/defs/id" },
-        {
-          id: "#/properties/model/properties/parent",
-          type: "simple",
-          parent: model,
-          ref: "#/defs/model",
-          isCycle: true,
+      const after: JSONSchema4 = {
+        type: "object",
+        properties: {
+          model: { $ref: "#/defs/model" },
         },
-      ])
-      expect(children[0].value()).toMatchObject(schema.defs!.id)
-      expect(children[1].value()).toMatchObject({ type: "object" })
+        defs: {
+          id: {
+            title: "id",
+            type: "string",
+          },
+          model: {
+            type: "object",
+            required: ['id'],
+            properties: {
+              id: {
+                $ref: "#/defs/id",
+              },
+            },
+          },
+        },
+      }
+
+      const merged = mergeSchemas(before, after)
+      const tree = createJsonSchemaDiffTree(merged, metaKey)
+      expect(tree.root?.children()[0].meta).toMatchObject({ $childrenChanges: { "#/properties/model/properties/parent": { action: 'remove' }} })
+      expect(tree.root?.children()[0].value()).toMatchObject({ $changes: { required: { action: 'add' }} })
+      expect(tree.root?.children()[0].children()[0].meta).toMatchObject({ $metaChanges: { required: { action: 'add' }} })
+      expect(tree.root?.children()[0].children()[1].meta).toMatchObject({ $nodeChanges: { action: 'remove' } })
     })
   })
 
-  describe.skip("schema with broken reference", () => {
+  describe("schema with broken reference", () => {
     it("should create tree for jsonSchema with broken refs", () => {
-      const schema: JSONSchema4 = {
+      const before: JSONSchema4 = {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+        },
+      }
+
+      const after: JSONSchema4 = {
         type: "object",
         properties: {
           id: { $ref: "#/defs/id" },
         },
       }
 
-      const tree = createJsonSchemaTree(schema)
-
-      expect(tree.root).toMatchObject({ id: "#", type: "simple", parent: null })
-
-      const children = tree.root?.children()!
-      expect(children).toMatchObject([{ id: "#/properties/id", type: "simple", parent: tree.root, ref: "#/defs/id" }])
-      expect(children[0].value()).toEqual(null)
-    })
-
-    it("should create tree for jsonSchema with broken refs in allOf", () => {
-      const schema: JSONSchema4 = {
-        allOf: [
-          {
-            type: "string",
-          },
-          {
-            description: "String type",
-          },
-          {
-            $ref: "#/components/schemas/StringPropValidations",
-          },
-        ],
-      }
-
-      const tree = createJsonSchemaTree(schema)
-
-      expect(tree.root).toMatchObject({ id: "#", type: "allOf", parent: null })
-
-      const nested = tree.root?.nested!
-      expect(nested).toMatchObject([
-        { id: "#/allOf/0", type: "simple", parent: null },
-        { id: "#/allOf/1", type: "simple", parent: null },
-        { id: "#/allOf/2", type: "simple", parent: null, ref: "#/components/schemas/StringPropValidations" },
-      ])
-      expect(nested[2].value()).toEqual(null)
+      const merged = mergeSchemas(before, after)
+      const tree = createJsonSchemaDiffTree(merged, metaKey)
+      expect(tree.root?.children()[0].value()).toEqual(null)
     })
   })
 })

@@ -1,4 +1,4 @@
-import { buildPointer, isRefNode, merge, parseRef, resolveRefNode } from "allof-merge"
+import { buildPointer, isRefNode, parseRef, resolveRefNode } from "allof-merge"
 import { SyncCrawlHook, syncCrawl } from "json-crawl"
 import type { Diff } from 'api-smart-diff'
 
@@ -14,26 +14,26 @@ import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
 import { modelTreeNodeType } from "../consts"
 import { ModelTree, ModelTreeComplexNode } from "../modelTree"
 
-type JsonSchemaDiffTreeNode<T extends JsonSchemaNodeType = any> = ModelDataNode<
+export type JsonSchemaDiffTreeNode<T extends JsonSchemaNodeType = any> = ModelDataNode<
   JsonSchemaDiffNodeValue<T>,
   JsonSchemaNodeKind,
   JsonSchemaDiffNodeMeta
 >
-type JsonSchemaComplexNode<T extends JsonSchemaNodeType = any> = ModelTreeComplexNode<
+export type JsonSchemaComplexNode<T extends JsonSchemaNodeType = any> = ModelTreeComplexNode<
   JsonSchemaDiffNodeValue<T>,
   JsonSchemaNodeKind,
   JsonSchemaDiffNodeMeta
 >
 
-type JsonSchemaDiffCrawlState = { 
+export type JsonSchemaDiffCrawlState = { 
   parent: JsonSchemaDiffTreeNode | null
   container?: JsonSchemaComplexNode
   source?: any
   metaKey: symbol
 }
 
-type JsonSchemaDiffNodeValue<T extends JsonSchemaNodeType = any> = JsonSchemaNodeValue<T> & { $changes?: any }
-type JsonSchemaDiffNodeMeta = JsonSchemaNodeMeta & { 
+export type JsonSchemaDiffNodeValue<T extends JsonSchemaNodeType = any> = JsonSchemaNodeValue<T> & { $changes?: any }
+export type JsonSchemaDiffNodeMeta = JsonSchemaNodeMeta & { 
   $nodeChanges?: any,
   $metaChanges?: any,
   $childrenChanges?: any,
@@ -47,9 +47,13 @@ export const getRequiredChange = (key: string | number, parent: ModelDataNode<an
   const value = parent?.value()
   const diff = value.$changes
   if (!!diff && 'required' in diff && !!value && 'required' in value && Array.isArray(value.required) && value.required.includes(key)) {
-    const index = value.required.indexOf(key)
-    if (index in diff.required.array) {
-      return diff.required.array[index]
+    if (diff.required.array) {
+      const index = value.required.indexOf(key)
+      if (index in diff.required.array) {
+        return diff.required.array[index]
+      }
+    } else {
+      return diff.required
     }
   }
   return null
@@ -183,7 +187,11 @@ export const createJsonSchemaDiffNode = (
     } else {
       // resolve and create node in cache
       const _value = transformTitle(resolveRefNode(source, _fragment), normalized) ?? null
-      res = createJsonSchemaDiffNode(tree, normalized, "definition", "", _value, state)
+      if (_value === null) {
+        res = { node: tree.createNode(id, kind, key, { parent, meta: { required, _fragment } }), value: null }
+      } else {
+        res = createJsonSchemaDiffNode(tree, normalized, "definition", "", _value, state)
+      }
     }
 
     const meta = { ...simpleDiffMeta(id, key, res.value, state), required }

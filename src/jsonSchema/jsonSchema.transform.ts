@@ -1,9 +1,8 @@
 import { isAnyOfNode, isOneOfNode, isRefNode } from "allof-merge"
 
 import type { JsonSchemaCrawlState } from "./jsonSchema.types"
-import { isAllOfNode, isObject, objectKeys, pick } from "../utils"
+import { isAllOfNode, isObject, objectKeys } from "../utils"
 import { inferTypes, isValidType } from "./jsonSchema.utils"
-import { jsonSchemaTypeProps } from "./jsonSchema.consts"
 import type { SchemaTransformFunc } from "../types"
 
 export const validators = {
@@ -211,16 +210,22 @@ export const transformTypeOfArray: SchemaTransformFunc<JsonSchemaCrawlState> = (
   if (typeSet.size === 1) {
     const [type] = [...typeSet.values()]
     return {
-      // TODO: save custom properties
-      ...pick<any>(value, jsonSchemaTypeProps[type]),
+      // TODO: exclude not valid properties
+      // ...pick<any>(value, jsonSchemaTypeProps[type]),
+      ...value,
       type,
     }
   } else {
+    const { defs, definitions, ...rest } = value as any
     return {
       anyOf: [...typeSet.values()].map((type) => ({
-        ...pick<any>(value, jsonSchemaTypeProps[type]),
+        // TODO: exclude not valid properties
+        // ...pick<any>(rest, jsonSchemaTypeProps[type]),
+        ...rest,
         type,
       })),
+      ...defs ? { defs } : {},
+      ...definitions ? { definitions } : {},
     }
   }
 }
@@ -230,7 +235,7 @@ export const transformDeprecated: SchemaTransformFunc<JsonSchemaCrawlState> = (v
     return value
   }
   // 1. convert "x-deprecated" into deprecated
-  // TODO: 2. convert "x-deprecated-infor" into deprecated object
+  // TODO: 2. convert "x-deprecated-info" into deprecated object
   if ("x-deprecated" in value && typeof value["x-deprecated"] === "boolean") {
     return { deprecated: value["x-deprecated"], ...value }
   }
