@@ -1,27 +1,37 @@
 import { buildPointer, isRefNode, merge, parseRef, resolveRefNode } from "allof-merge"
-import { SyncCrawlHook, syncClone, syncCrawl } from "json-crawl"
-import { Diff, apiMerge } from 'api-smart-diff'
+import { SyncCrawlHook, syncCrawl } from "json-crawl"
+import type { Diff } from 'api-smart-diff'
 
 import {
   JsonSchemaNodeValue, JsonSchemaNode, JsonSchemaFragment, JsonSchemaNodeKind,
-  JsonSchemaModelTree, JsonSchemaNodeMeta, JsonSchemaCrawlState, JsonSchemaNodeType,
+  JsonSchemaModelTree, JsonSchemaNodeMeta, JsonSchemaNodeType,
 } from "./jsonSchema.types"
 import { jsonSchemaNodeKinds, jsonSchemaNodeMetaProps, jsonSchemaNodeValueProps } from "./jsonSchema.consts"
 import { isValidType, transformTitle, isJsonSchemaTreeNode, isRequired } from "./jsonSchema.utils"
 import { getNodeComplexityType, getTargetNode, isObject, objectKeys, pick } from "../utils"
-import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
-import { transformCrawlHook } from "../transform"
-import { modelTreeNodeType } from "../consts"
 import { CreateNodeResult, ModelDataNode } from "../types"
-import { ModelTree } from "../modelTree"
-
-const metaKey = Symbol('diff')
+import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
+import { modelTreeNodeType } from "../consts"
+import { ModelTree, ModelTreeComplexNode } from "../modelTree"
 
 type JsonSchemaDiffTreeNode<T extends JsonSchemaNodeType = any> = ModelDataNode<
-JsonSchemaDiffNodeValue<T>,
-JsonSchemaNodeKind,
-JsonSchemaDiffNodeMeta
+  JsonSchemaDiffNodeValue<T>,
+  JsonSchemaNodeKind,
+  JsonSchemaDiffNodeMeta
 >
+type JsonSchemaComplexNode<T extends JsonSchemaNodeType = any> = ModelTreeComplexNode<
+  JsonSchemaDiffNodeValue<T>,
+  JsonSchemaNodeKind,
+  JsonSchemaDiffNodeMeta
+>
+
+type JsonSchemaDiffCrawlState = { 
+  parent: JsonSchemaDiffTreeNode | null
+  container?: JsonSchemaComplexNode
+  source?: any
+  metaKey: symbol
+}
+
 type JsonSchemaDiffNodeValue<T extends JsonSchemaNodeType = any> = JsonSchemaNodeValue<T> & { $changes?: any }
 type JsonSchemaDiffNodeMeta = JsonSchemaNodeMeta & { 
   $nodeChanges?: any,
@@ -45,7 +55,7 @@ export const getRequiredChange = (key: string | number, parent: ModelDataNode<an
   return null
 }
 
-export const getChildrenChanges = (id: string, _fragment: any): Record<string, Diff> => {
+export const getChildrenChanges = (id: string, _fragment: any, metaKey: symbol): Record<string, Diff> => {
   const children: Record<string, Diff> = {}
 
   // add/remove all properties
@@ -101,13 +111,14 @@ export const getChildrenChanges = (id: string, _fragment: any): Record<string, D
   return children
 }
 
-export const simpleDiffMeta = (id: string, key: string | number, _fragment: any,  parent: JsonSchemaDiffTreeNode | null = null, container: JsonSchemaDiffTreeNode | null = null) => {
+export const simpleDiffMeta = (id: string, key: string | number, _fragment: any, state: JsonSchemaDiffCrawlState) => {
+  const { metaKey, parent = null, container = null } = state
   const requiredChange = getRequiredChange(key, parent)
   const $metaChanges = {
     ...requiredChange ? { required: requiredChange } : {},
     ...pick(_fragment?.[metaKey], jsonSchemaNodeMetaProps),
   }
-  const $childrenChanges = getChildrenChanges(id, _fragment ?? {})
+  const $childrenChanges = getChildrenChanges(id, _fragment ?? {}, metaKey)
   const $nodeChanges = parent?.meta?.$childrenChanges?.[id] || container?.meta?.$nestedChanges?.[id]
 
   return {
@@ -119,12 +130,12 @@ export const simpleDiffMeta = (id: string, key: string | number, _fragment: any,
   }
 }
 
-export const nestedDiffMeta = (id: string, _fragment: any, meta: JsonSchemaDiffNodeMeta = {}) => {
+export const nestedDiffMeta = (id: string, _fragment: any, metaKey: symbol, meta: JsonSchemaDiffNodeMeta = {}) => {
   const complexityType = getNodeComplexityType(_fragment)
   if (complexityType !== modelTreeNodeType.simple) {
     let _meta = meta
     for (const item of _fragment[complexityType]!) {
-      _meta = nestedDiffMeta(`${id}/${complexityType}/${item}`, item as JsonSchemaFragment, _meta)
+      _meta = nestedDiffMeta(`${id}/${complexityType}/${item}`, item as JsonSchemaFragment, metaKey, _meta)
     }
 
     const nestedChanges: Record<string, any> = _fragment?.[metaKey]?.[complexityType]?.array ?? {}
@@ -149,10 +160,9 @@ export const createJsonSchemaDiffNode = (
   kind: JsonSchemaNodeKind,
   key: string | number,
   _fragment: any | null,
-  source: any,
-  parent: JsonSchemaDiffTreeNode | null = null,
-  container: JsonSchemaDiffTreeNode | null = null
+  state: JsonSchemaDiffCrawlState
 ): CreateNodeResult<JsonSchemaNode> => {
+  const { metaKey, source, parent = null } = state
   const required = isRequired(key, parent)
 
   if (_fragment === null) {
@@ -163,7 +173,7 @@ export const createJsonSchemaDiffNode = (
 
   const complexityType = getNodeComplexityType(_fragment)
   if (complexityType !== modelTreeNodeType.simple) {
-    const params = { type: complexityType, parent, meta: { ...nestedDiffMeta(id, _fragment), required, _fragment } }
+    const params = { type: complexityType, parent, meta: { ...nestedDiffMeta(id, _fragment, metaKey), required, _fragment } }
     res.node = tree.createComplexNode(id, kind, key, params)
   } else if (isRefNode(_fragment)) {
     const { normalized } = parseRef(_fragment.$ref)
@@ -173,10 +183,10 @@ export const createJsonSchemaDiffNode = (
     } else {
       // resolve and create node in cache
       const _value = transformTitle(resolveRefNode(source, _fragment), normalized) ?? null
-      res = createJsonSchemaDiffNode(tree, normalized, "definition", "", _value, source)
+      res = createJsonSchemaDiffNode(tree, normalized, "definition", "", _value, state)
     }
 
-    const meta = { ...simpleDiffMeta(id, key, res.value, parent, container), required }
+    const meta = { ...simpleDiffMeta(id, key, res.value, state), required }
     const params = { parent, meta }
     res.node = tree.createRefNode(id, kind, key, res.node ?? null, params)
   } else {
@@ -185,7 +195,7 @@ export const createJsonSchemaDiffNode = (
       throw new Error(`Schema should have type: ${id}`)
     }
 
-    const meta = { ...simpleDiffMeta(id, key, _fragment, parent, container ), required }
+    const meta = { ...simpleDiffMeta(id, key, _fragment, state), required }
     const valueChanges = pick(_fragment[metaKey], jsonSchemaNodeValueProps[type])
 
     const value = {
@@ -212,7 +222,7 @@ export const createJsonSchemaDiffTreeCrawlHook = (tree: JsonSchemaModelTree): Sy
     const { parent, container, source } = ctx.state
     const { kind } = ctx.rules
 
-    const res = createJsonSchemaDiffNode(tree, id, kind, ctx.key, value as JsonSchemaFragment, source, parent, container)
+    const res = createJsonSchemaDiffNode(tree, id, kind, ctx.key, value as JsonSchemaFragment, ctx.state)
 
     if (container) {
       container.addNestedNode(res.node)
@@ -222,7 +232,9 @@ export const createJsonSchemaDiffTreeCrawlHook = (tree: JsonSchemaModelTree): Sy
 
     if (res.value) {
       const _node = getTargetNode(tree, res.node)
-      const state = isJsonSchemaTreeNode(res.node) ? { parent: _node, source } : { parent, container: _node, source }
+      const state = isJsonSchemaTreeNode(res.node) 
+        ? { ...ctx.state, parent: _node, container: null } 
+        : { ...ctx.state, parent, container: _node }
       return { value: res.value, state }
     } else {
       return null
@@ -230,22 +242,24 @@ export const createJsonSchemaDiffTreeCrawlHook = (tree: JsonSchemaModelTree): Sy
   }
 }
 
-export const createJsonSchemaDiffTree = (before: JsonSchemaFragment, after: JsonSchemaFragment, beforeSource: any = before, afterSource: any = after) => {
+// export const createJsonSchemaDiffTree = (before: JsonSchemaFragment, after: JsonSchemaFragment, beforeSource: any = before, afterSource: any = after) => {
+export const createJsonSchemaDiffTree = (merged: any, metaKey: symbol, mergedSource: any = merged) => {
 
   const tree = new ModelTree<JsonSchemaDiffNodeValue, JsonSchemaNodeKind, JsonSchemaDiffNodeMeta>()
-  if (!isObject(before) || !isObject(after)) {
+  if (!isObject(merged) || !isObject(mergedSource)) {
     return tree
   }
 
-  const _before = merge(before, { source: beforeSource, mergeRefSibling: true, mergeCombinarySibling: true })
-  const _after = merge(after, { source: afterSource, mergeRefSibling: true, mergeCombinarySibling: true })
+  // const _before = merge(before, { source: beforeSource, mergeRefSibling: true, mergeCombinarySibling: true })
+  // const _after = merge(after, { source: afterSource, mergeRefSibling: true, mergeCombinarySibling: true })
 
-  const b = syncClone(_before, transformCrawlHook, { rules: jsonSchemaCrawlRules() })
-  const a = syncClone(_after, transformCrawlHook, { rules: jsonSchemaCrawlRules() })
+  // const b = syncClone(_before, transformCrawlHook, { rules: jsonSchemaCrawlRules() })
+  // const a = syncClone(_after, transformCrawlHook, { rules: jsonSchemaCrawlRules() })
 
-  const merged = apiMerge(b, a, { metaKey })
+  // const merged = apiMerge(b, a, { metaKey })
 
-  const crawlState: JsonSchemaCrawlState = { parent: null, source: merged }
+  // const crawlState: JsonSchemaCrawlState = { parent: null, source: merged }
+  const crawlState: JsonSchemaDiffCrawlState = { parent: null, source: mergedSource, metaKey }
 
   syncCrawl(merged, [
     createJsonSchemaDiffTreeCrawlHook(tree)
