@@ -4,7 +4,7 @@ import { syncClone } from "json-crawl"
 import { merge } from "allof-merge"
 
 import { createJsonSchemaDiffTree, createJsonSchemaTree, jsonSchemaCrawlRules } from "../src"
-import { transformCrawlHook } from "../src/transform"
+import { createTransformCrawlHook } from "../src/transform"
 
 const metaKey = Symbol('diff')
 
@@ -12,8 +12,8 @@ const mergeSchemas = (before: any, after: any, beforeSource: any = before, after
   const _before = merge(before, { source: beforeSource, mergeRefSibling: true, mergeCombinarySibling: true })
   const _after = merge(after, { source: afterSource, mergeRefSibling: true, mergeCombinarySibling: true })
 
-  const b = syncClone(_before, transformCrawlHook, { rules: jsonSchemaCrawlRules() })
-  const a = syncClone(_after, transformCrawlHook, { rules: jsonSchemaCrawlRules() })
+  const b = syncClone(_before, createTransformCrawlHook(beforeSource), { rules: jsonSchemaCrawlRules() })
+  const a = syncClone(_after, createTransformCrawlHook(afterSource), { rules: jsonSchemaCrawlRules() })
 
   return apiMerge(b, a, { metaKey })
 }

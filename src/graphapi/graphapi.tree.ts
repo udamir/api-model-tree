@@ -10,8 +10,8 @@ import {
 import { graphApiNodeKind, graphApiNodeKinds, graphqlEmbeddedDirectives } from "./graphapi.consts"
 import { GraphApiNodeData, GraphApiNodeKind, GraphapiTreeNode } from "./graphapi.types"
 import { CreateNodeResult, ModelTreeNodeParams } from "../types"
+import { createTransformCrawlHook } from "../transform"
 import { graphApiCrawlRules } from "./graphapi.rules"
-import { transformCrawlHook } from "../transform"
 import { modelTreeNodeType } from "../consts"
 import { isRequired } from "../jsonSchema"
 import { ModelTree } from "../modelTree"
@@ -82,7 +82,7 @@ export const createGraphApiTree = (schema: GraphApiSchema) => {
   syncCrawl(
     schema,
     [
-      transformCrawlHook, 
+      createTransformCrawlHook(schema), 
       createGraphApiTreeCrawlHook(tree),
       createGraphSchemaTreeCrawlHook(tree as GraphSchemaModelTree)
     ], 

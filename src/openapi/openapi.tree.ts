@@ -6,12 +6,11 @@ import { openApiNodeKindMetaKeys, openApiSpecificNodeKind, openApiSpecificNodeKi
 import { OpenApiCrawlState, OpenApiModelTree } from './openapi.types'
 import { createJsonSchemaTreeCrawlHook } from '../jsonSchema'
 import { getTargetNode, isObject, pick } from '../utils'
+import { createTransformCrawlHook } from '../transform'
 import { JsonSchemaModelTree } from '../jsonSchema'
 import { openApiCrawlRules } from "./openapi.rules"
-import { transformCrawlHook } from '../transform'
-import { ModelTree } from "../modelTree"
 
-const createOpenApiTreeCrawlHook = (tree: ModelTree<any, any, any>): SyncCrawlHook => {
+const createOpenApiTreeCrawlHook = (tree: OpenApiModelTree): SyncCrawlHook => {
   return (value, ctx) => {
     if (!ctx.rules) { return null }
     if (!("kind" in ctx.rules) || !(openApiSpecificNodeKinds.includes(ctx.rules.kind)) || !isObject(value)) { 
@@ -75,13 +74,13 @@ const createOpenApiTreeCrawlHook = (tree: ModelTree<any, any, any>): SyncCrawlHo
 }
 
 export const createOpenApiTree = (schema: any) => {
-  const tree: OpenApiModelTree = new ModelTree()
+  const tree: OpenApiModelTree = new JsonSchemaModelTree(schema)
   const crawlState: OpenApiCrawlState  = { parent: null, source: schema }
 
   syncCrawl(
     schema,
     [
-      transformCrawlHook,
+      createTransformCrawlHook(schema),
       createOpenApiTreeCrawlHook(tree),
       createJsonSchemaTreeCrawlHook(tree as JsonSchemaModelTree)
     ], 

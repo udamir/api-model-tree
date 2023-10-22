@@ -4,12 +4,12 @@ import { OpenApiCrawlState } from "./openapi.types"
 import { SchemaTransformFunc } from "../types"
 import { isKey, objectKeys } from "../utils"
 
-export const allOfMerge: SchemaTransformFunc<OpenApiCrawlState> = (value, path, {source}) => {
+export const allOfMerge: SchemaTransformFunc<OpenApiCrawlState> = (value, source) => {
   const mergeRules = { "/schema": jsonSchemaMergeRules() }
   return merge(value, { source, mergeRefSibling: true, mergeCombinarySibling: true, rules: mergeRules })
 }
 
-export const resolveRef: SchemaTransformFunc<OpenApiCrawlState> = (value, path, {source}) => {
+export const resolveRef: SchemaTransformFunc<OpenApiCrawlState> = (value, source) => {
   return isRefNode(value) ? resolveRefNode(source, value) : value
 }
 

@@ -1,8 +1,8 @@
 import type { JSONSchema4, JSONSchema6 } from "json-schema"
 
 import { jsonSchemaNodeKind, jsonSchemaNodeTypes } from "./jsonSchema.consts"
-import { ModelTree, ModelTreeComplexNode } from "../modelTree"
 import { ModelDataNode, SchemaCrawlRule } from "../types"
+import { ModelTreeComplexNode } from "../modelTree"
 
 export type JsonSchemaNodeKind = keyof typeof jsonSchemaNodeKind
 export type JsonSchemaNodeType = (typeof jsonSchemaNodeTypes)[number]
@@ -10,7 +10,6 @@ export type JsonSchemaNodeType = (typeof jsonSchemaNodeTypes)[number]
 export type JsonSchemaFragment<T = {}> = (JSONSchema6 | JSONSchema4) & T
 
 export type JsonSchemaCrawlRule = SchemaCrawlRule<JsonSchemaNodeKind, JsonSchemaCrawlState>
-export type JsonSchemaModelTree = ModelTree<JsonSchemaNodeValue, JsonSchemaNodeKind, JsonSchemaNodeMeta>
 
 export type JsonSchemaNodeMeta = {
   readonly required?: boolean
@@ -36,7 +35,6 @@ export type JsonSchemaNode<T extends JsonSchemaNodeType = any> = JsonSchemaTreeN
 export interface JsonSchemaCrawlState {
   parent: JsonSchemaTreeNode | null
   container?: JsonSchemaComplexNode
-  source?: any
 }
 
 export type JsonSchemaTransformedFragment = JsonSchemaFragment & {

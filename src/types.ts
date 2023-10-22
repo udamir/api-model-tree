@@ -4,7 +4,7 @@ import { JsonPath } from 'json-crawl'
 import { modelStateNodeType, modelTreeNodeType } from './consts'
 
 
-export type SchemaTransformFunc<S> = (value: unknown, path: JsonPath, state: S) => any
+export type SchemaTransformFunc<S> = (value: unknown, source: unknown, path: JsonPath, state: S) => any
 
 export type SchemaCrawlRule<K extends string, S> = {
   kind: K

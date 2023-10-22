@@ -1,8 +1,8 @@
 import { JsonPath } from 'json-crawl'
 
-import { JsonSchemaComplexDiffNode, JsonSchemaNode, JsonSchemaNodeMeta, JsonSchemaNodeValue } from '../jsonSchema'
+import { JsonSchemaComplexDiffNode, JsonSchemaModelTree, JsonSchemaNode, JsonSchemaNodeMeta, JsonSchemaNodeValue } from '../jsonSchema'
 import { IModelTreeNode, ModelDataNode, SchemaCrawlRule } from '../types'
-import { ModelTree, ModelTreeComplexNode } from '../modelTree'
+import { ModelTreeComplexNode } from '../modelTree'
 import { openApiNodeKind } from './openapi.consts'
 
 export type OpenApiNodeKind = keyof typeof openApiNodeKind
@@ -42,7 +42,7 @@ export type OpenApiComplexNode<T extends OpenApiNodeKind = any> =
   T extends 'requestBody' ? OpenApiRequestBodyNode : JsonSchemaComplexDiffNode
 
 export type OpenApiNodeMeta = IServiceNodeMeta | IOperationNodeMeta | IParameterMeta | IContentMeta | IResponseMeta | IResponseBodyMeta | IRequestBodyMeta | JsonSchemaNodeMeta
-export type OpenApiModelTree = ModelTree<JsonSchemaNodeValue | null, OpenApiNodeKind, OpenApiNodeMeta>
+export type OpenApiModelTree = JsonSchemaModelTree<JsonSchemaNodeValue | null, OpenApiNodeKind, OpenApiNodeMeta>
 
 export interface IServiceNodeMeta {
   info: any

@@ -7,7 +7,7 @@ import {
 
 import { createGraphSchemaTreeCrawlHook } from "./graphSchema.node"
 import { graphSchemaCrawlRules } from "./graphSchema.rules"
-import { transformCrawlHook } from "../transform"
+import { createTransformCrawlHook } from "../transform"
 import { ModelTree } from "../modelTree"
 
 export const createGraphSchemaTree = (schema: GraphSchemaFragment, source: any = schema): GraphSchemaModelTree => {
@@ -17,7 +17,7 @@ export const createGraphSchemaTree = (schema: GraphSchemaFragment, source: any =
   syncCrawl(
     schema,
     [ 
-      transformCrawlHook, 
+      createTransformCrawlHook(source), 
       createGraphSchemaTreeCrawlHook(tree)
     ], 
     { 

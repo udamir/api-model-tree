@@ -4,7 +4,7 @@ import type { Diff } from 'api-smart-diff'
 
 import {
   JsonSchemaNodeValue, JsonSchemaNode, JsonSchemaFragment, JsonSchemaNodeKind,
-  JsonSchemaModelTree, JsonSchemaNodeMeta, JsonSchemaNodeType,
+  JsonSchemaNodeMeta, JsonSchemaNodeType,
 } from "./jsonSchema.types"
 import { jsonSchemaNodeKinds, jsonSchemaNodeMetaProps, jsonSchemaNodeValueProps } from "./jsonSchema.consts"
 import { isValidType, transformTitle, isJsonSchemaTreeNode, isRequired } from "./jsonSchema.utils"
@@ -13,6 +13,7 @@ import { ModelTree, ModelTreeComplexNode } from "../modelTree"
 import { CreateNodeResult, ModelDataNode } from "../types"
 import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
 import { modelTreeNodeType } from "../consts"
+import { JsonSchemaModelTree } from "./jsonSchema.tree"
 
 export type JsonSchemaDiffTreeNode<T extends JsonSchemaNodeType = any> = ModelDataNode<
   JsonSchemaDiffNodeValue<T>,
@@ -28,7 +29,6 @@ export type JsonSchemaComplexDiffNode<T extends JsonSchemaNodeType = any> = Mode
 export type JsonSchemaDiffCrawlState = { 
   parent: JsonSchemaDiffTreeNode | null
   container?: JsonSchemaComplexDiffNode
-  source?: unknown
   metaKey: symbol
 }
 
@@ -162,14 +162,14 @@ export const nestedDiffMeta = (id: string, _fragment: any, metaKey: symbol, meta
 }
 
 export const createJsonSchemaDiffNode = (
-  tree: ModelTree<JsonSchemaDiffNodeValue, JsonSchemaNodeKind, JsonSchemaDiffNodeMeta>,
+  tree: JsonSchemaModelTree,
   id: string,
   kind: JsonSchemaNodeKind,
   key: string | number,
   _fragment: any | null,
   state: JsonSchemaDiffCrawlState
 ): CreateNodeResult<JsonSchemaNode> => {
-  const { metaKey, source, parent = null } = state
+  const { metaKey, parent = null } = state
   const required = isRequired(key, parent)
 
   if (_fragment === null) {
@@ -189,7 +189,7 @@ export const createJsonSchemaDiffNode = (
       res.node = tree.nodes.get(normalized)!
     } else {
       // resolve and create node in cache
-      const _value = transformTitle(resolveRefNode(source, _fragment), normalized) ?? null
+      const _value = transformTitle(resolveRefNode(tree.source, _fragment), normalized) ?? null
       if (_value === null) {
         res = { node: tree.createNode(id, kind, key, { parent, meta: { required, _fragment } }), value: null }
       } else {
@@ -256,7 +256,7 @@ export const createJsonSchemaDiffTreeCrawlHook = (tree: JsonSchemaModelTree): Sy
 // export const createJsonSchemaDiffTree = (before: JsonSchemaFragment, after: JsonSchemaFragment, beforeSource: any = before, afterSource: any = after) => {
 export const createJsonSchemaDiffTree = (merged: any, metaKey: symbol, mergedSource: any = merged) => {
 
-  const tree = new ModelTree<JsonSchemaDiffNodeValue, JsonSchemaNodeKind, JsonSchemaDiffNodeMeta>()
+  const tree = new JsonSchemaModelTree<JsonSchemaDiffNodeValue, JsonSchemaNodeKind, JsonSchemaDiffNodeMeta>(mergedSource)
   if (!isObject(merged) || !isObject(mergedSource)) {
     return tree
   }
@@ -270,7 +270,7 @@ export const createJsonSchemaDiffTree = (merged: any, metaKey: symbol, mergedSou
   // const merged = apiMerge(b, a, { metaKey })
 
   // const crawlState: JsonSchemaCrawlState = { parent: null, source: merged }
-  const crawlState: JsonSchemaDiffCrawlState = { parent: null, source: mergedSource, metaKey }
+  const crawlState: JsonSchemaDiffCrawlState = { parent: null, metaKey }
 
   syncCrawl(merged, [
     createJsonSchemaDiffTreeCrawlHook(tree)

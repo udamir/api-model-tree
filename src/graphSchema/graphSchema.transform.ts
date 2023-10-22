@@ -43,7 +43,7 @@ export const transformValues: SchemaTransformFunc<GraphSchemaCrawlState>  = (val
   return { ...rest, values: _values }
 }
 
-export const transformRef: SchemaTransformFunc<GraphSchemaCrawlState> = (value, path, { source }) => {
+export const transformRef: SchemaTransformFunc<GraphSchemaCrawlState> = (value, source) => {
   // skip if not object or current node graph-schema
   if (!isRefNode(value) ) { return value }
 

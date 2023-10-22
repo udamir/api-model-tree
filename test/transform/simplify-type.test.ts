@@ -11,7 +11,7 @@ describe('json-schema with complex type should be simplified', () => {
       minimum: 0
     }
 
-    const result = transformTypeOfArray(schema, [], { source: schema, parent: null })
+    const result = transformTypeOfArray(schema, schema, [], { parent: null })
 
     expect(result).toMatchObject({
       anyOf: [
@@ -38,7 +38,7 @@ describe('json-schema with complex type should be simplified', () => {
       minimum: 0
     }
 
-    const result = transformTypeOfArray(schema, [], { source: schema, parent: null })
+    const result = transformTypeOfArray(schema, schema, [], { parent: null })
 
     expect(result).toMatchObject({
       anyOf: [
@@ -75,7 +75,7 @@ describe('json-schema with complex type should be simplified', () => {
       uniqueItems: true
     }
 
-    const result = transformTypeOfArray(schema, [], { source: schema, parent: null })
+    const result = transformTypeOfArray(schema, schema, [], { parent: null })
 
     expect(result).toMatchObject({
       anyOf: [
@@ -114,7 +114,7 @@ describe('json-schema with complex type should be simplified', () => {
       },
     }
 
-    const result = transformTypeOfArray(schema, [], { source: schema, parent: null })
+    const result = transformTypeOfArray(schema, schema, [], { parent: null })
 
     const { nullable, ...rest } = schema
     expect(result).toMatchObject(rest)
@@ -132,7 +132,7 @@ describe('json-schema with complex type should be simplified', () => {
       maximum: 5
     }
 
-    const result = filterValidProps(schema, [], { source: schema, parent: null })
+    const result = filterValidProps(schema, schema, [], { parent: null })
 
     const { maximum, uniqueItems, ...rest } = schema
 
@@ -153,7 +153,7 @@ describe('json-schema with complex type should be simplified', () => {
       maximum: 5
     }
 
-    const result = transformAdditionalProperties(filterValidProps(schema, [], { source: schema, parent: null }), [], { source: schema, parent: null })
+    const result = transformAdditionalProperties(filterValidProps(schema, schema, [], { parent: null }), schema, [], { parent: null })
 
     const { maximum, uniqueItems, ...rest } = schema
 
