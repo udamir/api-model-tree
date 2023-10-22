@@ -8,13 +8,14 @@ import {
 } from "../graphSchema"
 
 import { graphApiNodeKind, graphApiNodeKinds, graphqlEmbeddedDirectives } from "./graphapi.consts"
+import { GraphApiNodeData, GraphApiNodeKind, GraphapiTreeNode } from "./graphapi.types"
+import { CreateNodeResult, ModelTreeNodeParams } from "../types"
 import { graphApiCrawlRules } from "./graphapi.rules"
+import { transformCrawlHook } from "../transform"
 import { modelTreeNodeType } from "../consts"
 import { isRequired } from "../jsonSchema"
 import { ModelTree } from "../modelTree"
-import { GraphApiNodeData, GraphApiNodeKind } from "./graphapi.types"
-import { ModelTreeNodeParams } from "../types"
-import { transformCrawlHook } from "../transform"
+import { getTargetNode } from "../utils"
 
 const createGraphApiTreeCrawlHook = (tree: ModelTree<GraphApiNodeData, GraphApiNodeKind, GraphSchemaNodeMeta>): SyncCrawlHook => {
   return (value, ctx) => {
@@ -27,12 +28,12 @@ const createGraphApiTreeCrawlHook = (tree: ModelTree<GraphApiNodeData, GraphApiN
     const { parent, source } = ctx.state
     const { kind } = ctx.rules
  
-    let node
+    let res = { value, node: {} } as CreateNodeResult<GraphapiTreeNode>
     switch (kind) {
       case graphApiNodeKind.query: 
       case graphApiNodeKind.mutation: 
       case graphApiNodeKind.subscription: {
-        node = createGraphSchemaNode(tree as GraphSchemaModelTree, id, kind, ctx.key, value as GraphSchemaFragment, parent, false)
+        res = createGraphSchemaNode(tree as GraphSchemaModelTree, id, kind, ctx.key, value as GraphSchemaFragment, source, parent, false)
         break;
       }
       case graphApiNodeKind.schema: {
@@ -43,7 +44,7 @@ const createGraphApiTreeCrawlHook = (tree: ModelTree<GraphApiNodeData, GraphApiN
           meta: { required: isRequired(ctx.key, parent), _fragment: value }, 
           countInDepth: false
         }
-        node = tree.createNode(id, kind, ctx.key, params)
+        res.node = tree.createNode(id, kind, ctx.key, params)
         break;
       }
       case graphApiNodeKind.directive: {
@@ -54,16 +55,22 @@ const createGraphApiTreeCrawlHook = (tree: ModelTree<GraphApiNodeData, GraphApiN
           parent,
           meta: { required: isRequired(ctx.key, parent), _fragment: value }
         }
-        node = tree.createNode(id, kind, ctx.key, params)
+        res.node = tree.createNode(id, kind, ctx.key, params)
         break;
       }
     }
+    
+    parent?.addChild(res.node)
 
-    parent?.addChild(node)
-    const state = node!.type === modelTreeNodeType.simple 
-      ? { parent: node as GraphSchemaTreeNode<any>, source } 
-      : { parent, container: node as GraphSchemaComplexNode<any>, source }
-    return { value, state }
+    if (res.value) {
+      const _node = getTargetNode(tree, res.node)
+      const state = res.node!.type === modelTreeNodeType.simple 
+        ? { parent: _node as GraphSchemaTreeNode<any>, source } 
+        : { parent, container: _node as GraphSchemaComplexNode<any>, source }
+      return { value: res.value, state }
+    } else {
+      return null
+    }
   }
 }
 

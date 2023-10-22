@@ -40,7 +40,7 @@ export const createJsonSchemaNode = (
     return { node: tree.createNode(id, kind, key, { parent, meta: { required } }), value: null }
   }
 
-  let res: any = { value: _fragment, node: null }
+  let res = { value: _fragment, node: {} } as CreateNodeResult<JsonSchemaNode>
 
   const complexityType = getNodeComplexityType(_fragment)
   if (complexityType !== modelTreeNodeType.simple) {

@@ -19,7 +19,7 @@ export type JsonSchemaDiffTreeNode<T extends JsonSchemaNodeType = any> = ModelDa
   JsonSchemaNodeKind,
   JsonSchemaDiffNodeMeta
 >
-export type JsonSchemaComplexNode<T extends JsonSchemaNodeType = any> = ModelTreeComplexNode<
+export type JsonSchemaComplexDiffNode<T extends JsonSchemaNodeType = any> = ModelTreeComplexNode<
   JsonSchemaDiffNodeValue<T>,
   JsonSchemaNodeKind,
   JsonSchemaDiffNodeMeta
@@ -27,7 +27,7 @@ export type JsonSchemaComplexNode<T extends JsonSchemaNodeType = any> = ModelTre
 
 export type JsonSchemaDiffCrawlState = { 
   parent: JsonSchemaDiffTreeNode | null
-  container?: JsonSchemaComplexNode
+  container?: JsonSchemaComplexDiffNode
   source?: unknown
   metaKey: symbol
 }

@@ -7,10 +7,10 @@ import {
   GraphSchemaCrawlRule, GraphSchemaModelTree, GraphSchemaNodeMeta 
 } from "./graphSchema.types"
 import { graphSchemaNodeKind, graphSchemaNodeMetaProps, graphSchemaNodeValueProps } from "./graphSchema.consts"
-import { getNodeComplexityType, pick } from "../utils"
+import { getNodeComplexityType, getTargetNode, pick } from "../utils"
 import { modelTreeNodeType } from "../consts"
+import { CreateNodeResult } from "../types"
 import { isRequired } from "../jsonSchema"
-import { ModelDataNode } from "../types"
 import { ModelTree } from "../modelTree"
 
 export const createGraphSchemaNode = (
@@ -19,19 +19,35 @@ export const createGraphSchemaNode = (
   kind: GraphSchemaNodeKind,
   key: string | number,
   _fragment: GraphSchemaFragment, 
+  source: any,
   parent: GraphSchemaTreeNode<any> | null = null,
   countInDepth = true
-): GraphSchemaNode<any> => {
+): CreateNodeResult<GraphSchemaNode> => {
   const required = isRequired(key, parent)
 
   if (_fragment === null) {
-    return tree.createNode(id, kind, key, { parent, meta: { required }, countInDepth })
+    return { node: tree.createNode(id, kind, key, { parent, meta: { required }, countInDepth }), value: null }
   }
 
+  let res = { value: _fragment, node: {} } as CreateNodeResult<GraphSchemaNode>
   const complexityType = getNodeComplexityType(_fragment)
   if (complexityType !== modelTreeNodeType.simple) {
     const params = { type: complexityType, parent, meta: { required, _fragment }, countInDepth }
-    return tree.createComplexNode(id, kind, key, params)
+    res.node = tree.createComplexNode(id, kind, key, params)
+  } else if (isRefNode(_fragment)) {
+    const { normalized } = parseRef(_fragment.$ref)
+    // check if node in cache
+    if (tree.nodes.has(_fragment.$ref)) {
+      res.value = null
+      res.node = tree.nodes.get(_fragment.$ref)! as GraphSchemaNode
+    } else {
+      // resolve and create node in cache
+      const _value = resolveRefNode(source, _fragment)
+      res = createGraphSchemaNode(tree, normalized, graphSchemaNodeKind.definition, "", _value, source)
+    }
+
+    const params = { parent, meta: { required: isRequired(key, parent) }, countInDepth }
+    res.node = tree.createRefNode(id, kind, key, res.node ?? null, params)
   } else {
     const { type } = _fragment
     if (!type || typeof type !== 'string') { 
@@ -46,8 +62,10 @@ export const createGraphSchemaNode = (
 
     const value = pick<any>(_fragment, graphSchemaNodeValueProps[type]) as GraphSchemaNodeValue<typeof type>
 
-    return tree.createNode(id, kind, key, { value: value, parent, meta, countInDepth })
+    res.node = tree.createNode(id, kind, key, { value, parent, meta, countInDepth })
   }
+
+  return res
 }
 
 export const createGraphSchemaTreeCrawlHook = (tree: GraphSchemaModelTree): SyncCrawlHook => {
@@ -66,55 +84,26 @@ export const createGraphSchemaTreeCrawlHook = (tree: GraphSchemaModelTree): Sync
     // do not count depth for nested nodes if depth of the container is not counted
     const countInDepth = container ? container.depth !== container.parent?.depth : true
  
-    if (isRefNode(value)) {
-      let refData = null
-      // check if node in cache
-      let node: ModelDataNode<GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta> | undefined
-      if (tree.nodes.has(value.$ref)) {
-        node = tree.nodes.get(value.$ref)!
-      } else {
-        // resolve and create node in cache
-        refData = resolveRefNode(source, value)
-        const { normalized } = parseRef(value.$ref)
+    const res = createGraphSchemaNode(tree, id, kind, ctx.key, value as GraphSchemaFragment, source, parent, kind !== 'args' && countInDepth)
 
-        node = createGraphSchemaNode(tree, normalized, graphSchemaNodeKind.definition, "", refData ?? null)
-      }
-
-      if (container) {
-        const params = { parent: container.parent, meta: { required: isRequired(ctx.key, container.parent) }, countInDepth }
-        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, params)
-        container.addNestedNode(refNode)
-      } else if (parent) {
-        const params = { parent, meta: { required: isRequired(ctx.key, parent) }}
-        const refNode = tree.createRefNode(id, kind, ctx.key, node ?? null, params)
-        parent.addChild(refNode)
-      }
-        
-      if (refData) {
-        const state = node.type === modelTreeNodeType.simple 
-          ? { parent: node as GraphSchemaTreeNode<any>, source }
-          : { parent, container: node as GraphSchemaComplexNode<any>, source }
-        return { value: refData, state }
-      } else {
-        return null
-      }
-    } 
-        
-    const node = createGraphSchemaNode(tree, id, kind, ctx.key, value as GraphSchemaFragment, parent, kind !== 'args' && countInDepth)
-
-    if (node.kind === 'args') {
+    if (kind === 'args') {
       const nested = container ? container.nested : parent!.nested
       // put args node as nested with index -1
-      nested[-1] = node
+      nested[-1] = res.node
     } else if (container) {
-      container.addNestedNode(node)
+      container.addNestedNode(res.node)
     } else {
-      parent?.addChild(node)
+      parent?.addChild(res.node)
     }
 
-    const state = node.type === modelTreeNodeType.simple
-      ? { parent: node as GraphSchemaTreeNode<any>, source }
-      : { parent, container: node as GraphSchemaComplexNode<any>, source }
-    return { value, state }
+    if (res.value) {
+      const _node = getTargetNode(tree, res.node)
+      const state = res.node.type === modelTreeNodeType.simple
+        ? { parent: _node as GraphSchemaTreeNode<any>, source }
+        : { parent, container: _node as GraphSchemaComplexNode<any>, source }
+      return { value: res.value, state }
+    } else {
+      return null
+    }
   }
 }
