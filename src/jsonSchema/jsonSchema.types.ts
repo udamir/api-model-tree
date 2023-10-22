@@ -1,13 +1,9 @@
-import type { JSONSchema4, JSONSchema6 } from "json-schema"
-
 import { jsonSchemaNodeKind, jsonSchemaNodeTypes } from "./jsonSchema.consts"
 import { ModelDataNode, SchemaCrawlRule } from "../types"
 import { ModelTreeComplexNode } from "../modelTree"
 
 export type JsonSchemaNodeKind = keyof typeof jsonSchemaNodeKind
 export type JsonSchemaNodeType = (typeof jsonSchemaNodeTypes)[number]
-
-export type JsonSchemaFragment<T = {}> = (JSONSchema6 | JSONSchema4) & T
 
 export type JsonSchemaCrawlRule = SchemaCrawlRule<JsonSchemaNodeKind, JsonSchemaCrawlState>
 
@@ -17,7 +13,7 @@ export type JsonSchemaNodeMeta = {
   readonly readOnly?: boolean
   readonly writeOnly?: boolean
   readonly externalDocs?: any
-  readonly _fragment?: JsonSchemaFragment
+  readonly _fragment?: unknown
 }
 
 export type JsonSchemaTreeNode<T extends JsonSchemaNodeType = any> = ModelDataNode<
@@ -37,10 +33,13 @@ export interface JsonSchemaCrawlState {
   container?: JsonSchemaComplexNode
 }
 
-export type JsonSchemaTransformedFragment = JsonSchemaFragment & {
-  type: JsonSchemaNodeType
-  exclusiveMinimum: number | undefined
-  exclusiveMaximum: number | undefined
+export interface JsonSchemaCreateNodeParams<T, K extends string, M extends object> {
+  id: string
+  kind: K
+  key?: string | number
+  value: any
+  parent?: ModelDataNode<T, K, M> | null
+  container?: ModelDataNode<T, K, M> | null
 }
 
 export type JsonSchemaNodeValue<T extends JsonSchemaNodeType = any> = 

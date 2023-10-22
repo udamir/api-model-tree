@@ -1,8 +1,8 @@
 import { parsePointer } from "allof-merge"
 
 import type {
-  JsonSchemaFragment, JsonSchemaNodeValue, JsonSchemaNodeKind, JsonSchemaNodeMeta,
-  JsonSchemaNodeType, JsonSchemaTransformedFragment, JsonSchemaTreeNode,
+  JsonSchemaNodeValue, JsonSchemaNodeKind, JsonSchemaNodeMeta,
+  JsonSchemaNodeType, JsonSchemaTreeNode,
 } from "./jsonSchema.types"
 import { jsonSchemaCommonProps, jsonSchemaNodeTypes, jsonSchemaTypeProps } from "./jsonSchema.consts"
 import { isStringOrNumber } from "../utils"
@@ -20,7 +20,9 @@ export const isRequired = (key: string | number, parent: ModelDataNode<any, any,
 export const isValidType = (maybeType: unknown): maybeType is JsonSchemaNodeType =>
   typeof maybeType === "string" && jsonSchemaNodeTypes.includes(maybeType as JsonSchemaNodeType)
 
-export function inferTypes(fragment: JsonSchemaFragment): JsonSchemaNodeType[] {
+export function inferTypes(fragment: unknown): JsonSchemaNodeType[] {
+  if (typeof fragment !== 'object' || !fragment) { return [] }
+
   const types: JsonSchemaNodeType[] = []
   for (const type of Object.keys(jsonSchemaTypeProps) as JsonSchemaNodeType[]) {
     const props = jsonSchemaTypeProps[type].slice(jsonSchemaCommonProps.length)
@@ -31,7 +33,6 @@ export function inferTypes(fragment: JsonSchemaFragment): JsonSchemaNodeType[] {
       }
     }
   }
-
   return types
 }
 
@@ -60,12 +61,12 @@ export const isJsonSchemaComplexNode = (
   return !!node && node.type !== modelTreeNodeType.simple
 }
 
-export const transformTitle = (value: unknown, ref?: string): JsonSchemaTransformedFragment => {
+export const transformTitle = (value: unknown, ref?: string): unknown => {
   // 1. transform $ref key into title
   if (!value || typeof value !== "object" || "title" in value || !ref) {
-    return value as JsonSchemaTransformedFragment
+    return value
   }
 
   const key = parsePointer(ref).pop()!
-  return { title: key[0].toUpperCase() + key.slice(1), ...value } as JsonSchemaTransformedFragment
+  return { title: key[0].toUpperCase() + key.slice(1), ...value }
 }

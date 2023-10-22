@@ -26,7 +26,7 @@ export const createOpenApiParamSchemaNode = (
     _fragment: _parameter
   } 
 
-  const res = tree.createJsonSchemaNode(`${id}/schema`, openApiNodeKind.definition, key, schema)
+  const res = tree.createJsonSchemaNode({ id: `${id}/schema`, kind: openApiNodeKind.definition, key, value: schema })
 
   const node = tree.createRefNode(id, kind, key, res.node, { parent, meta }) as OpenApiParameterNode
   return { value: res.value, node }
@@ -76,7 +76,7 @@ export const createOpenApiContentNode = (
     _fragment: _content
   } 
 
-  const res = tree.createJsonSchemaNode(`${id}/schema`, openApiNodeKind.definition, '', schema)
+  const res = tree.createJsonSchemaNode({ id: `${id}/schema`, kind: openApiNodeKind.definition, value:  schema })
   
   const node = tree.createRefNode(id, openApiNodeKind.oneOfContent, 'body', res.node ?? null, { parent, meta }) as OpenApiContentNode
   return { value: res.value, node }

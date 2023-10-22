@@ -1,6 +1,6 @@
 import { isRefNode, parseRef, resolveRefNode } from "allof-merge"
 
-import { JsonSchemaNodeValue, JsonSchemaFragment, JsonSchemaNodeKind, JsonSchemaNodeMeta } from "./jsonSchema.types"
+import { JsonSchemaNodeValue, JsonSchemaNodeKind, JsonSchemaNodeMeta, JsonSchemaCreateNodeParams } from "./jsonSchema.types"
 import { jsonSchemaNodeMetaProps, jsonSchemaNodeValueProps } from "./jsonSchema.consts"
 import { isValidType, transformTitle, isRequired } from "./jsonSchema.utils"
 import { CreateNodeResult, IModelTreeNode, ModelDataNode } from "../types"
@@ -11,7 +11,7 @@ import { ModelTree } from "../modelTree"
 export class JsonSchemaModelTree<
   T = JsonSchemaNodeValue,
   K extends string = JsonSchemaNodeKind,
-  M extends JsonSchemaNodeMeta = JsonSchemaNodeMeta
+  M extends object = JsonSchemaNodeMeta
 > extends ModelTree<T, K, M> {
   public nodes: Map<string, ModelDataNode<T, K, M>> = new Map()
 
@@ -19,7 +19,8 @@ export class JsonSchemaModelTree<
     super()
   }
 
-  public createNodeMeta (key: string | number, value: any, parent: ModelDataNode<T, K, M> | null = null): M {
+  public createNodeMeta (params: JsonSchemaCreateNodeParams<T, K, M>): M {
+    const { value, key = "", parent = null } = params
     const required = isRequired(key, parent)
 
     const complexityType = getNodeComplexityType(value)
@@ -48,25 +49,20 @@ export class JsonSchemaModelTree<
     return _value as T
   }
 
-  public createJsonSchemaNode (
-    id: string,
-    kind: K,
-    key: string | number,
-    value: JsonSchemaFragment | null,
-    parent: ModelDataNode<T, K, M> | null = null
-  ): CreateNodeResult<ModelDataNode<T, K, M>> {
+  public createJsonSchemaNode (params: JsonSchemaCreateNodeParams<T, K, M>): CreateNodeResult<ModelDataNode<T, K, M>> {
+    const { id, kind, key = "", value, parent = null } = params
     const required = isRequired(key, parent)
   
     if (value === null) {
-      return { node: this.createNode(id, kind, key, { parent, meta: this.createNodeMeta(key, parent) }), value: null }
+      return { node: this.createNode(id, kind, key, { parent, meta: this.createNodeMeta(params) }), value: null }
     }
   
     let res = { value: value, node: {} } as CreateNodeResult<ModelDataNode<T, K, M>>
   
     const complexityType = getNodeComplexityType(value)
     if (complexityType !== modelTreeNodeType.simple) {
-      const params = { type: complexityType, parent, meta: this.createNodeMeta(key, value, parent) }
-      res.node = this.createComplexNode(id, kind, key, params)
+      const _params = { type: complexityType, parent, meta: this.createNodeMeta(params) }
+      res.node = this.createComplexNode(id, kind, key, _params)
     } else if (isRefNode(value)) {
       const { normalized } = parseRef(value.$ref)
       if (this.nodes.has(normalized)) {
@@ -75,15 +71,15 @@ export class JsonSchemaModelTree<
       } else {
         // resolve and create node in cache
         const _value = transformTitle(resolveRefNode(this.source, value), normalized) ?? null
-        res = this.createJsonSchemaNode(normalized, "definition" as K, "", _value)
+        res = this.createJsonSchemaNode({ id: normalized, kind: "definition" as K, value: _value })
       }
   
-      const params = { parent, meta: this.createNodeMeta(key, value, parent) }
-      res.node = this.createRefNode(id, kind, key, res.node ?? null, params)
+      const _params = { parent, meta: this.createNodeMeta(params) }
+      res.node = this.createRefNode(id, kind, key, res.node ?? null, _params)
     } else {  
       res.node = this.createNode(id, kind, key, { 
         value: this.createNodeValue(value),
-        meta: this.createNodeMeta(key, value, parent),
+        meta: this.createNodeMeta(params),
         parent
       })
     }
@@ -92,13 +88,13 @@ export class JsonSchemaModelTree<
   }
   
   public createNestedNode(id: string, kind: K, key: string | number, value: any, container: any) {
-    const res = this.createJsonSchemaNode(id, kind, key, value, container.parent)
+    const res = this.createJsonSchemaNode({ id, kind, key, value, container, parent: container.parent })
     container.addNestedNode(res.node)
     return res
   }
 
   public createChildNode(id: string, kind: K, key: string | number, value: any, parent: any) {
-    const res = this.createJsonSchemaNode(id, kind, key, value, parent)
+    const res = this.createJsonSchemaNode({ id, kind, key, value, parent })
     parent?.addChild(res.node)
     return res
   }

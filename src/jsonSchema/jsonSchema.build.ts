@@ -1,10 +1,7 @@
 import { SyncCrawlHook, isObject, syncCrawl } from 'json-crawl'
 import { buildPointer, merge } from "allof-merge"
 
-import { 
-  JsonSchemaCrawlState, JsonSchemaNodeValue, JsonSchemaFragment, 
-  JsonSchemaNodeKind, JsonSchemaNodeMeta 
-} from "./jsonSchema.types"
+import { JsonSchemaCrawlState, JsonSchemaNodeValue, JsonSchemaNodeKind, JsonSchemaNodeMeta } from "./jsonSchema.types"
 import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
 import { isJsonSchemaTreeNode } from './jsonSchema.utils'
 import { jsonSchemaNodeKinds } from './jsonSchema.consts'
@@ -38,7 +35,7 @@ export const createJsonSchemaTreeCrawlHook = (tree: JsonSchemaModelTree): SyncCr
   }
 }
 
-export const createJsonSchemaTree = (schema: JsonSchemaFragment, source: any = schema) => {
+export const createJsonSchemaTree = (schema: unknown, source: any = schema) => {
 
   const tree = new JsonSchemaModelTree<JsonSchemaNodeValue, JsonSchemaNodeKind, JsonSchemaNodeMeta>(source)
   if (!isObject(schema) || !isObject(source)) {
