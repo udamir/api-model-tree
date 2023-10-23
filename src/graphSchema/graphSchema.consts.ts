@@ -18,7 +18,7 @@ export const graphSchemaNodeTypes = [
 ] as const 
 
 export const graphSchemaNodeMetaProps = [
-  'required', 'deprecated', 'directives', 'args',
+  'deprecated', 'directives', 'args',
 ]
 
 export const graphSchemaCommonProps: (keyof IGraphSchemaBaseType)[]  = [

@@ -22,13 +22,9 @@ export class GraphSchemaModelTree<
         _fragment: value
       } as M
     } else {
-      return { 
-        required,
-        _fragment: value 
-      } as M
+      return { required, _fragment: value } as M
     }
   } 
-
 
   public createNodeValue(params: JsonSchemaCreateNodeParams<T, K, M>): T {
     const { value, id } = params

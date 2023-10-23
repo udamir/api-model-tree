@@ -1,16 +1,8 @@
-import { buildFromSchema, GraphApiSchema } from "gqlapi"
+import { buildFromSchema } from "gqlapi"
 import { buildSchema } from "graphql"
-import path from "path"
-import fs from "fs"
 
 import { createGraphSchemaTree, GraphSchemaFragment, GraphSchemaState, GraphSchemaStatePropNode } from "../src"
-
-const buildGraphApiSchema = (filename: string): GraphApiSchema => {
-  const resPath = path.join(__dirname, "./resources/", filename)
-  const raw = fs.readFileSync(resPath, "utf8")
-  const schema = buildSchema(raw, { noLocation: true })
-  return buildFromSchema(schema)
-}
+import { buildGraphApiSchema } from "./helpers/graphql"
 
 describe("graphschema transformation tests", () => {
   describe("simple schema", () => {
