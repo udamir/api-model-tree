@@ -1,6 +1,5 @@
 import { buildPointer } from "allof-merge"
 import { syncCrawl } from "json-crawl"
-import type { Diff } from 'api-smart-diff'
 
 import {
   JsonSchemaNodeValue, JsonSchemaNodeKind,
@@ -9,6 +8,7 @@ import {
 import { jsonSchemaNodeMetaProps, jsonSchemaNodeValueProps } from "./jsonSchema.consts"
 import { getNodeComplexityType, isObject, objectKeys, pick } from "../utils"
 import { createJsonSchemaTreeCrawlHook } from "./jsonSchema.build"
+import { Diff, DiffNodeMeta, DiffNodeValue } from "../diff.types"
 import { isValidType, isRequired } from "./jsonSchema.utils"
 import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
 import { JsonSchemaModelTree } from "./jsonSchema.tree"
@@ -29,19 +29,10 @@ export type JsonSchemaComplexDiffNode<T extends JsonSchemaNodeType = any> = Mode
 export type JsonSchemaDiffCrawlState = { 
   parent: JsonSchemaDiffTreeNode | null
   container?: JsonSchemaComplexDiffNode
-  metaKey: symbol
 }
 
-export type JsonSchemaDiffNodeValue<T extends JsonSchemaNodeType = any> = JsonSchemaNodeValue<T> & { 
-  $changes?: Record<string, Diff>
-}
-
-export type JsonSchemaDiffNodeMeta = JsonSchemaNodeMeta & { 
-  $nodeChanges?: Diff
-  $metaChanges?: Record<string, Diff>
-  $childrenChanges?: Record<string, Diff>
-  $nestedChanges?: Record<string, Diff>
-}
+export type JsonSchemaDiffNodeValue<T extends JsonSchemaNodeType = any> = JsonSchemaNodeValue<T> & DiffNodeValue
+export type JsonSchemaDiffNodeMeta = JsonSchemaNodeMeta & DiffNodeMeta
 
 export class JsonSchemaModelDiffTree<
   T = JsonSchemaDiffNodeValue,
@@ -213,7 +204,7 @@ export const createJsonSchemaDiffTree = (merged: any, metaKey: symbol, mergedSou
   // const merged = apiMerge(b, a, { metaKey })
 
   // const crawlState: JsonSchemaCrawlState = { parent: null, source: merged }
-  const crawlState: JsonSchemaDiffCrawlState = { parent: null, metaKey }
+  const crawlState: JsonSchemaDiffCrawlState = { parent: null }
 
   syncCrawl(merged, [
     createJsonSchemaTreeCrawlHook(tree)
