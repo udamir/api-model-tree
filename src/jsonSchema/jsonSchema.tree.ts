@@ -51,7 +51,7 @@ export class JsonSchemaModelTree<
   }
 
   public createJsonSchemaNode (params: JsonSchemaCreateNodeParams<T, K, M>): CreateNodeResult<ModelDataNode<T, K, M>> {
-    const { id, kind, key = "", value, parent = null, countInDepth = false } = params
+    const { id, kind, key = "", value, parent = null, countInDepth = true } = params
   
     if (value === null) {
       return { node: this.createNode(id, kind, key, { parent, meta: this.createNodeMeta(params), countInDepth }), value: null }

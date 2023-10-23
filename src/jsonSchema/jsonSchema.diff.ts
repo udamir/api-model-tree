@@ -7,13 +7,12 @@ import {
 } from "./jsonSchema.types"
 import { jsonSchemaNodeMetaProps, jsonSchemaNodeValueProps } from "./jsonSchema.consts"
 import { getNodeComplexityType, isObject, objectKeys, pick } from "../utils"
+import { Diff, DiffNodeMeta, DiffNodeValue, ModelDataNode } from "../types"
 import { createJsonSchemaTreeCrawlHook } from "./jsonSchema.build"
-import { Diff, DiffNodeMeta, DiffNodeValue } from "../diff.types"
 import { isValidType, isRequired } from "./jsonSchema.utils"
 import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
 import { JsonSchemaModelTree } from "./jsonSchema.tree"
 import { ModelTreeComplexNode } from "../modelTree"
-import { ModelDataNode } from "../types"
 
 export type JsonSchemaDiffTreeNode<T extends JsonSchemaNodeType = any> = ModelDataNode<
   JsonSchemaDiffNodeValue<T>,

@@ -77,8 +77,8 @@ describe("jsonschema transformation tests", () => {
 
       const children = tree.root?.children()!
       expect(children).toMatchObject([
-        { id: "#/properties/id", kind: "property", key: "id", meta: { required: true }, type: "simple", parent: tree.root },
-        { id: "#/properties/name", kind: "property", key: "name", meta: { required: false }, type: "simple", parent: tree.root },
+        { id: "#/properties/id", kind: "property", key: "id", depth: 1, meta: { required: true }, type: "simple", parent: tree.root },
+        { id: "#/properties/name", kind: "property", key: "name", depth: 1, meta: { required: false }, type: "simple", parent: tree.root },
       ])
       expect(children[0].meta).toMatchObject({ _fragment: schema.properties!.id })
       expect(children[1].meta).toMatchObject({ _fragment: schema.properties!.name })
