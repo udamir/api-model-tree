@@ -1,30 +1,49 @@
-import { syncCrawl } from 'json-crawl'
+import { GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta } from "./graphSchema.types"
+import { JsonSchemaCreateNodeParams, JsonSchemaModelTree, isRequired } from "../jsonSchema"
+import { graphSchemaNodeMetaProps, graphSchemaNodeValueProps } from "./graphSchema.consts"
+import { CreateNodeResult, ModelDataNode } from "../types"
+import { getNodeComplexityType, pick } from "../utils"
 
-import { 
-  GraphSchemaCrawlState, GraphSchemaNodeValue, GraphSchemaFragment, GraphSchemaNodeKind, 
-  GraphSchemaModelTree, GraphSchemaNodeMeta 
-} from "./graphSchema.types"
+export class GraphSchemaModelTree<
+  T = GraphSchemaNodeValue,
+  K extends string = GraphSchemaNodeKind,
+  M extends object = GraphSchemaNodeMeta
+> extends JsonSchemaModelTree<T, K, M> {
 
-import { createGraphSchemaTreeCrawlHook } from "./graphSchema.node"
-import { graphSchemaCrawlRules } from "./graphSchema.rules"
-import { createTransformCrawlHook } from "../transform"
-import { ModelTree } from "../modelTree"
+  public createNodeMeta (params: JsonSchemaCreateNodeParams<T, K, M>): M {
+    const { value, key = "", parent = null } = params
+    const required = isRequired(key, parent)
 
-export const createGraphSchemaTree = (schema: GraphSchemaFragment, source: any = schema): GraphSchemaModelTree => {
-  const tree = new ModelTree<GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta>()
-  const crawlState: GraphSchemaCrawlState = { parent: null, source }
-
-  syncCrawl(
-    schema,
-    [ 
-      createTransformCrawlHook(source), 
-      createGraphSchemaTreeCrawlHook(tree)
-    ], 
-    { 
-      state: crawlState, 
-      rules: graphSchemaCrawlRules()
+    const complexityType = getNodeComplexityType(value)
+    if (complexityType === "simple") {
+      return {
+        ...pick<any>(value, graphSchemaNodeMetaProps),
+        required,
+        _fragment: value
+      } as M
+    } else {
+      return { 
+        required,
+        _fragment: value 
+      } as M
     }
-  )
+  } 
 
-  return tree
+
+  public createNodeValue(params: JsonSchemaCreateNodeParams<T, K, M>): T {
+    const { value, id } = params
+    const { type } = value
+    if (!type || typeof type !== 'string') { 
+      throw new Error (`Schema should have type: ${id}`)
+    }
+    const _value = pick<any>(value, graphSchemaNodeValueProps[type])
+
+    return _value as T
+  }
+  
+  public createGraphSchemaNode (
+    params: JsonSchemaCreateNodeParams<T, K, M>
+  ): CreateNodeResult<ModelDataNode<T, K, M>> {
+    return this.createJsonSchemaNode(params)
+  }
 }

@@ -39,10 +39,11 @@ export class JsonSchemaModelTree<
   } 
 
 
-  public createNodeValue(value: any): T {
+  public createNodeValue(params: JsonSchemaCreateNodeParams<T, K, M>): T {
+    const { value, id } = params
     const { type = "any" } = value
     if (Array.isArray(type) || !type || typeof type !== "string" || !isValidType(type)) {
-      throw new Error(`Schema should have correct type!`)
+      throw new Error(`Schema should have correct type: ${id}`)
     }
     const _value = pick<any>(value, jsonSchemaNodeValueProps[type])
 
@@ -50,18 +51,17 @@ export class JsonSchemaModelTree<
   }
 
   public createJsonSchemaNode (params: JsonSchemaCreateNodeParams<T, K, M>): CreateNodeResult<ModelDataNode<T, K, M>> {
-    const { id, kind, key = "", value, parent = null } = params
-    const required = isRequired(key, parent)
+    const { id, kind, key = "", value, parent = null, countInDepth = false } = params
   
     if (value === null) {
-      return { node: this.createNode(id, kind, key, { parent, meta: this.createNodeMeta(params) }), value: null }
+      return { node: this.createNode(id, kind, key, { parent, meta: this.createNodeMeta(params), countInDepth }), value: null }
     }
   
     let res = { value: value, node: {} } as CreateNodeResult<ModelDataNode<T, K, M>>
   
     const complexityType = getNodeComplexityType(value)
     if (complexityType !== modelTreeNodeType.simple) {
-      const _params = { type: complexityType, parent, meta: this.createNodeMeta(params) }
+      const _params = { type: complexityType, parent, meta: this.createNodeMeta(params), countInDepth }
       res.node = this.createComplexNode(id, kind, key, _params)
     } else if (isRefNode(value)) {
       const { normalized } = parseRef(value.$ref)
@@ -74,13 +74,14 @@ export class JsonSchemaModelTree<
         res = this.createJsonSchemaNode({ id: normalized, kind: "definition" as K, value: _value })
       }
   
-      const _params = { parent, meta: this.createNodeMeta(params) }
+      const _params = { parent, meta: this.createNodeMeta(params), countInDepth }
       res.node = this.createRefNode(id, kind, key, res.node ?? null, _params)
     } else {  
       res.node = this.createNode(id, kind, key, { 
-        value: this.createNodeValue(value),
+        value: this.createNodeValue(params),
         meta: this.createNodeMeta(params),
-        parent
+        parent,
+        countInDepth
       })
     }
   

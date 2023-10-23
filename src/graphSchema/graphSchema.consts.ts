@@ -25,7 +25,7 @@ export const graphSchemaCommonProps: (keyof IGraphSchemaBaseType)[]  = [
   'type', 'description', 'title', 'examples', 'default', 
 ]
 
-export const graphSchemaNodeValueProps: Record<GraphSchemaNodeType, readonly string[]> = {
+export const graphSchemaNodeValueProps: Record<string, readonly string[]> = {
   boolean: [...graphSchemaCommonProps],
   null: [...graphSchemaCommonProps],
   string: [...graphSchemaCommonProps, 'format', 'enum', 'values'],
@@ -33,4 +33,4 @@ export const graphSchemaNodeValueProps: Record<GraphSchemaNodeType, readonly str
   integer: [...graphSchemaCommonProps, 'format'],
   object: [...graphSchemaCommonProps, 'properties', 'required'],
   array: [...graphSchemaCommonProps, 'items'],
-} 
+} as const

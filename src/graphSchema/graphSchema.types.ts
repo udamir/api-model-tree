@@ -1,7 +1,7 @@
 import { GraphSchema } from 'gqlapi'
 
-import { ModelTree, ModelTreeComplexNode, ModelTreeNode } from '../modelTree'
 import { graphSchemaNodeKind, graphSchemaNodeTypes } from './graphSchema.consts'
+import { ModelTreeComplexNode, ModelTreeNode } from '../modelTree'
 import { SchemaCrawlRule, SchemaTransformFunc } from '../types'
 import { IJsonSchemaBaseType } from '../jsonSchema'
 
@@ -21,8 +21,6 @@ export type GraphSchemaNodeMeta = {
   readonly _fragment?: any
 }
 
-export type GraphSchemaModelTree = ModelTree<GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta>
-
 export type GraphSchemaTreeNode<T extends GraphSchemaNodeType = any> = ModelTreeNode<GraphSchemaNodeValue<T>, GraphSchemaNodeKind, GraphSchemaNodeMeta>
 export type GraphSchemaComplexNode<T extends GraphSchemaNodeType = any> = ModelTreeComplexNode<GraphSchemaNodeValue<T>, GraphSchemaNodeKind, GraphSchemaNodeMeta>
 export type GraphSchemaNode<T extends GraphSchemaNodeType = any> = GraphSchemaTreeNode<T> | GraphSchemaComplexNode<T>
@@ -30,7 +28,6 @@ export type GraphSchemaNode<T extends GraphSchemaNodeType = any> = GraphSchemaTr
 export interface GraphSchemaCrawlState {
   parent: GraphSchemaTreeNode<any> | null
   container?: GraphSchemaComplexNode<any>
-  source: any
 }
 
 export type GraphSchemaNodeValue<T extends GraphSchemaNodeType = any> = 

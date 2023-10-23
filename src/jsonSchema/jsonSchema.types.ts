@@ -40,6 +40,7 @@ export interface JsonSchemaCreateNodeParams<T, K extends string, M extends objec
   value: any
   parent?: ModelDataNode<T, K, M> | null
   container?: ModelDataNode<T, K, M> | null
+  countInDepth?: boolean
 }
 
 export type JsonSchemaNodeValue<T extends JsonSchemaNodeType = any> = 

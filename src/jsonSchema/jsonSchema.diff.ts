@@ -64,7 +64,8 @@ export class JsonSchemaModelDiffTree<
     }
   } 
 
-  public createNodeValue(value: any): T {
+  public createNodeValue(params: JsonSchemaCreateNodeParams<T, K, M>): T {
+    const { value } = params
     const { type = "any" } = value
     if (Array.isArray(type) || !type || typeof type !== "string" || !isValidType(type)) {
       throw new Error(`Schema should have correct type!`)

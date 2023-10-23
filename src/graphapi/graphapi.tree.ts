@@ -3,21 +3,20 @@ import { SyncCrawlHook, syncCrawl } from 'json-crawl'
 import { buildPointer } from "allof-merge"
 
 import { 
-  GraphSchemaComplexNode, GraphSchemaFragment, GraphSchemaModelTree, GraphSchemaNodeMeta, GraphSchemaTreeNode, createGraphSchemaNode, 
+  GraphSchemaComplexNode, GraphSchemaModelTree, GraphSchemaNodeMeta, GraphSchemaTreeNode, 
   createGraphSchemaTreeCrawlHook 
 } from "../graphSchema"
 
 import { graphApiNodeKind, graphApiNodeKinds, graphqlEmbeddedDirectives } from "./graphapi.consts"
-import { GraphApiNodeData, GraphApiNodeKind, GraphapiTreeNode } from "./graphapi.types"
-import { CreateNodeResult, ModelTreeNodeParams } from "../types"
+import { GraphApiNodeData, GraphApiNodeKind } from "./graphapi.types"
 import { createTransformCrawlHook } from "../transform"
 import { graphApiCrawlRules } from "./graphapi.rules"
+import { ModelTreeNodeParams } from "../types"
 import { modelTreeNodeType } from "../consts"
 import { isRequired } from "../jsonSchema"
-import { ModelTree } from "../modelTree"
 import { getTargetNode } from "../utils"
 
-const createGraphApiTreeCrawlHook = (tree: ModelTree<GraphApiNodeData, GraphApiNodeKind, GraphSchemaNodeMeta>): SyncCrawlHook => {
+const createGraphApiTreeCrawlHook = (tree: GraphSchemaModelTree<GraphApiNodeData, GraphApiNodeKind, GraphSchemaNodeMeta>): SyncCrawlHook => {
   return (value, ctx) => {
     if (!ctx.rules) { return null }
     if (!("kind" in ctx.rules) || !(graphApiNodeKinds.includes(ctx.rules.kind))) { 
@@ -28,12 +27,12 @@ const createGraphApiTreeCrawlHook = (tree: ModelTree<GraphApiNodeData, GraphApiN
     const { parent, source } = ctx.state
     const { kind } = ctx.rules
  
-    let res = { value, node: {} } as CreateNodeResult<GraphapiTreeNode>
+    let res: any = { value, node: {} }
     switch (kind) {
       case graphApiNodeKind.query: 
       case graphApiNodeKind.mutation: 
       case graphApiNodeKind.subscription: {
-        res = createGraphSchemaNode(tree as GraphSchemaModelTree, id, kind, ctx.key, value as GraphSchemaFragment, source, parent, false)
+        res = tree.createGraphSchemaNode({ id, kind, key: ctx.key, value, parent, countInDepth: false })
         break;
       }
       case graphApiNodeKind.schema: {
@@ -76,7 +75,7 @@ const createGraphApiTreeCrawlHook = (tree: ModelTree<GraphApiNodeData, GraphApiN
 
 
 export const createGraphApiTree = (schema: GraphApiSchema) => {
-  const tree = new ModelTree<GraphApiNodeData, GraphApiNodeKind, GraphSchemaNodeMeta>()
+  const tree = new GraphSchemaModelTree<GraphApiNodeData, GraphApiNodeKind, GraphSchemaNodeMeta>(schema)
   const crawlState = { parent: null, source: schema }
 
   syncCrawl(
