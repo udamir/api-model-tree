@@ -42,7 +42,7 @@
   "peerDependencies": {},
   "dependencies": {
     "@types/json-schema": "^7.0.12",
-    "allof-merge": "0.5.1",
+    "allof-merge": "0.5.2",
     "gqlapi": "^0.5.1",
     "json-crawl": "^0.3.1"
   },
