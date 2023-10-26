@@ -1,36 +1,39 @@
 import { SyncCrawlHook, isObject, syncCrawl } from 'json-crawl'
 import { buildPointer, merge } from "allof-merge"
 
-import { JsonSchemaCrawlState, JsonSchemaNodeValue, JsonSchemaNodeKind, JsonSchemaNodeMeta } from "./jsonSchema.types"
+import { 
+  JsonSchemaCrawlState, JsonSchemaNodeValue, JsonSchemaNodeKind, JsonSchemaNodeMeta,
+  JsonSchemaCrawlRule, JsonSchemaComplexNode }
+from "./jsonSchema.types"
 import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
 import { isJsonSchemaTreeNode } from './jsonSchema.utils'
 import { jsonSchemaNodeKinds } from './jsonSchema.consts'
 import { JsonSchemaModelTree } from "./jsonSchema.tree"
 import { createTransformCrawlHook } from '../transform'
 
-export const createJsonSchemaTreeCrawlHook = (tree: JsonSchemaModelTree): SyncCrawlHook => {
-  return (value, ctx) => {
-    if (!ctx.rules) {
-      return null
+export const createJsonSchemaTreeCrawlHook = (tree: JsonSchemaModelTree): SyncCrawlHook<JsonSchemaCrawlState, JsonSchemaCrawlRule> => {
+  return ({ key, value, path, rules, state}) => {
+    if (!rules) {
+      return { done: true}
     }
-    if (!jsonSchemaNodeKinds.includes(ctx.rules?.kind) || Array.isArray(value)) {
-      return { value, state: ctx.state }
+    if (!jsonSchemaNodeKinds.includes(rules?.kind) || Array.isArray(value)) {
+      return
     }
 
-    const id = "#" + buildPointer(ctx.path)
-    const { parent, container } = ctx.state
-    const { kind } = ctx.rules
+    const id = "#" + buildPointer(path)
+    const { parent, container } = state
+    const { kind } = rules
 
     const res = container
-      ? tree.createNestedNode(id, kind, ctx.key, value, container)
-      : tree.createChildNode(id, kind, ctx.key, value, parent)
+      ? tree.createNestedNode(id, kind, key, value, container)
+      : tree.createChildNode(id, kind, key, value, parent)
 
     if (res.value) {
       const _node = tree.getTargetNode(res.node)
-      const state = isJsonSchemaTreeNode(res.node) ? { parent: _node } : { parent, container: _node }
+      const state = isJsonSchemaTreeNode(res.node) ? { parent: _node } : { parent, container: _node as JsonSchemaComplexNode }
       return { value: res.value, state }
     } else {
-      return null
+      return { done: true }
     }
   }
 }

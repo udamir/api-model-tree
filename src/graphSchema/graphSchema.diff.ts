@@ -1,6 +1,6 @@
 import { syncCrawl } from "json-crawl"
 
-import { GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta, GraphSchemaNodeType } from "./graphSchema.types"
+import { GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta, GraphSchemaNodeType, GraphSchemaCrawlRule } from "./graphSchema.types"
 import { JsonSchemaCreateNodeParams, JsonSchemaModelDiffTree, isRequired } from "../jsonSchema"
 import { CreateNodeResult, Diff, DiffNodeMeta, DiffNodeValue, ModelDataNode } from "../types"
 import { graphSchemaNodeMetaProps, graphSchemaNodeValueProps } from "./graphSchema.consts"
@@ -100,7 +100,7 @@ export const createGraphSchemaDiffTree = (schema: any, metaKey: symbol, source: 
   const tree = new GraphSchemaModelDiffTree(source, metaKey)
   const crawlState: GraphSchemaDiffCrawlState = { parent: null }
 
-  syncCrawl(
+  syncCrawl<GraphSchemaDiffCrawlState, GraphSchemaCrawlRule>(
     schema,
     [ 
       createGraphSchemaTreeCrawlHook(tree)

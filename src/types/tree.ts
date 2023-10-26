@@ -7,7 +7,7 @@ export type SchemaTransformFunc<S> = (value: unknown, source: unknown, path: Jso
 
 export type SchemaCrawlRule<K extends string, S> = {
   kind: K
-  transformers: SchemaTransformFunc<S>[]
+  transformers?: SchemaTransformFunc<S>[]
 }
 
 export interface CreateNodeResult<T extends IModelTreeNode<any, any, any>> {

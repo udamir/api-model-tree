@@ -3,7 +3,7 @@ import { JsonPath } from "json-crawl"
 
 import { 
   OpenApiOperationNode, IParameterMeta, OpenApiParameterNode, IContentMeta, OpenApiResponseNode,
-  IOperationNodeMeta, OpenApiServiceNode, OpenApiModelTree, OpenApiContentNode, IServiceNodeMeta 
+  IOperationNodeMeta, OpenApiServiceNode, OpenApiModelTree, OpenApiContentNode, IServiceNodeMeta, OpenApiTreeNode 
 } from "./openapi.types"
 import { openApiNodeKind, openApiNodeKindMetaKeys } from "./openapi.consts"
 import { jsonSchemaNodeMetaProps } from "../jsonSchema"
@@ -16,7 +16,7 @@ export const createOpenApiParamSchemaNode = (
   kind: 'parameter' | 'definition' | 'header',
   _parameter: any, 
   source: any,
-  parent: OpenApiOperationNode | null = null 
+  parent: OpenApiTreeNode | null = null 
 ): CreateNodeResult<OpenApiParameterNode> => {
   const { name: key = "", schema = {} } = _parameter
 
@@ -39,7 +39,7 @@ export const createOpenApiParamNode = (
   key: string,
   _parameter: any, 
   source: any,
-  parent: OpenApiOperationNode | null = null 
+  parent: OpenApiTreeNode | null = null 
 ): CreateNodeResult<OpenApiParameterNode> => {
   let res: CreateNodeResult<OpenApiParameterNode> = { value: _parameter, node: null as any }
   if (isRefNode(_parameter)) {
@@ -66,7 +66,7 @@ export const createOpenApiContentNode = (
   id: string,
   _content: any, 
   source: any,
-  parent: OpenApiOperationNode | null = null 
+  parent: OpenApiTreeNode | null = null 
 ): CreateNodeResult<OpenApiContentNode> => {
   const { schema = {} } = _content
 
@@ -87,7 +87,7 @@ export const createOpenApiOperationNode = (
   id: string,
   path: JsonPath,
   _operation: any, 
-  parent: OpenApiServiceNode | null = null 
+  parent: OpenApiTreeNode | null = null 
 ): CreateNodeResult<OpenApiOperationNode> => {
 
   const meta: IOperationNodeMeta = {
@@ -125,7 +125,7 @@ export const createOpenApiResponseNode = (
   key: string,
   value: any, 
   source: any,
-  parent: OpenApiOperationNode | null = null 
+  parent: OpenApiTreeNode | null = null 
 ): CreateNodeResult<OpenApiResponseNode> => {
   let res: CreateNodeResult<OpenApiResponseNode> = { value, node: null as any }
   if (isRefNode(value)) {

@@ -1,6 +1,6 @@
 import { CrawlRules } from "json-crawl"
 
-import { GraphSchemaTransformers, graphSchemaCrawlRules } from "../graphSchema"
+import { GraphSchemaTransformers, graphSchemaCrawlRules, graphSchemaNodeKind } from "../graphSchema"
 import { graphApiNodeKind } from "./graphapi.consts"
 import { GraphApiCrawlRule } from "./graphapi.types"
 
@@ -31,9 +31,9 @@ export const graphApiCrawlRules: CrawlRules<GraphApiCrawlRule> = {
       "/*": {
         "/args": {
           "/properties": {
-            "/*": () => graphSchemaCrawlRules(graphApiNodeKind.arg),
+            "/*": () => graphSchemaCrawlRules(graphSchemaNodeKind.arg),
           },
-          kind: graphApiNodeKind.args,
+          kind: graphSchemaNodeKind.args,
         },
         kind: graphApiNodeKind.directive
       }
