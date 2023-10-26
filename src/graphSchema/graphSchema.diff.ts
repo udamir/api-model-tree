@@ -1,12 +1,13 @@
+import { syncCrawl } from "json-crawl"
+
 import { GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta, GraphSchemaNodeType } from "./graphSchema.types"
 import { JsonSchemaCreateNodeParams, JsonSchemaModelDiffTree, isRequired } from "../jsonSchema"
 import { CreateNodeResult, Diff, DiffNodeMeta, DiffNodeValue, ModelDataNode } from "../types"
 import { graphSchemaNodeMetaProps, graphSchemaNodeValueProps } from "./graphSchema.consts"
-import { getNodeComplexityType, objectKeys, pick } from "../utils"
-import { ModelTreeComplexNode } from "../modelTree"
-import { syncCrawl } from "json-crawl"
 import { createGraphSchemaTreeCrawlHook } from "./graphSchema.build"
+import { getNodeComplexityType, objectKeys, pick } from "../utils"
 import { graphSchemaCrawlRules } from "./graphSchema.rules"
+import { ModelTreeComplexNode } from "../modelTree"
 
 export type GraphSchemaDiffTreeNode<T extends GraphSchemaNodeType = any> = ModelDataNode<
   GraphSchemaDiffNodeValue<T>,

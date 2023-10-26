@@ -1,4 +1,4 @@
-import { IGraphSchemaBaseType, GraphSchemaNodeType } from "./graphSchema.types"
+import { IGraphSchemaBaseType } from "./graphSchema.types"
 
 export const graphSchemaNodeKinds = ['root', 'args', 'arg', 'definition', 'property', 'items', 'allOf', 'oneOf']
 

@@ -262,6 +262,18 @@ describe("jsonschema transformation tests", () => {
       expect(children3[0]).toMatchObject({ type: "combinary", selected: "#/oneOf/1" })
       expect(children3[1]).toMatchObject({ type: "basic", node: { key: "id" }, value: { type: "number" } })
       expect(children3[2]).toMatchObject({ type: "basic", node: { key: "name" }, value: { type: "string" } })
+
+      state.root!.sort(1)
+      const children4 = state.root!.children
+      expect(children4[0]).toMatchObject({ type: "combinary", selected: "#/oneOf/1" })
+      expect(children4[1]).toMatchObject({ type: "basic", node: { key: "name" }, first: true, value: { type: "string" } })
+      expect(children4[2]).toMatchObject({ type: "basic", node: { key: "id" }, value: { type: "number" } })
+
+      state.root!.sort(-1)
+      const children5 = state.root!.children
+      expect(children5[0]).toMatchObject({ type: "combinary", selected: "#/oneOf/1" })
+      expect(children5[1]).toMatchObject({ type: "basic", node: { key: "id" }, first: true, value: { type: "number" } })
+      expect(children5[2]).toMatchObject({ type: "basic", node: { key: "name" }, value: { type: "string" } })
     })
 
     it("should create tree from jsonSchema with additionalProperties", () => {

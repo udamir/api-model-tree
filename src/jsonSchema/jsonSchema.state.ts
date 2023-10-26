@@ -36,12 +36,13 @@ export class JsonSchemaStateCombinaryNode<T extends ModelDataNode<any, any, any>
 export class JsonSchemaStatePropNode<T extends ModelDataNode<any, any, any> = JsonSchemaTreeNode>
   implements IModelStatePropNode<T>
 {
-  private _combinaryNodes: IModelStateCombinaryNode<T>[] = []
-  private _childrenNodes: IModelStatePropNode<T>[] = []
+  protected _combinaryNodes: IModelStateCombinaryNode<T>[] = []
+  protected _childrenNodes: IModelStatePropNode<T>[] = []
 
   protected _expanded = false
   protected _selected: string | undefined
   protected _children: IModelStateNode<T>[] | null = null
+  protected _sort = 0
 
   public readonly type: Exclude<ModelStateNodeType, "combinary">
 
@@ -104,7 +105,7 @@ export class JsonSchemaStatePropNode<T extends ModelDataNode<any, any, any> = Js
   public setSelected(value: string | undefined) {
     if (value !== this._selected) {
       this._selected = value
-      this._children = [...this.buildCombinaryNodes(), ...this.buildChildrenNodes()]
+      this._children = [...this.buildCombinaryNodes(), ...this.buildChildrenNodes(this._sort)]
     }
   }
 
@@ -120,16 +121,13 @@ export class JsonSchemaStatePropNode<T extends ModelDataNode<any, any, any> = Js
     return this.node.nestedNode(this.selected) as T
   }
 
-  public sort(dir = 0) {
-    if (!dir) {
-      this._children = [...this._combinaryNodes, ...this._childrenNodes]
-    } else {
-      const sorted = this._childrenNodes.sort((n1, n2) => (n1.node.key > n2.node.key ? -1 * dir : dir))
-      this._children = [...this._combinaryNodes, ...sorted]
-    }
+  public sort(sort = 0) {
+    if (sort === this._sort) { return }
+    this._sort = sort
+    this._children = [...this._combinaryNodes, ...this.buildChildrenNodes(sort)]
   }
 
-  constructor(public readonly node: T, public readonly first = false) {
+  constructor(public readonly node: T, public first = false) {
     this.type =
       node.children().length || node.nested.length || node.nested[-1]
         ? modelStateNodeType.expandable
@@ -154,14 +152,15 @@ export class JsonSchemaStatePropNode<T extends ModelDataNode<any, any, any> = Js
     return _combinary
   }
 
-  protected buildChildrenNodes(): IModelStateNode<T>[] {
+  protected buildChildrenNodes(sort: number): IModelStateNode<T>[] {
     const children = this.node.children(this.selected) as T[]
-    this._childrenNodes = children.length ? children.map((prop, i) => this.createStatePropNode(prop, i === 0)) : []
+    const sorted = sort ? children.sort((n1, n2) => (n1.key > n2.key ? -1 * sort : sort)) : children
+    this._childrenNodes = sorted.length ? sorted.map((prop, i) => this.createStatePropNode(prop, i === 0)) : []
     return this._childrenNodes
   }
 
   protected buildChildren(): IModelStateNode<T>[] {
-    return [...this.buildCombinaryNodes(), ...this.buildChildrenNodes()]
+    return [...this.buildCombinaryNodes(), ...this.buildChildrenNodes(this._sort)]
   }
 
   protected createStatePropNode(prop: T, first = false): IModelStatePropNode<T> {
