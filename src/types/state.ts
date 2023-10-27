@@ -31,6 +31,7 @@ export interface IModelStatePropNode<T extends IModelTreeNode<any, any, any>> {
   readonly allChildrenCount: number 
 
   // sort child nodes
+  readonly sorted: number
   sort(dir?: number): void
 
   expand(value?: number): void 

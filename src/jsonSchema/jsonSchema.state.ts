@@ -46,6 +46,10 @@ export class JsonSchemaStatePropNode<T extends ModelDataNode<any, any, any> = Js
 
   public readonly type: Exclude<ModelStateNodeType, "combinary">
 
+  get sorted(): number {
+    return this._sort
+  }
+
   get expanded() {
     return this._expanded
   }
