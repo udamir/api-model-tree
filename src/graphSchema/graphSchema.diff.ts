@@ -2,7 +2,7 @@ import { syncCrawl } from "json-crawl"
 
 import { GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta, GraphSchemaNodeType, GraphSchemaCrawlRule } from "./graphSchema.types"
 import { JsonSchemaCreateNodeParams, JsonSchemaModelDiffTree, isRequired } from "../jsonSchema"
-import { CreateNodeResult, Diff, DiffNodeMeta, DiffNodeValue, ModelDataNode } from "../types"
+import { CreateNodeResult, ChangeMeta, DiffNodeMeta, DiffNodeValue, ModelDataNode } from "../types"
 import { graphSchemaNodeMetaProps, graphSchemaNodeValueProps } from "./graphSchema.consts"
 import { createGraphSchemaTreeCrawlHook } from "./graphSchema.build"
 import { getNodeComplexityType, objectKeys, pick } from "../utils"
@@ -61,7 +61,7 @@ export class GraphSchemaModelDiffTree<
     const complexityType = getNodeComplexityType(value)
     const nestedChanges: Record<string, any> = value?.[this.metaKey]?.[complexityType]?.array ?? {}
 
-    const $nestedChanges: Record<string, Diff> = {}
+    const $nestedChanges: Record<string, ChangeMeta> = {}
     for (const nested of objectKeys(nestedChanges)) {
       $nestedChanges[`${id}/${complexityType}/${nested}`] = nestedChanges[nested]
     }

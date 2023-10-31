@@ -1,22 +1,25 @@
-import { JsonPath } from "json-crawl"
-
 // from api-smart-diff
-export type Diff = {
+export type ApiMergedMeta = {
   action: "add" | "remove" | "replace" | "test" | "rename"
-  path: JsonPath
-  before?: any
-  after?: any
+  replaced?: any
   type: "breaking" | "non-breaking" | "annotation" | "unclassified" | "deprecated"
-  description?: string
 }
 
+export type MergedArrayMeta = {
+  array: {
+    [key: number]: ApiMergedMeta | MergedArrayMeta
+  }
+}
+
+export type ChangeMeta = ApiMergedMeta | MergedArrayMeta
+
 export type DiffNodeValue = { 
-  $changes?: Record<string, Diff>
+  $changes?: Record<string, ChangeMeta>
 }
 
 export type DiffNodeMeta = { 
-  $nodeChanges?: Diff
-  $metaChanges?: Record<string, Diff>
-  $childrenChanges?: Record<string, Diff>
-  $nestedChanges?: Record<string, Diff>
+  $nodeChanges?: ChangeMeta
+  $metaChanges?: Record<string, ChangeMeta>
+  $childrenChanges?: Record<string, ChangeMeta>
+  $nestedChanges?: Record<string, ChangeMeta>
 }

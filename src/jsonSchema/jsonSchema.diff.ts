@@ -7,7 +7,7 @@ import {
 } from "./jsonSchema.types"
 import { jsonSchemaNodeMetaProps, jsonSchemaNodeValueProps } from "./jsonSchema.consts"
 import { getNodeComplexityType, isObject, objectKeys, pick } from "../utils"
-import { Diff, DiffNodeMeta, DiffNodeValue, ModelDataNode } from "../types"
+import { ChangeMeta, DiffNodeMeta, DiffNodeValue, ModelDataNode } from "../types"
 import { createJsonSchemaTreeCrawlHook } from "./jsonSchema.build"
 import { isValidType, isRequired } from "./jsonSchema.utils"
 import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
@@ -70,7 +70,7 @@ export class JsonSchemaModelDiffTree<
     return _value as T
   }
 
-  public getRequiredChange (key: string | number, parent: ModelDataNode<any, any, any> | null): Diff | null {
+  public getRequiredChange (key: string | number, parent: ModelDataNode<any, any, any> | null): ChangeMeta | null {
     if (!parent || typeof key === "number" || !key) {
       return null
     }
@@ -89,8 +89,8 @@ export class JsonSchemaModelDiffTree<
     return null
   }
   
-  public getChildrenChanges (id: string, _fragment: any): Record<string, Diff> {
-    const children: Record<string, Diff> = {}
+  public getChildrenChanges (id: string, _fragment: any): Record<string, ChangeMeta> {
+    const children: Record<string, ChangeMeta> = {}
   
     // add/remove all properties
     if (_fragment?.[this.metaKey]?.properties) {
@@ -172,7 +172,7 @@ export class JsonSchemaModelDiffTree<
     const complexityType = getNodeComplexityType(value)
     const nestedChanges: Record<string, any> = value?.[this.metaKey]?.[complexityType]?.array ?? {}
 
-    const $nestedChanges: Record<string, Diff> = {}
+    const $nestedChanges: Record<string, ChangeMeta> = {}
     for (const nested of objectKeys(nestedChanges)) {
       $nestedChanges[`${id}/${complexityType}/${nested}`] = nestedChanges[nested]
     }

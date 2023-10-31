@@ -1,6 +1,6 @@
 {
   "name": "api-model-tree",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "description": "Convert JsonSchema based document into structured and simplified data tree",
   "module": "dist/index.mjs",
   "main": "dist/index.cjs",

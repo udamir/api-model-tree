@@ -269,7 +269,7 @@ describe("jsonschema transformation tests", () => {
       expect(children4[1]).toMatchObject({ type: "basic", node: { key: "name" }, first: true, value: { type: "string" } })
       expect(children4[2]).toMatchObject({ type: "basic", node: { key: "id" }, value: { type: "number" } })
 
-      state.root!.sort(-1)
+      state.root!.sort(0)
       const children5 = state.root!.children
       expect(children5[0]).toMatchObject({ type: "combinary", selected: "#/oneOf/1" })
       expect(children5[1]).toMatchObject({ type: "basic", node: { key: "id" }, first: true, value: { type: "number" } })

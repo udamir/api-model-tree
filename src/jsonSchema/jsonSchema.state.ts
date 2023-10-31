@@ -157,7 +157,7 @@ export class JsonSchemaStatePropNode<T extends ModelDataNode<any, any, any> = Js
   }
 
   protected buildChildrenNodes(sort: number): IModelStateNode<T>[] {
-    const children = this.node.children(this.selected) as T[]
+    const children = [...this.node.children(this.selected)] as T[]
     const sorted = sort ? children.sort((n1, n2) => (n1.key > n2.key ? -1 * sort : sort)) : children
     this._childrenNodes = sorted.length ? sorted.map((prop, i) => this.createStatePropNode(prop, i === 0)) : []
     return this._childrenNodes
