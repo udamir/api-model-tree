@@ -216,7 +216,7 @@ export const transformTypeOfArray: SchemaTransformFunc<JsonSchemaCrawlState> = (
       type,
     }
   } else {
-    const { defs, definitions, ...rest } = value as any
+    const { defs, definitions, nullable, ...rest } = value as any
     return {
       anyOf: [...typeSet.values()].map((type) => ({
         // TODO: exclude not valid properties
