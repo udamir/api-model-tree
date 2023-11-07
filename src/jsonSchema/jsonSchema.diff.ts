@@ -167,10 +167,11 @@ export class JsonSchemaModelDiffTree<
   }
   
   public nestedDiffMeta (params: JsonSchemaCreateNodeParams<T, K, JsonSchemaDiffNodeMeta>) {
-    const { value, id, key = "", parent = null } = params
+    const { value, id, key = "", parent = null, container = null } = params
 
     const complexityType = getNodeComplexityType(value)
     const nestedChanges: Record<string, any> = value?.[this.metaKey]?.[complexityType]?.array ?? {}
+    const $nodeChanges = parent?.meta?.$childrenChanges?.[id] || container?.meta?.$nestedChanges?.[id]
 
     const $nestedChanges: Record<string, ChangeMeta> = {}
     for (const nested of objectKeys(nestedChanges)) {
@@ -179,6 +180,7 @@ export class JsonSchemaModelDiffTree<
 
     return { 
       ...Object.keys($nestedChanges).length ? { $nestedChanges } : {},
+      ...$nodeChanges ? { $nodeChanges } : {},
       required: isRequired(key, parent),
       _fragment: value
     }

@@ -86,6 +86,16 @@ describe("jsonschema diff tree tests", () => {
           name: {
             type: "string",
           },
+          param: {
+            oneOf: [
+              {
+                type: "string"
+              },
+              {
+                type: "number"
+              }
+            ]
+          }
         },
       }
 
@@ -118,11 +128,13 @@ describe("jsonschema diff tree tests", () => {
       expect(children).toMatchObject([
         { id: "#/properties/id", kind: "property", key: "id", meta: { required: true }, type: "simple", parent: tree.root },
         { id: "#/properties/name", kind: "property", key: "name", meta: { required: true }, type: "simple", parent: tree.root },
+        { id: "#/properties/param", kind: "property", key: "param", meta: { required: false }, type: "oneOf", parent: tree.root },
         { id: "#/properties/test", kind: "property", key: "test", meta: { required: false }, type: "simple", parent: tree.root },
       ])
       expect(children[0].value()?.$changes).toMatchObject({ type: { action: 'replace' }})
       expect(children[1].meta?.$metaChanges).toMatchObject({ required: { action: 'add' }})
-      expect(children[2].meta?.$nodeChanges).toMatchObject({ action: 'add' })
+      expect(children[2].meta?.$nodeChanges).toMatchObject({ action: 'remove' })
+      expect(children[3].meta?.$nodeChanges).toMatchObject({ action: 'add' })
     })
 
     it("should create diff tree from jsonSchema with oneOf obejct", () => {
