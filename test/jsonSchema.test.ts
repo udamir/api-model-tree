@@ -93,6 +93,7 @@ describe("jsonschema transformation tests", () => {
         ...common,
         oneOf: [
           {
+            title: "option1",
             required: ['id'],
             properties: {
               id: {
@@ -104,6 +105,7 @@ describe("jsonschema transformation tests", () => {
             },
           },
           {
+            title: "option2",
             required: ['name'],
             properties: {
               id: {

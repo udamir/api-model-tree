@@ -1,6 +1,6 @@
 {
   "name": "api-model-tree",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "description": "Convert JsonSchema based document into structured and simplified data tree",
   "module": "dist/index.mjs",
   "main": "dist/index.cjs",
@@ -39,10 +39,9 @@
     "test": "jest --verbose",
     "test:coverage": "jest --verbose --coverage"
   },
-  "peerDependencies": {},
   "dependencies": {
     "@types/json-schema": "^7.0.12",
-    "allof-merge": "0.5.2",
+    "allof-merge": "^0.5.3",
     "gqlapi": "^0.5.1",
     "json-crawl": "^0.3.1"
   },
