@@ -1,4 +1,4 @@
-import { IGraphSchemaBaseType } from "./graphSchema.types"
+import { GraphSchemaNodeType, IGraphSchemaBaseType } from "./graphSchema.types"
 
 export const graphSchemaNodeKinds = ['root', 'args', 'arg', 'definition', 'property', 'items', 'allOf', 'oneOf']
 
@@ -31,6 +31,16 @@ export const graphSchemaNodeValueProps: Record<string, readonly string[]> = {
   string: [...graphSchemaCommonProps, 'format', 'enum', 'values'],
   number: [...graphSchemaCommonProps, 'format'],
   integer: [...graphSchemaCommonProps, 'format'],
-  object: [...graphSchemaCommonProps, 'properties', 'required'],
-  array: [...graphSchemaCommonProps, 'items'],
+  object: [...graphSchemaCommonProps, 'required'],
+  array: [...graphSchemaCommonProps],
 } as const
+
+export const graphSchemaTypeProps: Record<GraphSchemaNodeType, readonly string[]> = {
+  boolean: [...graphSchemaNodeValueProps.boolean, ...graphSchemaNodeMetaProps],
+  null: [...graphSchemaNodeValueProps.null, ...graphSchemaNodeMetaProps],
+  string: [...graphSchemaNodeValueProps.string, ...graphSchemaNodeMetaProps],
+  number: [...graphSchemaNodeValueProps.number, ...graphSchemaNodeMetaProps],
+  integer: [...graphSchemaNodeValueProps.integer, ...graphSchemaNodeMetaProps],
+  object: [...graphSchemaNodeValueProps.object, ...graphSchemaNodeMetaProps, 'properties'],
+  array: [...graphSchemaNodeValueProps.array, ...graphSchemaNodeMetaProps, 'items'],
+} 

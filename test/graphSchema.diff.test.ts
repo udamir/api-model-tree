@@ -53,6 +53,53 @@ describe("graphschema transformation tests", () => {
       expect(tree.root?.nested[-1]?.meta.$childrenChanges).toMatchObject({ "#/args/properties/isCompleted": { action: 'add' } })
       expect(tree.root?.nested[-1]?.children()[0]?.meta.$metaChanges).toMatchObject({ required: { action: 'add' } })
     })
+
+    it("should create diff tree from graphSchema with directive", () => {
+
+      const before = `
+      type Query {
+        "A Query with 1 required argument and 1 optional argument"
+        todo(
+          id: ID!
+      
+          "A default value of false"
+          isCompleted: Boolean = false
+        ): String!
+      }
+      `
+      const beforeSource = buildFromSchema(buildSchema(before, { noLocation: true }))
+      const after = `
+      type Object {
+          id: ID!
+          count: Int
+      } 
+
+      type Query {
+        "A Query with 1 required argument and 1 optional argument"
+        todo(
+          id: ID!
+      
+          "A default value of false"
+          isCompleted: Boolean = false @deprecated(reason: "not used")
+        ): Object!
+      }
+      `
+      const afterSource = buildFromSchema(buildSchema(after, { noLocation: true }))
+
+      const merged = mergeGraphApi(beforeSource, afterSource)
+      const schema = merged.queries!.todo as GraphSchemaFragment
+
+      const tree = createGraphSchemaDiffTree(schema, metaKey, merged)
+      expect(tree.root!.value()).toMatchObject({ type: 'object', title: 'Object' })
+
+      const children = tree.root!.children()
+      expect(children[0].value()).toMatchObject({ type: 'string', format: 'ID' })      
+      expect(children[0].meta).toMatchObject({ $nodeChange: { action: 'add' }})      
+
+      expect(children[1].value()).toMatchObject({ type: 'integer' })      
+      expect(children[1].meta).toMatchObject({ $nodeChange: { action: 'add' }})      
+  
+    })
   })
 
   describe.skip("schema with directives", () => {

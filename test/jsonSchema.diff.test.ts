@@ -133,8 +133,8 @@ describe("jsonschema diff tree tests", () => {
       ])
       expect(children[0].value()?.$changes).toMatchObject({ type: { action: 'replace' }})
       expect(children[1].meta?.$metaChanges).toMatchObject({ required: { action: 'add' }})
-      expect(children[2].meta?.$nodeChanges).toMatchObject({ action: 'remove' })
-      expect(children[3].meta?.$nodeChanges).toMatchObject({ action: 'add' })
+      expect(children[2].meta?.$nodeChange).toMatchObject({ action: 'remove' })
+      expect(children[3].meta?.$nodeChange).toMatchObject({ action: 'add' })
     })
 
     it("should create diff tree from jsonSchema with oneOf obejct", () => {
@@ -187,9 +187,49 @@ describe("jsonschema diff tree tests", () => {
       expect(tree.root).toMatchObject({ id: "#", kind: "root", type: "oneOf", parent: null })
 
       expect(tree.root?.meta).toMatchObject({ $nestedChanges: { "#/oneOf/2": { action: 'add' } } })
-      expect(tree.root?.nested[2].meta).toMatchObject({ $nodeChanges: { action: 'add' } })
+      expect(tree.root?.nested[2].meta).toMatchObject({ $nodeChange: { action: 'add' } })
 
       expect(tree.root?.children("#/oneOf/1")[1].meta).toMatchObject({ $metaChanges: { required: { action: 'add' } } })
+    })
+
+    it("should create diff tree from jsonSchema with added obejct", () => {
+      const before: JSONSchema4 = {
+        type: "object",
+        required: ['id'],
+        properties: {
+          id: {
+            type: "number",
+          }
+        },
+      }
+
+      const after: JSONSchema4 = {
+        type: "object",
+        required: ['name', 'id'],
+        properties: {
+          id: {
+            type: "number",
+          },
+          name: {
+            type: "object",
+            properties: {
+              test: {
+                type: "string"
+              }
+            }
+          },
+        },
+      }
+
+      const merged = mergeSchemas(before, after)
+      const tree = createJsonSchemaDiffTree(merged, metaKey)
+
+      expect(tree.root).toMatchObject({ id: "#", kind: "root", type: "simple", parent: null })
+
+      const children = tree.root?.children()!
+
+      expect(children[1].meta).toMatchObject({ $nodeChange: { action: 'add', depth: 1 } })
+      expect(children[1].children()[0].meta).toMatchObject({ $nodeChange: { action: 'add', depth: 1 } })
     })
 
     it.skip("should create diff tree from jsonSchema with nested oneOf obejct", () => {
@@ -275,7 +315,7 @@ describe("jsonschema diff tree tests", () => {
       const tree = createJsonSchemaDiffTree(merged, metaKey)
 
       expect(tree.root?.meta).toMatchObject({ $childrenChanges: { "#/additionalProperties": { action: 'add' } } })
-      expect(tree.root?.children()[1].meta).toMatchObject({ $nodeChanges: { action: 'add' } })
+      expect(tree.root?.children()[1].meta).toMatchObject({ $nodeChange: { action: 'add' } })
     })
 
     it("should create tree from jsonSchema with patternProperties", () => {
@@ -302,8 +342,8 @@ describe("jsonschema diff tree tests", () => {
         "#/patternProperties/%5E%5Ba-z0-9%5D%2B%24": { action: 'add' }
       } })
 
-      expect(tree.root?.children()[0].meta).toMatchObject({ $nodeChanges: { action: 'add' } })
-      expect(tree.root?.children()[1].meta).toMatchObject({ $nodeChanges: { action: 'add' } })
+      expect(tree.root?.children()[0].meta).toMatchObject({ $nodeChange: { action: 'add' } })
+      expect(tree.root?.children()[1].meta).toMatchObject({ $nodeChange: { action: 'add' } })
     })
 
     it("should create tree from jsonSchema with patternProperties", () => {
@@ -376,7 +416,7 @@ describe("jsonschema diff tree tests", () => {
       const tree = createJsonSchemaDiffTree(merged, metaKey)
 
       expect(tree.root?.value()).toMatchObject({ $changes: { type: { action: 'replace' } } })
-      expect(tree.root?.children()[0].meta).toMatchObject({ $nodeChanges: { action: 'add' } })
+      expect(tree.root?.children()[0].meta).toMatchObject({ $nodeChange: { action: 'add' } })
     })
 
     it("should create tree from jsonSchema with array items", () => {
@@ -403,7 +443,7 @@ describe("jsonschema diff tree tests", () => {
       const merged = mergeSchemas(before, after)
       const tree = createJsonSchemaDiffTree(merged, metaKey)
 
-      expect(tree.root?.children()[0].meta).toMatchObject({ $nodeChanges: { action: 'remove' } })
+      expect(tree.root?.children()[0].meta).toMatchObject({ $nodeChange: { action: 'remove' } })
     })
 
     it("should create tree from jsonSchema with array items", () => {
@@ -429,8 +469,8 @@ describe("jsonschema diff tree tests", () => {
         "#/items/1": { action: 'remove' } 
       }})
 
-      expect(tree.root?.children()[0].meta).toMatchObject({ $nodeChanges: { action: 'remove' } })
-      expect(tree.root?.children()[1].meta).toMatchObject({ $nodeChanges: { action: 'remove' } })
+      expect(tree.root?.children()[0].meta).toMatchObject({ $nodeChange: { action: 'remove' } })
+      expect(tree.root?.children()[1].meta).toMatchObject({ $nodeChange: { action: 'remove' } })
     })
 
     it.skip("should create diff tree from jsonSchema with array items change", () => {
@@ -482,7 +522,7 @@ describe("jsonschema diff tree tests", () => {
         "#/items/1": { action: 'remove' } 
       }})
 
-      expect(tree.root?.children()[1].meta).toMatchObject({ $nodeChanges: { action: 'remove' } })
+      expect(tree.root?.children()[1].meta).toMatchObject({ $nodeChange: { action: 'remove' } })
     })
   })
 
@@ -527,7 +567,7 @@ describe("jsonschema diff tree tests", () => {
       const tree = createJsonSchemaDiffTree(merged, metaKey)
       expect(tree.root?.meta).toMatchObject({ $childrenChanges: { "#/properties/name": { action: 'add' }} })
       expect(tree.root?.children()[0].value()).toMatchObject({ $changes: { type: { action: 'replace' }} })
-      expect(tree.root?.children()[1].meta).toMatchObject({ $nodeChanges: { action: 'add' } })
+      expect(tree.root?.children()[1].meta).toMatchObject({ $nodeChange: { action: 'add' } })
     })
 
     it("should create diff tree for jsonSchema with refs change", () => {
@@ -623,7 +663,7 @@ describe("jsonschema diff tree tests", () => {
       expect(tree.root?.children()[0].meta).toMatchObject({ $childrenChanges: { "#/properties/model/properties/parent": { action: 'remove' }} })
       expect(tree.root?.children()[0].value()).toMatchObject({ $changes: { required: { action: 'add' }} })
       expect(tree.root?.children()[0].children()[0].meta).toMatchObject({ $metaChanges: { required: { action: 'add' }} })
-      expect(tree.root?.children()[0].children()[1].meta).toMatchObject({ $nodeChanges: { action: 'remove' } })
+      expect(tree.root?.children()[0].children()[1].meta).toMatchObject({ $nodeChange: { action: 'remove' } })
     })
   })
 

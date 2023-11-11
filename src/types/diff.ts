@@ -13,13 +13,15 @@ export type MergedArrayMeta = {
 
 export type ChangeMeta = ApiMergedMeta | MergedArrayMeta
 
-export type DiffNodeValue = { 
-  $changes?: Record<string, ChangeMeta>
-}
+export type NodeChange = ApiMergedMeta & { depth: number }
 
 export type DiffNodeMeta = { 
-  $nodeChanges?: ChangeMeta
+  $nodeChange?: NodeChange 
   $metaChanges?: Record<string, ChangeMeta>
-  $childrenChanges?: Record<string, ChangeMeta>
-  $nestedChanges?: Record<string, ChangeMeta>
+  $childrenChanges?: Record<string, ApiMergedMeta>
+  $nestedChanges?: Record<string, ApiMergedMeta>
+}
+
+export type DiffNodeValue = { 
+  $changes?: Record<string, ChangeMeta>
 }

@@ -1,8 +1,8 @@
 import { syncCrawl } from "json-crawl"
 
 import { GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta, GraphSchemaNodeType, GraphSchemaCrawlRule } from "./graphSchema.types"
+import { CreateNodeResult, DiffNodeMeta, DiffNodeValue, ModelDataNode, ApiMergedMeta } from "../types"
 import { JsonSchemaCreateNodeParams, JsonSchemaModelDiffTree, isRequired } from "../jsonSchema"
-import { CreateNodeResult, ChangeMeta, DiffNodeMeta, DiffNodeValue, ModelDataNode } from "../types"
 import { graphSchemaNodeMetaProps, graphSchemaNodeValueProps } from "./graphSchema.consts"
 import { createGraphSchemaTreeCrawlHook } from "./graphSchema.build"
 import { getNodeComplexityType, objectKeys, pick } from "../utils"
@@ -31,11 +31,11 @@ export type GraphSchemaDiffNodeMeta = GraphSchemaNodeMeta & DiffNodeMeta
 export class GraphSchemaModelDiffTree<
   T = GraphSchemaDiffNodeValue,
   K extends string = GraphSchemaNodeKind,
-  M extends object = GraphSchemaDiffNodeMeta
+  M extends DiffNodeMeta = GraphSchemaDiffNodeMeta
 > extends JsonSchemaModelDiffTree<T, K, M> {
 
-  public simpleDiffMeta (params: JsonSchemaCreateNodeParams<T, K, GraphSchemaDiffNodeMeta>) {
-    const { value, id, key = "", parent = null, container = null } = params
+  public simpleDiffMeta (params: JsonSchemaCreateNodeParams<T, K, M>): GraphSchemaDiffNodeMeta {
+    const { value, id, key = "", parent = null } = params
 
     const requiredChange = this.getRequiredChange(key, parent)
     const $metaChanges = {
@@ -43,31 +43,43 @@ export class GraphSchemaModelDiffTree<
       ...pick(value?.[this.metaKey], graphSchemaNodeMetaProps),
     }
     const $childrenChanges = this.getChildrenChanges(id, value ?? {})
-    const $nodeChanges = parent?.meta?.$childrenChanges?.[id] || container?.meta?.$nestedChanges?.[id]
-  
+    const $nodeChange = this.getNodeChange(params)
+
     return {
       ...pick<any>(value, graphSchemaNodeMetaProps),
-      ...$nodeChanges ? { $nodeChanges } : {},
+      ...$nodeChange ? { $nodeChange } : {},
       ...Object.keys($metaChanges).length ? { $metaChanges } : {},
       ...Object.keys($childrenChanges).length ? { $childrenChanges } : {},
       required: isRequired(key, parent),
       _fragment: value,
     }
   }
+
+  protected getNodeChange = (params: JsonSchemaCreateNodeParams<T, K, M>) => {
+    const { id, parent = null, container = null } = params
+    const inheretedChanges = container?.meta?.$nodeChange ?? parent?.meta.$nodeChange
+    const nodeChanges = parent?.meta?.$childrenChanges?.[id] || container?.meta?.$nestedChanges?.[id]
   
-  public nestedDiffMeta (params: JsonSchemaCreateNodeParams<T, K, GraphSchemaDiffNodeMeta>) {
+    return ['add', 'remove'].includes(inheretedChanges?.action ?? "") ? inheretedChanges : nodeChanges 
+        ? { ...nodeChanges, depth: (parent?.depth ?? 0) + (params.countInDepth ? 1 : 0) } : undefined
+  }
+  
+  public nestedDiffMeta (params: JsonSchemaCreateNodeParams<T, K, M>): GraphSchemaDiffNodeMeta {
     const { value, id, key = "", parent = null } = params
 
     const complexityType = getNodeComplexityType(value)
     const nestedChanges: Record<string, any> = value?.[this.metaKey]?.[complexityType]?.array ?? {}
 
-    const $nestedChanges: Record<string, ChangeMeta> = {}
+    const $nestedChanges: Record<string, ApiMergedMeta> = {}
     for (const nested of objectKeys(nestedChanges)) {
       $nestedChanges[`${id}/${complexityType}/${nested}`] = nestedChanges[nested]
     }
 
+    const $nodeChange = this.getNodeChange(params)
+
     return { 
       ...Object.keys($nestedChanges).length ? { $nestedChanges } : {},
+      ...$nodeChange ? { $nodeChange } : {},
       required: isRequired(key, parent),
       _fragment: value
     }
