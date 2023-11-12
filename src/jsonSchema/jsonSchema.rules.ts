@@ -1,6 +1,6 @@
 import { CrawlRules } from "json-crawl"
 
-import { JsonSchemaCrawlRule, JsonSchemaNodeKind } from "./jsonSchema.types"
+import type { JsonSchemaCrawlRule, JsonSchemaNodeKind } from "./jsonSchema.types"
 import { jsonSchemaTransformers} from "./jsonSchema.transform"
 import { isNumber } from "../utils"
 

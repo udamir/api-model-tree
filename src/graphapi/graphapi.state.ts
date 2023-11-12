@@ -1,6 +1,6 @@
-import { GraphApiNodeData, GraphApiNodeKind, GraphOperationsFilter, GraphApiTreeNode } from "./graphapi.types"
+import type { GraphApiNodeData, GraphApiNodeKind, GraphOperationsFilter, GraphApiTreeNode } from "./graphapi.types"
+import type { IModelStateCombinaryNode, IModelStateNode, IModelStatePropNode, IModelTree } from "../types"
 import { GraphSchemaStateCombinaryNode, GraphSchemaStatePropNode } from "../graphSchema/graphSchema.state"
-import { IModelStateCombinaryNode, IModelStateNode, IModelStatePropNode, IModelTree } from "../types"
 import { GraphSchemaNodeMeta } from "../graphSchema"
 import { graphApiNodeKind } from "./graphapi.consts"
 import { modelStateNodeType } from "../consts"

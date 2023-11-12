@@ -1,11 +1,14 @@
 import { buildPointer } from "allof-merge"
 import { syncCrawl } from "json-crawl"
 
-import {
+import type {
   JsonSchemaNodeValue, JsonSchemaNodeKind,
   JsonSchemaNodeMeta, JsonSchemaNodeType, JsonSchemaCreateNodeParams,
 } from "./jsonSchema.types"
-import { ApiMergedMeta, ChangeMeta, ChangeType, DiffNodeMeta, DiffNodeValue, ModelDataNode, ModelTreeNodeParams, ModelTreeNodeType } from "../types"
+import type { 
+  ApiMergedMeta, ChangeMeta, ChangeType, DiffNodeMeta, DiffNodeValue, ModelDataNode, 
+  ModelTreeNodeParams, ModelTreeNodeType, NodeChangesSummary
+} from "../types"
 import { calcChanges, getNodeComplexityType, isObject, objectKeys, pick, sumChanges } from "../utils"
 import { jsonSchemaNodeMetaProps, jsonSchemaNodeValueProps } from "./jsonSchema.consts"
 import { createJsonSchemaTreeCrawlHook } from "./jsonSchema.build"
@@ -59,7 +62,7 @@ export class JsonSchemaModelDiffTree<
     return summary
   }
 
-  public totalChangesSummary(node: ModelDataNode<T, K, M>): Partial<Record<ChangeType, number>> {
+  public totalChangesSummary(node: ModelDataNode<T, K, M>): NodeChangesSummary {
     if ("isCycle" in node && node.isCycle) { return {} }
 
     const nodeChanges = this.changesSummary(node)

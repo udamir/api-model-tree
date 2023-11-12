@@ -1,7 +1,7 @@
 import { isRefNode, parseRef, resolvePointer } from "allof-merge"
 
-import { GraphSchemaCrawlState, GraphSchemaFragment, IGraphSchemaEnumValueType } from "./graphSchema.types"
-import { SchemaTransformFunc } from "../types"
+import type { GraphSchemaCrawlState, GraphSchemaFragment, IGraphSchemaEnumValueType } from "./graphSchema.types"
+import type { SchemaTransformFunc } from "../types"
 
 export const transformNullable: SchemaTransformFunc<GraphSchemaCrawlState>  = (value) => {
   if (typeof value !== "object" || !value || !('nullable' in value)) {

@@ -1,7 +1,7 @@
 import { JsonPath } from 'json-crawl'
 
 import { JsonSchemaComplexDiffNode, JsonSchemaModelTree, JsonSchemaNode, JsonSchemaNodeMeta, JsonSchemaNodeValue } from '../jsonSchema'
-import { IModelTreeNode, ModelDataNode, SchemaCrawlRule } from '../types'
+import type { IModelTreeNode, ModelDataNode, SchemaCrawlRule } from '../types'
 import { ModelTreeComplexNode } from '../modelTree'
 import { openApiNodeKind } from './openapi.consts'
 

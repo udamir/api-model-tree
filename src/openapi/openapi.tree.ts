@@ -5,7 +5,7 @@ import {
   createOpenApiContentNode, createOpenApiOperationNode, createOpenApiParamNode, 
   createOpenApiResponseNode, createOpenApiServiceNode
 } from './openapi.node'
-import { OpenApiComplexNode, OpenApiCrawlRule, OpenApiCrawlState, OpenApiModelTree, OpenApiTreeNode } from './openapi.types'
+import type { OpenApiComplexNode, OpenApiCrawlRule, OpenApiCrawlState, OpenApiModelTree, OpenApiTreeNode } from './openapi.types'
 import { openApiNodeKindMetaKeys, openApiSpecificNodeKind, openApiSpecificNodeKinds } from './openapi.consts'
 import { createJsonSchemaTreeCrawlHook } from '../jsonSchema'
 import { getTargetNode, isObject, pick } from '../utils'

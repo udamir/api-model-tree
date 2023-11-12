@@ -1,7 +1,7 @@
 import { SyncCrawlHook, syncCrawl } from 'json-crawl'
 import { buildPointer } from 'allof-merge'
 
-import { 
+import type { 
   GraphSchemaCrawlState, GraphSchemaNodeValue, GraphSchemaFragment, GraphSchemaNodeKind,
   GraphSchemaNodeMeta, GraphSchemaCrawlRule, GraphSchemaComplexNode, GraphSchemaTreeNode 
 } from "./graphSchema.types"

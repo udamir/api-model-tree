@@ -1,13 +1,13 @@
 import { isRefNode, parseRef, resolveRefNode } from "allof-merge"
 import { JsonPath } from "json-crawl"
 
-import { 
+import type { 
   OpenApiOperationNode, IParameterMeta, OpenApiParameterNode, IContentMeta, OpenApiResponseNode,
   IOperationNodeMeta, OpenApiServiceNode, OpenApiModelTree, OpenApiContentNode, IServiceNodeMeta, OpenApiTreeNode 
 } from "./openapi.types"
 import { openApiNodeKind, openApiNodeKindMetaKeys } from "./openapi.consts"
 import { jsonSchemaNodeMetaProps } from "../jsonSchema"
-import { CreateNodeResult } from "../types"
+import type { CreateNodeResult } from "../types"
 import { pick } from "../utils"
 
 export const createOpenApiParamSchemaNode = (

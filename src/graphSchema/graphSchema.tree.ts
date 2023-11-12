@@ -1,7 +1,7 @@
-import { GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta } from "./graphSchema.types"
+import type { GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta } from "./graphSchema.types"
 import { JsonSchemaCreateNodeParams, JsonSchemaModelTree, isRequired } from "../jsonSchema"
 import { graphSchemaNodeMetaProps, graphSchemaNodeValueProps } from "./graphSchema.consts"
-import { CreateNodeResult, ModelDataNode } from "../types"
+import type { CreateNodeResult, ModelDataNode } from "../types"
 import { getNodeComplexityType, pick } from "../utils"
 
 export class GraphSchemaModelTree<

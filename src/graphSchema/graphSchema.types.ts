@@ -2,7 +2,7 @@ import { GraphSchema } from 'gqlapi'
 
 import { graphSchemaNodeKind, graphSchemaNodeTypes } from './graphSchema.consts'
 import { ModelTreeComplexNode, ModelTreeNode } from '../modelTree'
-import { SchemaCrawlRule, SchemaTransformFunc } from '../types'
+import type { SchemaCrawlRule, SchemaTransformFunc } from '../types'
 import { IJsonSchemaBaseType } from '../jsonSchema'
 
 export type GraphSchemaNodeKind = keyof typeof graphSchemaNodeKind

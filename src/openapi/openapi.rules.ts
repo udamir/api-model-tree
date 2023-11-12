@@ -1,8 +1,8 @@
 import { CrawlRules } from "json-crawl"
 
 import { allOfMerge, resolveRef, transformGlobalSecurity, transformPathItems } from "./openapi.transform"
+import type { OpenApiCrawlRule } from "./openapi.types"
 import { jsonSchemaCrawlRules } from "../jsonSchema"
-import { OpenApiCrawlRule } from "./openapi.types"
 import { openApiNodeKind } from "./openapi.consts"
 
 export const openApiCrawlRules: CrawlRules<OpenApiCrawlRule> = {

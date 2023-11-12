@@ -1,4 +1,4 @@
-import { IJsonSchemaBaseType, JsonSchemaNodeMeta, JsonSchemaNodeType } from "./jsonSchema.types"
+import type { IJsonSchemaBaseType, JsonSchemaNodeMeta, JsonSchemaNodeType } from "./jsonSchema.types"
 
 export const jsonSchemaNodeKind = {
   root: 'root',

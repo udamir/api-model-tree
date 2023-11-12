@@ -16,10 +16,11 @@ export type MergedArrayMeta = {
 export type ChangeMeta = ApiMergedMeta | MergedArrayMeta
 
 export type NodeChange = ApiMergedMeta & { depth: number }
+export type NodeChangesSummary = Partial<Record<ChangeType, number>>
 
 export type DiffNodeMeta = { 
   $nodeChange?: NodeChange 
-  $nodeChangesSummary: () => Partial<Record<ChangeType, number>> 
+  $nodeChangesSummary: () => NodeChangesSummary
   $metaChanges?: Record<string, ChangeMeta>
   $childrenChanges?: Record<string, ApiMergedMeta>
   $nestedChanges?: Record<string, ApiMergedMeta>

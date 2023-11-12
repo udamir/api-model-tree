@@ -7,11 +7,11 @@ import {
   createGraphSchemaTreeCrawlHook 
 } from "../graphSchema"
 
+import type { GraphApiCrawlRule, GraphApiCrawlState, GraphApiNodeData, GraphApiNodeKind } from "./graphapi.types"
 import { graphApiNodeKind, graphApiNodeKinds, graphqlEmbeddedDirectives } from "./graphapi.consts"
-import { GraphApiCrawlRule, GraphApiCrawlState, GraphApiNodeData, GraphApiNodeKind } from "./graphapi.types"
 import { createTransformCrawlHook } from "../transform"
 import { graphApiCrawlRules } from "./graphapi.rules"
-import { ModelTreeNodeParams } from "../types"
+import type { ModelTreeNodeParams } from "../types"
 import { modelTreeNodeType } from "../consts"
 import { isRequired } from "../jsonSchema"
 import { getTargetNode } from "../utils"

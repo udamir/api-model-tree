@@ -1,6 +1,6 @@
 
-import { OpenApiModelTree, OpenApiOperationsFilter, OpenApiTreeNode } from "./openapi.types"
-import { IModelStateCombinaryNode, IModelStateNode, IModelStatePropNode } from "../types"
+import type { OpenApiModelTree, OpenApiOperationsFilter, OpenApiTreeNode } from "./openapi.types"
+import type { IModelStateCombinaryNode, IModelStateNode, IModelStatePropNode } from "../types"
 import { JsonSchemaStateCombinaryNode, JsonSchemaStatePropNode } from "../jsonSchema"
 import { openApiNodeKind } from "./openapi.consts"
 import { modelStateNodeType } from "../consts"

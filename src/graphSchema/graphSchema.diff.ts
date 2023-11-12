@@ -1,7 +1,7 @@
 import { syncCrawl } from "json-crawl"
 
-import { GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta, GraphSchemaNodeType } from "./graphSchema.types"
-import { CreateNodeResult, DiffNodeMeta, DiffNodeValue, ModelDataNode, ApiMergedMeta } from "../types"
+import type { GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta, GraphSchemaNodeType } from "./graphSchema.types"
+import type { CreateNodeResult, DiffNodeMeta, DiffNodeValue, ModelDataNode, ApiMergedMeta } from "../types"
 import { JsonSchemaCreateNodeParams, JsonSchemaModelDiffTree, isRequired } from "../jsonSchema"
 import { graphSchemaNodeMetaProps, graphSchemaNodeValueProps } from "./graphSchema.consts"
 import { createGraphSchemaTreeCrawlHook } from "./graphSchema.build"

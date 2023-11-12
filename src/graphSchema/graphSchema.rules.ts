@@ -1,6 +1,6 @@
 import { CrawlRules } from "json-crawl"
 
-import { GraphSchemaCrawlRule, GraphSchemaNodeKind } from "./graphSchema.types"
+import type { GraphSchemaCrawlRule, GraphSchemaNodeKind } from "./graphSchema.types"
 import { GraphSchemaTransformers } from "./graphSchema.transform"
 import { graphSchemaNodeKind } from "./graphSchema.consts"
 

@@ -1,8 +1,8 @@
 import { CrawlRules } from "json-crawl"
 
 import { GraphSchemaTransformers, graphSchemaCrawlRules, graphSchemaNodeKind } from "../graphSchema"
+import type { GraphApiCrawlRule } from "./graphapi.types"
 import { graphApiNodeKind } from "./graphapi.consts"
-import { GraphApiCrawlRule } from "./graphapi.types"
 
 export const graphApiCrawlRules: CrawlRules<GraphApiCrawlRule> = {
   "/queries": {

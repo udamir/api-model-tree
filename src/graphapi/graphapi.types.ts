@@ -2,8 +2,8 @@ import { GraphSchema } from 'gqlapi'
 
 import { GraphSchemaCrawlState, GraphSchemaNodeKind, GraphSchemaNodeMeta, GraphSchemaNodeValue } from '../graphSchema'
 import { graphApiNodeKind } from './graphapi.consts'
+import type { SchemaCrawlRule } from '../types'
 import { ModelTreeNode } from '../modelTree'
-import { SchemaCrawlRule } from '../types'
 
 export type GraphApiNodeKind = GraphSchemaNodeKind | keyof typeof graphApiNodeKind
 export type GraphApiCrawlState = GraphSchemaCrawlState & {

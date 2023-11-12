@@ -1,6 +1,6 @@
 import { SyncCrawlHook } from "json-crawl"
 
-import { SchemaCrawlRule, SchemaTransformFunc } from "./types"
+import type { SchemaCrawlRule, SchemaTransformFunc } from "./types"
 
 export const createTransformCrawlHook = <T extends {}>(source: unknown): SyncCrawlHook<T, SchemaCrawlRule<any, any>> => {
   return ({ value, path, state, rules }) => {

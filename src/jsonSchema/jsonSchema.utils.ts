@@ -5,9 +5,9 @@ import type {
   JsonSchemaNodeType, JsonSchemaTreeNode,
 } from "./jsonSchema.types"
 import { jsonSchemaCommonProps, jsonSchemaNodeTypes, jsonSchemaTypeProps } from "./jsonSchema.consts"
-import { isStringOrNumber } from "../utils"
 import { modelTreeNodeType } from "../consts"
-import { ModelDataNode } from "../types"
+import type { ModelDataNode } from "../types"
+import { isStringOrNumber } from "../utils"
 
 export const isRequired = (key: string | number, parent: ModelDataNode<any, any, any> | null): boolean => {
   if (!parent || typeof key === "number" || !key) {

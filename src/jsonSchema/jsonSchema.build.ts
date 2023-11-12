@@ -1,7 +1,7 @@
 import { SyncCrawlHook, isObject, syncCrawl } from 'json-crawl'
 import { buildPointer, merge } from "allof-merge"
 
-import { 
+import type { 
   JsonSchemaCrawlState, JsonSchemaNodeValue, JsonSchemaNodeKind, JsonSchemaNodeMeta,
   JsonSchemaCrawlRule, JsonSchemaComplexNode }
 from "./jsonSchema.types"

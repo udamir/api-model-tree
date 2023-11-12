@@ -1,7 +1,10 @@
 import { isAnyOfNode, isOneOfNode } from "allof-merge"
 
-import { ChangeMeta, ChangeType, IModelStateNode, IModelStatePropNode, IModelTree, IModelTreeNode, ModelDataNode, ModelTreeNodeType } from "./types"
-import { changeTypes } from "./consts";
+import type { 
+  ChangeMeta, ChangeType, IModelStateNode, IModelStatePropNode, IModelTree, 
+  IModelTreeNode, ModelDataNode, ModelTreeNodeType, NodeChangesSummary 
+} from "./types"
+import { changeTypes } from "./consts"
 
 export function isStringOrNumber(value: unknown): value is number | string {
   return typeof value === 'string' || typeof value === 'number'
@@ -102,7 +105,7 @@ export const calcChanges = (summary: Record<ChangeType, number>, changes?: Recor
   })
 }
 
-export const sumChanges = (c1: Partial<Record<ChangeType, number>>, c2?: Partial<Record<ChangeType, number>>): Partial<Record<ChangeType, number>> => {
+export const sumChanges = (c1: NodeChangesSummary, c2?: NodeChangesSummary): NodeChangesSummary => {
   if (!c2) { return c1 }
   const summary: Partial<Record<ChangeType, number>> = {}
   for (const changeType of changeTypes) {

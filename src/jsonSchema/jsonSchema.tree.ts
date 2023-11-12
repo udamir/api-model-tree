@@ -1,9 +1,9 @@
 import { isRefNode, parseRef, resolveRefNode } from "allof-merge"
 
-import { JsonSchemaNodeValue, JsonSchemaNodeKind, JsonSchemaNodeMeta, JsonSchemaCreateNodeParams } from "./jsonSchema.types"
+import type { JsonSchemaNodeValue, JsonSchemaNodeKind, JsonSchemaNodeMeta, JsonSchemaCreateNodeParams } from "./jsonSchema.types"
 import { jsonSchemaNodeMetaProps, jsonSchemaNodeValueProps } from "./jsonSchema.consts"
+import type { CreateNodeResult, IModelTreeNode, ModelDataNode } from "../types"
 import { isValidType, transformTitle, isRequired } from "./jsonSchema.utils"
-import { CreateNodeResult, IModelTreeNode, ModelDataNode } from "../types"
 import { getNodeComplexityType, pick } from "../utils"
 import { modelTreeNodeType } from "../consts"
 import { ModelTree } from "../modelTree"

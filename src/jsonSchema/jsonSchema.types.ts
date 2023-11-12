@@ -1,5 +1,5 @@
 import { jsonSchemaNodeKind, jsonSchemaNodeTypes } from "./jsonSchema.consts"
-import { ModelDataNode, SchemaCrawlRule } from "../types"
+import type { ModelDataNode, SchemaCrawlRule } from "../types"
 import { ModelTreeComplexNode } from "../modelTree"
 
 export type JsonSchemaNodeKind = keyof typeof jsonSchemaNodeKind

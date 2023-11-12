@@ -1,7 +1,7 @@
 import { isRefNode, jsonSchemaMergeRules, merge, resolveRefNode } from "allof-merge"
 
 import { OpenApiCrawlState } from "./openapi.types"
-import { SchemaTransformFunc } from "../types"
+import type { SchemaTransformFunc } from "../types"
 import { isKey, objectKeys } from "../utils"
 
 export const allOfMerge: SchemaTransformFunc<OpenApiCrawlState> = (value, source) => {
