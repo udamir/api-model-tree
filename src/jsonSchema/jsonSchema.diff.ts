@@ -5,9 +5,9 @@ import {
   JsonSchemaNodeValue, JsonSchemaNodeKind,
   JsonSchemaNodeMeta, JsonSchemaNodeType, JsonSchemaCreateNodeParams,
 } from "./jsonSchema.types"
-import { ApiMergedMeta, ChangeMeta, DiffNodeMeta, DiffNodeValue, ModelDataNode } from "../types"
+import { ApiMergedMeta, ChangeMeta, ChangeType, DiffNodeMeta, DiffNodeValue, ModelDataNode, ModelTreeNodeParams, ModelTreeNodeType } from "../types"
+import { calcChanges, getNodeComplexityType, isObject, objectKeys, pick, sumChanges } from "../utils"
 import { jsonSchemaNodeMetaProps, jsonSchemaNodeValueProps } from "./jsonSchema.consts"
-import { getNodeComplexityType, isObject, objectKeys, pick } from "../utils"
 import { createJsonSchemaTreeCrawlHook } from "./jsonSchema.build"
 import { isValidType, isRequired } from "./jsonSchema.utils"
 import { jsonSchemaCrawlRules } from "./jsonSchema.rules"
@@ -34,13 +34,54 @@ export type JsonSchemaDiffNodeValue<T extends JsonSchemaNodeType = any> = JsonSc
 export type JsonSchemaDiffNodeMeta = JsonSchemaNodeMeta & DiffNodeMeta
 
 export class JsonSchemaModelDiffTree<
-  T = JsonSchemaDiffNodeValue,
+  T extends DiffNodeValue = JsonSchemaDiffNodeValue,
   K extends string = JsonSchemaNodeKind,
   M extends DiffNodeMeta = JsonSchemaDiffNodeMeta
 > extends JsonSchemaModelTree<T, K, M> {
 
   constructor(source: unknown, public metaKey: symbol) {
     super(source)
+  }
+
+  public changesSummary(node: ModelDataNode<T, K, M>): Partial<Record<ChangeType, number>> {
+    let summary = {} as Record<ChangeType, number>
+
+    calcChanges(summary, node.meta.$metaChanges)
+    calcChanges(summary, node.meta.$childrenChanges)
+    calcChanges(summary, node.meta.$nestedChanges)
+    
+    if (node.type === "simple") {
+      // skip required changes
+      const { required, ...rest } = node.value()?.$changes ?? {}
+      calcChanges(summary, rest)
+    }
+
+    return summary
+  }
+
+  public totalChangesSummary(node: ModelDataNode<T, K, M>): Partial<Record<ChangeType, number>> {
+    if ("isCycle" in node && node.isCycle) { return {} }
+
+    const nodeChanges = this.changesSummary(node)
+    if (node.type === "simple") {
+      return node.children().reduce((res, cur) => sumChanges(res, cur.meta.$nodeChangesSummary?.()), nodeChanges)
+    } else {
+      return node.nested.reduce((res, cur) => sumChanges(res, cur.meta.$nodeChangesSummary?.()), nodeChanges)
+    }
+  }
+
+  public createNode(id: string, kind: K, key: string | number, params: ModelTreeNodeParams<T, K, M>) {
+    const node = super.createNode(id, kind, key, params)
+    // calucate $nodeChangesSummay
+    node.meta.$nodeChangesSummary = () => this.totalChangesSummary(node)
+    return node
+  }
+
+  public createComplexNode(id: string, kind: K, key: string | number, params: ModelTreeNodeParams<T, K, M> & { type: Exclude<ModelTreeNodeType, "simple"> }) {
+    const node = super.createComplexNode(id, kind, key, params)
+    // calucate $nodeChangesSummay
+    node.meta.$nodeChangesSummary = () => this.totalChangesSummary(node)
+    return node
   }
 
   public createNodeMeta (params: JsonSchemaCreateNodeParams<T, K, M>): M {
@@ -74,9 +115,9 @@ export class JsonSchemaModelDiffTree<
     const _value = {
       ...pick<any>(value, jsonSchemaNodeValueProps[type]),
       ...Object.keys(valueChanges).length ? { $changes: valueChanges } : {}
-    } as JsonSchemaDiffNodeValue
+    } as T
 
-    return _value as T
+    return _value
   }
 
   public getRequiredChange (key: string | number, parent: ModelDataNode<any, any, any> | null): ChangeMeta | null {
@@ -170,6 +211,7 @@ export class JsonSchemaModelDiffTree<
       ...$nodeChange ? { $nodeChange } : {},
       ...Object.keys($metaChanges).length ? { $metaChanges } : {},
       ...Object.keys($childrenChanges).length ? { $childrenChanges } : {},
+      $nodeChangesSummary: () => ({}),
       required: isRequired(key, parent),
       _fragment: value,
     }
@@ -190,6 +232,7 @@ export class JsonSchemaModelDiffTree<
     return { 
       ...Object.keys($nestedChanges).length ? { $nestedChanges } : {},
       ...$nodeChange ? { $nodeChange } : {},
+      $nodeChangesSummary: () => ({}),
       required: isRequired(key, parent),
       _fragment: value
     }

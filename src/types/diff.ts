@@ -1,14 +1,16 @@
+import { changeTypes } from "../consts"
+
 // from api-smart-diff
+export type ChangeType = typeof changeTypes[number]
+
 export type ApiMergedMeta = {
   action: "add" | "remove" | "replace" | "test" | "rename"
   replaced?: any
-  type: "breaking" | "non-breaking" | "annotation" | "unclassified" | "deprecated"
+  type: ChangeType
 }
 
 export type MergedArrayMeta = {
-  array: {
-    [key: number]: ApiMergedMeta | MergedArrayMeta
-  }
+  array: Record<number, ApiMergedMeta | MergedArrayMeta>
 }
 
 export type ChangeMeta = ApiMergedMeta | MergedArrayMeta
@@ -17,6 +19,7 @@ export type NodeChange = ApiMergedMeta & { depth: number }
 
 export type DiffNodeMeta = { 
   $nodeChange?: NodeChange 
+  $nodeChangesSummary: () => Partial<Record<ChangeType, number>> 
   $metaChanges?: Record<string, ChangeMeta>
   $childrenChanges?: Record<string, ApiMergedMeta>
   $nestedChanges?: Record<string, ApiMergedMeta>

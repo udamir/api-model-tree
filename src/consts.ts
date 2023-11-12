@@ -10,3 +10,5 @@ export const modelStateNodeType = {
   expandable: 'expandable',
   combinary: 'combinary'
 } as const
+
+export const changeTypes = ["breaking", "non-breaking", "annotation", "unclassified", "deprecated"] as const

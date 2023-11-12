@@ -1,13 +1,13 @@
 import { syncCrawl } from "json-crawl"
 
-import { GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta, GraphSchemaNodeType, GraphSchemaCrawlRule } from "./graphSchema.types"
+import { GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta, GraphSchemaNodeType } from "./graphSchema.types"
 import { CreateNodeResult, DiffNodeMeta, DiffNodeValue, ModelDataNode, ApiMergedMeta } from "../types"
 import { JsonSchemaCreateNodeParams, JsonSchemaModelDiffTree, isRequired } from "../jsonSchema"
 import { graphSchemaNodeMetaProps, graphSchemaNodeValueProps } from "./graphSchema.consts"
 import { createGraphSchemaTreeCrawlHook } from "./graphSchema.build"
 import { getNodeComplexityType, objectKeys, pick } from "../utils"
+import { ModelTreeComplexNode, ModelTreeNode } from "../modelTree"
 import { graphSchemaCrawlRules } from "./graphSchema.rules"
-import { ModelTreeComplexNode } from "../modelTree"
 
 export type GraphSchemaDiffTreeNode<T extends GraphSchemaNodeType = any> = ModelDataNode<
   GraphSchemaDiffNodeValue<T>,
@@ -21,7 +21,7 @@ export type GraphSchemaComplexDiffNode<T extends GraphSchemaNodeType = any> = Mo
 >
 
 export type GraphSchemaDiffCrawlState = { 
-  parent: GraphSchemaDiffTreeNode | null
+  parent: ModelTreeNode<GraphSchemaDiffNodeValue,GraphSchemaNodeKind,GraphSchemaDiffNodeMeta>  | null
   container?: GraphSchemaComplexDiffNode
 }
 
@@ -29,7 +29,7 @@ export type GraphSchemaDiffNodeValue<T extends GraphSchemaNodeType = any> = Grap
 export type GraphSchemaDiffNodeMeta = GraphSchemaNodeMeta & DiffNodeMeta
 
 export class GraphSchemaModelDiffTree<
-  T = GraphSchemaDiffNodeValue,
+  T extends DiffNodeValue = GraphSchemaDiffNodeValue,
   K extends string = GraphSchemaNodeKind,
   M extends DiffNodeMeta = GraphSchemaDiffNodeMeta
 > extends JsonSchemaModelDiffTree<T, K, M> {
@@ -50,6 +50,7 @@ export class GraphSchemaModelDiffTree<
       ...$nodeChange ? { $nodeChange } : {},
       ...Object.keys($metaChanges).length ? { $metaChanges } : {},
       ...Object.keys($childrenChanges).length ? { $childrenChanges } : {},
+      $nodeChangesSummary: () => ({}),
       required: isRequired(key, parent),
       _fragment: value,
     }
@@ -80,6 +81,7 @@ export class GraphSchemaModelDiffTree<
     return { 
       ...Object.keys($nestedChanges).length ? { $nestedChanges } : {},
       ...$nodeChange ? { $nodeChange } : {},
+      $nodeChangesSummary: () => ({}),
       required: isRequired(key, parent),
       _fragment: value
     }
@@ -112,7 +114,7 @@ export const createGraphSchemaDiffTree = (schema: any, metaKey: symbol, source: 
   const tree = new GraphSchemaModelDiffTree(source, metaKey)
   const crawlState: GraphSchemaDiffCrawlState = { parent: null }
 
-  syncCrawl<GraphSchemaDiffCrawlState, GraphSchemaCrawlRule>(
+  syncCrawl(
     schema,
     [ 
       createGraphSchemaTreeCrawlHook(tree)

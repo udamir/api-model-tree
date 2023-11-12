@@ -6,14 +6,13 @@ import {
   GraphSchemaNodeMeta, GraphSchemaCrawlRule, GraphSchemaComplexNode, GraphSchemaTreeNode 
 } from "./graphSchema.types"
 
-import { GraphSchemaDiffCrawlState } from './graphSchema.diff'
 import { graphSchemaCrawlRules } from "./graphSchema.rules"
 import { graphSchemaNodeKind } from './graphSchema.consts'
 import { GraphSchemaModelTree } from "./graphSchema.tree"
 import { createTransformCrawlHook } from "../transform"
 import { modelTreeNodeType } from '../consts'
 
-export const createGraphSchemaTreeCrawlHook = (tree: GraphSchemaModelTree): SyncCrawlHook<GraphSchemaDiffCrawlState, GraphSchemaCrawlRule> => {
+export const createGraphSchemaTreeCrawlHook = (tree: GraphSchemaModelTree): SyncCrawlHook<GraphSchemaCrawlState, GraphSchemaCrawlRule> => {
   const graphSchemaNodeKinds = Object.keys(graphSchemaNodeKind)
 
   return ({ value, rules, state, path, key }) => {
@@ -57,7 +56,7 @@ export const createGraphSchemaTree = (schema: GraphSchemaFragment, source: any =
   const tree = new GraphSchemaModelTree<GraphSchemaNodeValue, GraphSchemaNodeKind, GraphSchemaNodeMeta>(source)
   const crawlState: GraphSchemaCrawlState = { parent: null }
 
-  syncCrawl<GraphSchemaDiffCrawlState, GraphSchemaCrawlRule>(
+  syncCrawl<GraphSchemaCrawlState, GraphSchemaCrawlRule>(
     schema,
     [ 
       createTransformCrawlHook(source), 

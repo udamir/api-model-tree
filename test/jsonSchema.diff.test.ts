@@ -44,6 +44,9 @@ describe("jsonschema diff tree tests", () => {
         enum: { array: { 3: { action: 'add'}}}, 
         examples: { array: { 0: { action: 'replace' }}} 
       })
+      const changes = tree.root?.meta.$nodeChangesSummary()
+      expect(changes?.annotation).toEqual(2)
+      expect(changes?.["non-breaking"]).toEqual(1)
     })
 
     it("should create tree from simple jsonSchema with meta", () => {
@@ -72,6 +75,10 @@ describe("jsonschema diff tree tests", () => {
       expect(tree.root?.value()?.$changes).toMatchObject({ 
         description: { action: 'replace' }, 
       })
+
+      const changes = tree.root?.meta.$nodeChangesSummary()
+      expect(changes?.annotation).toEqual(1)
+      expect(changes?.deprecated).toEqual(1)
     })
 
     it("should create diff tree from object jsonSchema", () => {
@@ -135,6 +142,10 @@ describe("jsonschema diff tree tests", () => {
       expect(children[1].meta?.$metaChanges).toMatchObject({ required: { action: 'add' }})
       expect(children[2].meta?.$nodeChange).toMatchObject({ action: 'remove' })
       expect(children[3].meta?.$nodeChange).toMatchObject({ action: 'add' })
+
+      const changes = tree.root?.meta.$nodeChangesSummary()
+      expect(changes?.breaking).toEqual(3)
+      expect(changes?.["non-breaking"]).toEqual(1)
     })
 
     it("should create diff tree from jsonSchema with oneOf obejct", () => {
