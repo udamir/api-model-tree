@@ -34,7 +34,7 @@ export const openApiNodeKind = {
 
 export const openApiNodeKindMetaKeys = {
   service: ["info", "security", "externalDocs"],
-  operation: ["method", "path", "summary", "servers", "security", "deprecated", "tags", "externalDocs"],
+  operation: ["method", "path", "summary", "description", "servers", "security", "deprecated", "tags", "externalDocs"],
   parameter: ["in", "description", "required", "deprecated", "allowEmptyValue"],
   content: ["example", "examples", "encoding"],
   response: ["description"],

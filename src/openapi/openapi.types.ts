@@ -1,6 +1,6 @@
 import { JsonPath } from 'json-crawl'
 
-import { JsonSchemaComplexDiffNode, JsonSchemaModelTree, JsonSchemaNode, JsonSchemaNodeMeta, JsonSchemaNodeValue } from '../jsonSchema'
+import { JsonSchemaComplexNode, JsonSchemaModelTree, JsonSchemaNode, JsonSchemaNodeMeta, JsonSchemaNodeValue } from '../jsonSchema'
 import type { IModelTreeNode, ModelDataNode, SchemaCrawlRule } from '../types'
 import { ModelTreeComplexNode } from '../modelTree'
 import { openApiNodeKind } from './openapi.consts'
@@ -39,7 +39,7 @@ export type OpenApiTreeNode<T extends OpenApiNodeKind = any> =
 export type OpenApiComplexNode<T extends OpenApiNodeKind = any> = 
   T extends 'response' ? OpenApiResponseNode :
   T extends 'responseBody' ? OpenApiResponseBodyNode :
-  T extends 'requestBody' ? OpenApiRequestBodyNode : JsonSchemaComplexDiffNode
+  T extends 'requestBody' ? OpenApiRequestBodyNode : JsonSchemaComplexNode
 
 export type OpenApiNodeMeta = IServiceNodeMeta | IOperationNodeMeta | IParameterMeta | IContentMeta | IResponseMeta | IResponseBodyMeta | IRequestBodyMeta | JsonSchemaNodeMeta
 export type OpenApiModelTree = JsonSchemaModelTree<JsonSchemaNodeValue | null, OpenApiNodeKind, OpenApiNodeMeta>
@@ -59,6 +59,7 @@ export interface IOperationNodeMeta {
   method: string
   path: string
   summary?: string
+  description?: string
   servers?: {
     url: string
     name?: string

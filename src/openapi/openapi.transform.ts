@@ -1,6 +1,6 @@
 import { isRefNode, jsonSchemaMergeRules, merge, resolveRefNode } from "allof-merge"
 
-import { OpenApiCrawlState } from "./openapi.types"
+import type { OpenApiCrawlState } from "./openapi.types"
 import type { SchemaTransformFunc } from "../types"
 import { isKey, objectKeys } from "../utils"
 
