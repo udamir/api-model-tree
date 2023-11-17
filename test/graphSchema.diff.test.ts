@@ -1,11 +1,16 @@
-import { buildFromSchema } from "gqlapi"
-import { apiMerge } from "api-smart-diff"
-import { buildSchema } from "graphql"
+import { buildFromSchema } from 'gqlapi'
+import { apiMerge } from 'api-smart-diff'
+import { buildSchema } from 'graphql'
 
-import { createGraphSchemaDiffTree, createGraphSchemaTree, graphApiCrawlRules, GraphSchemaFragment } from "../src"
-import { createTransformCrawlHook } from "../src/transform"
-import { syncClone } from "json-crawl"
-
+import {
+  createGraphSchemaDiffTree,
+  createGraphSchemaTree,
+  createTransformCrawlHook,
+  graphApiCrawlRules,
+  GraphSchemaFragment,
+  IGraphSchemaStringType
+} from '../src'
+import { syncClone } from 'json-crawl'
 
 const metaKey = Symbol('diff')
 
@@ -17,9 +22,9 @@ const mergeGraphApi = (before: any, after: any) => {
   return apiMerge(b, a, { metaKey })
 }
 
-describe("graphschema transformation tests", () => {
-  describe("simple schema", () => {
-    it("should create diff tree from simple graphSchema", () => {
+describe('graphschema transformation tests', () => {
+  describe('simple schema', () => {
+    it('should create diff tree from simple graphSchema', () => {
 
       const before = `
       type Query {
@@ -49,12 +54,12 @@ describe("graphschema transformation tests", () => {
 
       const tree = createGraphSchemaDiffTree(schema, metaKey, merged)
 
-      expect(tree.root?.value()?.$changes).toMatchObject({ type: { action: 'replace' }})
-      expect(tree.root?.nested[-1]?.meta.$childrenChanges).toMatchObject({ "#/args/properties/isCompleted": { action: 'add' } })
+      expect(tree.root?.value()?.$changes).toMatchObject({ type: { action: 'replace' } })
+      expect(tree.root?.nested[-1]?.meta.$childrenChanges).toMatchObject({ '#/args/properties/isCompleted': { action: 'add' } })
       expect(tree.root?.nested[-1]?.children()[0]?.meta.$metaChanges).toMatchObject({ required: { action: 'add' } })
     })
 
-    it("should create diff tree from graphSchema with directive", () => {
+    it('should create diff tree from graphSchema with directive', () => {
 
       const before = `
       type Query {
@@ -93,17 +98,289 @@ describe("graphschema transformation tests", () => {
       expect(tree.root!.value()).toMatchObject({ type: 'object', title: 'Object' })
 
       const children = tree.root!.children()
-      expect(children[0].value()).toMatchObject({ type: 'string', format: 'ID' })      
-      expect(children[0].meta).toMatchObject({ $nodeChange: { action: 'add' }})      
+      expect(children[0].value()).toMatchObject({ type: 'string', format: 'ID' })
+      expect(children[0].meta).toMatchObject({ $nodeChange: { action: 'add' } })
 
-      expect(children[1].value()).toMatchObject({ type: 'integer' })      
-      expect(children[1].meta).toMatchObject({ $nodeChange: { action: 'add' }})      
-  
+      expect(children[1].value()).toMatchObject({ type: 'integer' })
+      expect(children[1].meta).toMatchObject({ $nodeChange: { action: 'add' } })
+
     })
   })
 
-  describe.skip("schema with directives", () => {
-    it("should create diff tree from graphSchema with directive", () => {
+  describe('simple schema with complex enum', () => {
+    it('changed enum item description', () => {
+      const before = `
+      directive @example(value: String) on FIELD | FIELD_DEFINITION
+
+      type Object {
+          """Id of the object"""
+          id: ID @deprecated
+          name: String @example(value: "dog") @deprecated (reason: "was deleted")
+          """Star Wars trilogy"""
+          episode: Episode!
+      }
+      
+      enum Episode {
+          """episode 1"""
+          NEWHOPE
+          """episode 2"""
+          EMPIRE @deprecated (reason: "was deleted")
+          JEDI
+          NEWEPISOE
+      }
+      `
+
+      const beforeSource = buildFromSchema(buildSchema(before, { noLocation: true }))
+
+      const after = `
+      directive @example(value: String) on FIELD | FIELD_DEFINITION
+
+      type Object {
+          """Id of the object"""
+          id: ID @deprecated
+          name: String @example(value: "dog") @deprecated (reason: "was deleted")
+          """Star Wars trilogy"""
+          episode: Episode!
+      }
+      
+      enum Episode {
+          """episode #1 description"""
+          NEWHOPE
+          """episode 2"""
+          EMPIRE @deprecated (reason: "was deleted")
+          JEDI
+          NEWEPISOE
+      }
+      `
+
+      const afterSource = buildFromSchema(buildSchema(after, { noLocation: true }))
+
+      const merged = mergeGraphApi(beforeSource, afterSource)
+      const schema = merged.components.objects!.Object
+
+      const tree = createGraphSchemaDiffTree(schema, metaKey, merged)
+
+      expect((tree.root?.children()[2]?.value() as IGraphSchemaStringType).values?.NEWHOPE).toMatchObject({
+        description: 'episode #1 description'
+      })
+      expect(tree.root?.children()[2]?.value()?.$changes).toMatchObject({
+        values: {
+          NEWHOPE: {
+            description: {
+              type: 'annotation',
+              action: 'replace',
+              replaced: 'episode 1'
+            }
+          }
+        }
+      })
+    })
+
+    it('changed enum item deprecation reason', () => {
+      const before = `
+      directive @example(value: String) on FIELD | FIELD_DEFINITION
+
+      type Object {
+          """Id of the object"""
+          id: ID @deprecated
+          name: String @example(value: "dog") @deprecated (reason: "was deleted")
+          """Star Wars trilogy"""
+          episode: Episode!
+      }
+      
+      enum Episode {
+          """episode 1"""
+          NEWHOPE
+          """episode 2"""
+          EMPIRE @deprecated (reason: "was deleted")
+          JEDI
+          NEWEPISOE
+      }
+      `
+
+      const beforeSource = buildFromSchema(buildSchema(before, { noLocation: true }))
+
+      const after = `
+      directive @example(value: String) on FIELD | FIELD_DEFINITION
+
+      type Object {
+          """Id of the object"""
+          id: ID @deprecated
+          name: String @example(value: "dog") @deprecated (reason: "was deleted")
+          """Star Wars trilogy"""
+          episode: Episode!
+      }
+      
+      enum Episode {
+          """episode 1"""
+          NEWHOPE
+          """episode 2"""
+          EMPIRE @deprecated (reason: "was deleted by DIFFERENT reason")
+          JEDI
+          NEWEPISOE
+      }
+      `
+
+      const afterSource = buildFromSchema(buildSchema(after, { noLocation: true }))
+
+      const merged = mergeGraphApi(beforeSource, afterSource)
+      const schema = merged.components.objects!.Object
+
+      const tree = createGraphSchemaDiffTree(schema, metaKey, merged)
+
+      expect((tree.root?.children()[2]?.value() as IGraphSchemaStringType).values?.EMPIRE).toMatchObject({
+        deprecated: {
+          reason: 'was deleted by DIFFERENT reason'
+        }
+      })
+      expect(tree.root?.children()[2]?.value()?.$changes).toMatchObject({
+        values: {
+          EMPIRE: {
+            deprecated: {
+              type: 'annotation',
+              action: 'replace',
+              replaced: {
+                reason: 'was deleted'
+              }
+            }
+          }
+        }
+      })
+    })
+  })
+
+  describe('simple schema with oneOf', () => {
+    it('added 1 oneOf item', () => {
+      const before = `
+      type Query {
+          "A Query with 1 required argument and 1 optional argument"
+          todo(
+              id: ID!
+      
+              "A default value of false"
+              isCompleted: Boolean = false
+          ): Response
+      }
+      
+      union Response = StringResponse | NumberResponse
+      
+      type StringResponse {
+          title: String
+      }
+      
+      type NumberResponse {
+          index: Int
+      }
+      `
+
+      const beforeSource = buildFromSchema(buildSchema(before, { noLocation: true }))
+
+      const after = `
+      type Query {
+          "A Query with 1 required argument and 1 optional argument"
+          todo(
+              id: ID!
+      
+              "A default value of false"
+              isCompleted: Boolean = false
+          ): Response
+      }
+      
+      union Response = StringResponse | NumberResponse | BooleanResponse
+      
+      type StringResponse {
+          title: String
+      }
+      
+      type NumberResponse {
+          index: Int
+      }
+      
+      type BooleanResponse {
+          flag: Boolean
+      }
+      `
+
+      const afterSource = buildFromSchema(buildSchema(after, { noLocation: true }))
+
+      const merged = mergeGraphApi(beforeSource, afterSource)
+      const schema = merged.queries!.todo
+
+      const tree = createGraphSchemaDiffTree(schema, metaKey, merged)
+
+      expect(tree.root?.nested[0]?.nested[2]?.meta?.$nodeChange).toMatchObject({
+        type: 'non-breaking',
+        action: 'add'
+      })
+    })
+
+    it('removed 1 oneOf item', () => {
+      const before = `
+      type Query {
+          "A Query with 1 required argument and 1 optional argument"
+          todo(
+              id: ID!
+      
+              "A default value of false"
+              isCompleted: Boolean = false
+          ): Response
+      }
+      
+      union Response = StringResponse | NumberResponse | BooleanResponse
+      
+      type StringResponse {
+          title: String
+      }
+      
+      type NumberResponse {
+          index: Int
+      }
+      
+      type BooleanResponse {
+          flag: Boolean
+      }
+      `
+
+      const beforeSource = buildFromSchema(buildSchema(before, { noLocation: true }))
+
+      const after = `
+      type Query {
+          "A Query with 1 required argument and 1 optional argument"
+          todo(
+              id: ID!
+      
+              "A default value of false"
+              isCompleted: Boolean = false
+          ): Response
+      }
+      
+      union Response = StringResponse | NumberResponse
+      
+      type StringResponse {
+          title: String
+      }
+      
+      type NumberResponse {
+          index: Int
+      }
+      `
+
+      const afterSource = buildFromSchema(buildSchema(after, { noLocation: true }))
+
+      const merged = mergeGraphApi(beforeSource, afterSource)
+      const schema = merged.queries!.todo
+
+      const tree = createGraphSchemaDiffTree(schema, metaKey, merged)
+
+      expect(tree.root?.nested[0]?.nested[2]?.meta?.$nodeChange).toMatchObject({
+        type: 'breaking',
+        action: 'remove'
+      })
+    })
+  })
+
+  describe.skip('schema with directives', () => {
+    it('should create diff tree from graphSchema with directive', () => {
 
       const before = `
       directive @limit(offset: Int = 0, limit: Int = 20) on FIELD | FIELD_DEFINITION
@@ -151,7 +428,7 @@ describe("graphschema transformation tests", () => {
 
     })
 
-    it("should create tree from graphSchema with directive in enum", () => {
+    it('should create tree from graphSchema with directive in enum', () => {
 
       const raw = `
       directive @limit(offset: Int = 0, limit: Int = 20) on FIELD | FIELD_DEFINITION
@@ -186,11 +463,15 @@ describe("graphschema transformation tests", () => {
       expect(tree.root!.value()).toMatchObject({ type: 'object', title: 'Object' })
 
       const children = tree.root!.children()
-      expect(children[0].value()).toMatchObject({ type: 'string', format: 'ID' })      
-      expect(children[0].meta).toMatchObject({ deprecated: true })      
-      expect(children[1].value()).toMatchObject({ type: 'string', examples: ['dog'] })      
-      expect(children[1].meta).toMatchObject({ deprecated: true })      
-      expect(children[2].value()).toMatchObject({ type: 'string', enum: ['NEWHOPE', 'EMPIRE', 'JEDI', 'NEWEPISOE'], values: { EMPIRE: { deprecated: {reason: 'was deleted' }}}})      
+      expect(children[0].value()).toMatchObject({ type: 'string', format: 'ID' })
+      expect(children[0].meta).toMatchObject({ deprecated: true })
+      expect(children[1].value()).toMatchObject({ type: 'string', examples: ['dog'] })
+      expect(children[1].meta).toMatchObject({ deprecated: true })
+      expect(children[2].value()).toMatchObject({
+        type: 'string',
+        enum: ['NEWHOPE', 'EMPIRE', 'JEDI', 'NEWEPISOE'],
+        values: { EMPIRE: { deprecated: { reason: 'was deleted' } } }
+      })
     })
 
   })
