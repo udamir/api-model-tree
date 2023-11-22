@@ -436,6 +436,52 @@ describe('graphschema transformation tests', () => {
       })
     })
 
+    it("should create diff tree from graphSchema with custom directives & show diffs between directive usages", () => {
+      const before = `
+      directive @example(value: String) on FIELD_DEFINITION
+      directive @maxlength(value: Int) on FIELD_DEFINITION
+       
+      type Object {
+          id: ID!
+       
+          description: String @example(value: "Default description") @maxlength(value: 2048)
+      }
+      `
+      const beforeSource = buildFromSchema(buildSchema(before, { noLocation: true }))
+      const after = `
+      directive @sample(value: String) on FIELD_DEFINITION
+      directive @maxlength(value: Int) on FIELD_DEFINITION
+       
+      type Object {
+          id: ID!
+       
+          description: String @sample(value: "Default description") @maxlength(value: 2048)
+      }
+      `
+      const afterSource = buildFromSchema(buildSchema(after, { noLocation: true }))
+
+      const merged = mergeGraphApi(beforeSource, afterSource)
+      const schema = merged.components!.objects!.Object as GraphSchemaFragment
+
+      const tree = createGraphSchemaDiffTree(schema, metaKey, merged)
+
+      const directives = tree.root?.children()?.[1]?.meta?.directives
+      expect(directives).toBeDefined()
+      expect(Object.keys(directives!).length).toBe(3)
+      expect(tree.root?.children()?.[1]?.meta?.$metaChanges).toMatchObject({
+        directives: {
+          example: {
+            type: "breaking",
+            action: "remove"
+          },
+          sample: {
+            type: "non-breaking",
+            action: "add"
+          }
+        }
+      })
+    })
+
     it.skip("should create tree from graphSchema with directive in enum", () => {
 
       const raw = `
@@ -481,6 +527,5 @@ describe('graphschema transformation tests', () => {
         values: { EMPIRE: { deprecated: { reason: 'was deleted' } } }
       })
     })
-
   })
 })
