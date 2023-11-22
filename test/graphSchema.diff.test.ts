@@ -379,8 +379,8 @@ describe('graphschema transformation tests', () => {
     })
   })
 
-  describe.skip('schema with directives', () => {
-    it('should create diff tree from graphSchema with directive', () => {
+  describe("schema with directives", () => {
+    it("should create diff tree from graphSchema with directive", () => {
 
       const before = `
       directive @limit(offset: Int = 0, limit: Int = 20) on FIELD | FIELD_DEFINITION
@@ -426,9 +426,17 @@ describe('graphschema transformation tests', () => {
 
       const tree = createGraphSchemaDiffTree(schema, metaKey, merged)
 
+      expect(tree.root?.nested[-1]).not.toEqual(undefined)
+      expect(tree.root?.nested.length).toEqual(2)
+      expect(tree.root?.nested[0]?.id).toEqual("#/oneOf/0")
+      expect(tree.root?.nested[1]?.id).toEqual("#/oneOf/1")
+      expect(tree.root?.nested[1]?.meta?.$nodeChange).toMatchObject({
+        type: 'breaking',
+        action: 'remove'
+      })
     })
 
-    it('should create tree from graphSchema with directive in enum', () => {
+    it.skip("should create tree from graphSchema with directive in enum", () => {
 
       const raw = `
       directive @limit(offset: Int = 0, limit: Int = 20) on FIELD | FIELD_DEFINITION
