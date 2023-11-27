@@ -14,7 +14,7 @@ export const isKey = <T extends object>(x: T, k: PropertyKey): k is keyof T => {
   return k in x;
 }
 
-export function isObject(maybeObj: unknown): maybeObj is Record<any, unknown> {
+export function isObject(maybeObj: unknown): maybeObj is Record<number | string | symbol, unknown> {
   return maybeObj !== void 0 && maybeObj !== null && typeof maybeObj === 'object'
 }
 
@@ -61,7 +61,7 @@ export const objectKeys = <T extends object>(value: T): (keyof T)[] => {
 
 export function pick<T extends object>(target: unknown, keys: readonly (keyof T)[]): Partial<T> {
   if (!isObject(target)) { return {} }
-  const source: Partial<T> = {}
+  const source: any = {}
 
   for (const key of keys) {
     if (!(key in target)) { continue }

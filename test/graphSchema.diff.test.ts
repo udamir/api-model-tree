@@ -164,14 +164,10 @@ describe('graphschema transformation tests', () => {
         description: 'episode #1 description'
       })
       expect(tree.root?.children()[2]?.value()?.$changes).toMatchObject({
-        values: {
-          NEWHOPE: {
-            description: {
-              type: 'annotation',
-              action: 'replace',
-              replaced: 'episode 1'
-            }
-          }
+        "values.NEWHOPE.description": {
+          type: 'annotation',
+          action: 'replace',
+          replaced: 'episode 1'
         }
       })
     })
@@ -234,16 +230,10 @@ describe('graphschema transformation tests', () => {
         }
       })
       expect(tree.root?.children()[2]?.value()?.$changes).toMatchObject({
-        values: {
-          EMPIRE: {
-            deprecated: {
-              type: 'annotation',
-              action: 'replace',
-              replaced: {
-                reason: 'was deleted'
-              }
-            }
-          }
+        "values.EMPIRE.deprecated.reason": {
+          type: 'annotation',
+          action: 'replace',
+          replaced: 'was deleted'
         }
       })
     })
@@ -308,9 +298,11 @@ describe('graphschema transformation tests', () => {
 
       const tree = createGraphSchemaDiffTree(schema, metaKey, merged)
 
-      expect(tree.root?.nested[0]?.nested[2]?.meta?.$nodeChange).toMatchObject({
-        type: 'non-breaking',
-        action: 'add'
+      expect(tree.root?.nested[0]?.meta?.$nestedChanges).toMatchObject({
+        "#/oneOf/0/oneOf/2": {
+          type: 'non-breaking',
+          action: 'add'
+        }
       })
     })
 
@@ -372,9 +364,11 @@ describe('graphschema transformation tests', () => {
 
       const tree = createGraphSchemaDiffTree(schema, metaKey, merged)
 
-      expect(tree.root?.nested[0]?.nested[2]?.meta?.$nodeChange).toMatchObject({
-        type: 'breaking',
-        action: 'remove'
+      expect(tree.root?.nested[0]?.meta?.$nestedChanges).toMatchObject({
+        "#/oneOf/0/oneOf/2": {
+          type: 'breaking',
+          action: 'remove'
+        }
       })
     })
   })
@@ -397,7 +391,7 @@ describe('graphschema transformation tests', () => {
       
           "A default value of false"
           isCompleted: Boolean = false
-        ): Object
+        ): Object!
       }
       `
       const beforeSource = buildFromSchema(buildSchema(before, { noLocation: true }))
@@ -426,13 +420,17 @@ describe('graphschema transformation tests', () => {
 
       const tree = createGraphSchemaDiffTree(schema, metaKey, merged)
 
-      expect(tree.root?.nested[-1]).not.toEqual(undefined)
-      expect(tree.root?.nested.length).toEqual(2)
-      expect(tree.root?.nested[0]?.id).toEqual("#/oneOf/0")
-      expect(tree.root?.nested[1]?.id).toEqual("#/oneOf/1")
-      expect(tree.root?.nested[1]?.meta?.$nodeChange).toMatchObject({
-        type: 'breaking',
-        action: 'remove'
+      expect(tree.root?.children()[1].meta.$metaChanges).toMatchObject({
+        directives: {
+          type: 'unclassified',
+          action: 'remove'
+        }
+      })
+      expect(tree.root?.nested[-1].children()[1].meta.$metaChanges).toMatchObject({
+        deprecated: {
+          type: 'deprecated',
+          action: 'add'
+        }
       })
     })
 
@@ -469,15 +467,13 @@ describe('graphschema transformation tests', () => {
       expect(directives).toBeDefined()
       expect(Object.keys(directives!).length).toBe(3)
       expect(tree.root?.children()?.[1]?.meta?.$metaChanges).toMatchObject({
-        directives: {
-          example: {
-            type: "breaking",
-            action: "remove"
-          },
-          sample: {
-            type: "non-breaking",
-            action: "add"
-          }
+        "directives.example": {
+          type: "breaking",
+          action: "remove"
+        },
+        "directives.sample": {
+          type: "non-breaking",
+          action: "add"
         }
       })
     })
