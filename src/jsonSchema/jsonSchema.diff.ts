@@ -98,7 +98,23 @@ export class JsonSchemaModelDiffTree<
     }
   } 
 
-  protected getNodeChange = (params: JsonSchemaCreateNodeParams<T, K, M>) => {
+  protected getPropsChanges (_value: any, props: readonly string[]) {
+    const changes: Record<string, ChangeMeta> = {}
+    syncCrawl(_value, ({ value, path, key }) => {
+      if (path.length === 1 && !props.includes(String(key))) { return { done: true } }
+      if (!isObject(value) || !(this.metaKey in value)) { return }
+
+      const _changes: any = !path.length ? pick(value[this.metaKey], props) : value[this.metaKey]
+      for (const key of objectKeys(_changes)) {
+        const _key = [...path, key].join(".")
+        changes[_key] = _changes[key]
+      }
+    })
+
+    return changes
+  }
+
+  protected getNodeChange (params: JsonSchemaCreateNodeParams<T, K, M>) {
     const { id, parent = null, container = null } = params
     const inheretedChanges = container?.meta?.$nodeChange ?? parent?.meta.$nodeChange
     const nodeChanges = parent?.meta?.$childrenChanges?.[id] || container?.meta?.$nestedChanges?.[id]
@@ -113,11 +129,11 @@ export class JsonSchemaModelDiffTree<
     if (Array.isArray(type) || !type || typeof type !== "string" || !isValidType(type)) {
       throw new Error(`Schema should have correct type!`)
     }
-    const valueChanges = pick(value[this.metaKey], jsonSchemaNodeValueProps[type])
+    const $changes = this.getPropsChanges(value, jsonSchemaNodeValueProps[type]) 
 
     const _value = {
       ...pick<any>(value, jsonSchemaNodeValueProps[type]),
-      ...Object.keys(valueChanges).length ? { $changes: valueChanges } : {}
+      ...Object.keys($changes).length ? { $changes } : {}
     } as T
 
     return _value
@@ -204,7 +220,7 @@ export class JsonSchemaModelDiffTree<
     const requiredChange = this.getRequiredChange(key, parent)
     const $metaChanges = {
       ...requiredChange ? { required: requiredChange } : {},
-      ...pick(value?.[this.metaKey], jsonSchemaNodeMetaProps),
+      ...this.getPropsChanges(value, jsonSchemaNodeMetaProps),
     }
     const $childrenChanges = this.getChildrenChanges(id, value ?? {})
     const $nodeChange = this.getNodeChange(params)

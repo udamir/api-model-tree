@@ -40,7 +40,7 @@ export class GraphSchemaModelDiffTree<
     const requiredChange = this.getRequiredChange(key, parent)
     const $metaChanges = {
       ...requiredChange ? { required: requiredChange } : {},
-      ...pick(value?.[this.metaKey], graphSchemaNodeMetaProps),
+      ...this.getPropsChanges(value, graphSchemaNodeMetaProps),
     }
     const $childrenChanges = this.getChildrenChanges(id, value ?? {})
     const $nodeChange = this.getNodeChange(params)
@@ -93,11 +93,11 @@ export class GraphSchemaModelDiffTree<
     if (!type || typeof type !== 'string') { 
       throw new Error (`Schema should have type: ${id}`)
     }
-    const valueChanges = pick(value[this.metaKey], graphSchemaNodeValueProps[type])
+    const $changes = this.getPropsChanges(value, graphSchemaNodeValueProps[type])
 
     const _value = {
       ...pick<any>(value, graphSchemaNodeValueProps[type]),
-      ...Object.keys(valueChanges).length ? { $changes: valueChanges } : {}
+      ...Object.keys($changes).length ? { $changes } : {}
     }
 
     return _value as T
