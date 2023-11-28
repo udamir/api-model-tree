@@ -109,7 +109,7 @@ export const createOpenApiServiceNode = (
 
   const meta: IServiceNodeMeta = {
     ...pick(_service, openApiNodeKindMetaKeys.service),
-    ..._service?.components?.securitySchemes ? _service.components.securitySchemes : {},
+    ..._service?.components?.securitySchemes ? { securitySchemes: _service.components.securitySchemes } : {},
     _fragment: _service
   } 
 

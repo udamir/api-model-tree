@@ -1,3 +1,4 @@
+import { OpenAPIV3 } from "openapi-types"
 import { JsonPath } from 'json-crawl'
 
 import { JsonSchemaComplexNode, JsonSchemaModelTree, JsonSchemaNode, JsonSchemaNodeMeta, JsonSchemaNodeValue } from '../jsonSchema'
@@ -8,14 +9,14 @@ import { openApiNodeKind } from './openapi.consts'
 export type OpenApiNodeKind = keyof typeof openApiNodeKind
 
 export interface OpenApiTransformFuncContext {
-  source: any
+  source: unknown
   path: JsonPath
 }
 
 export interface OpenApiCrawlState {
   parent: OpenApiTreeNode | null
   container?: OpenApiComplexNode | null
-  source: any
+  source: unknown
 }
 
 export type OpenApiOperationsFilter = (node: OpenApiTreeNode) => boolean
@@ -45,14 +46,14 @@ export type OpenApiNodeMeta = IServiceNodeMeta | IOperationNodeMeta | IParameter
 export type OpenApiModelTree = JsonSchemaModelTree<JsonSchemaNodeValue | null, OpenApiNodeKind, OpenApiNodeMeta>
 
 export interface IServiceNodeMeta {
-  info: any
-  security?: any[][]
-  securitySchemes?: any[]
+  info?: OpenAPIV3.InfoObject
+  security?: OpenAPIV3.SecurityRequirementObject[]
+  securitySchemes?: Record<string, OpenAPIV3.SecuritySchemeObject>
   externalDocs?: {
     description?: string
     url: string
   }
-  _fragment: any
+  _fragment: OpenAPIV3.Document
 }
 
 export interface IOperationNodeMeta {
@@ -60,21 +61,13 @@ export interface IOperationNodeMeta {
   path: string
   summary?: string
   description?: string
-  servers?: {
-    url: string
-    name?: string
-    description?: string
-    variables?: Record<string, any>
-  }[]
-  tags?: any[]
-  security?: any[][]
+  servers?: OpenAPIV3.ServerObject[]
+  tags?: string[]
+  security?: OpenAPIV3.SecurityRequirementObject[]
   securityDeclarationType?: any
   deprecated?: boolean
-  externalDocs?: {
-    description?: string
-    url: string
-  }
-  _fragment: any
+  externalDocs?: OpenAPIV3.ExternalDocumentationObject
+  _fragment: OpenAPIV3.OperationObject
 }
 
 export interface IParameterMeta extends JsonSchemaNodeMeta {
@@ -84,8 +77,8 @@ export interface IParameterMeta extends JsonSchemaNodeMeta {
 }
 
 export interface IContentMeta extends JsonSchemaNodeMeta {
-  encoding?: any
-  examples?: any
+  encoding?: Record<string, OpenAPIV3.EncodingObject>
+  examples?: Record<string, OpenAPIV3.ExampleObject>
   example?: any
 }
 

@@ -14,7 +14,7 @@ import { createTransformCrawlHook } from '../transform'
 export const createJsonSchemaTreeCrawlHook = (tree: JsonSchemaModelTree): SyncCrawlHook<JsonSchemaCrawlState, JsonSchemaCrawlRule> => {
   return ({ key, value, path, rules, state}) => {
     if (!rules) {
-      return { done: true}
+      return { done: true }
     }
     if (!jsonSchemaNodeKinds.includes(rules?.kind) || Array.isArray(value)) {
       return
