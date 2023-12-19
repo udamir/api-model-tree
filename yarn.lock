@@ -2440,11 +2440,6 @@ jsesc@^2.5.1:
   resolved "https://registry.npmjs.org/jsesc/-/jsesc-2.5.2.tgz"
   integrity sha512-OYu7XEzjkCQ3C5Ps3QIZsQfNpqoJyZZA99wd9aWd05NCtC5pWOkShK2mkL6HXQR6/Cy2lbNdPlZBpuQHXE63gA==
 
-json-crawl@^0.3.1:
-  version "0.3.1"
-  resolved "https://registry.npmjs.org/json-crawl/-/json-crawl-0.3.1.tgz"
-  integrity sha512-exEL+d2gjjPIGCPwJQOeIeVj9Q6hBKDER4izDoKI7KSibf2EcwKBNM0GGRy/ws79bUHCNh3JHkofIoj4als8OQ==
-
 json-crawl@^0.4.2:
   version "0.4.2"
   resolved "https://registry.yarnpkg.com/json-crawl/-/json-crawl-0.4.2.tgz#34339e4984bdf3a7f39518f1e3a0cd29ac1cc86c"
