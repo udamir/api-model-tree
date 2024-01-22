@@ -981,11 +981,11 @@ aggregate-error@^3.0.0:
     indent-string "^4.0.0"
 
 allof-merge@^0.6.1:
-  version "0.6.3"
-  resolved "https://registry.yarnpkg.com/allof-merge/-/allof-merge-0.6.3.tgz#b1fa2fd78b5daf12345327146d49f078facae804"
-  integrity sha512-B+HU6Kxy2UDixejzHKb+3C2f8ACD3iYC4AEjpkJs3CUPEt1GLGqPvfEd1mp0H2TS8gCYvs2xHy+YY1AggDDayw==
+  version "0.6.5"
+  resolved "https://registry.yarnpkg.com/allof-merge/-/allof-merge-0.6.5.tgz#4ba3a7edce0a32bc0a2502ff7d83caeac6f2f129"
+  integrity sha512-tZ7ce3UiHkTfaXAPafpmCFtLvCTee4+axHuKsNZRbRKRRZ/1Z2aUzmcQSvuhnzWhYCQGZVb2+E0i8Rk2ThiYQw==
   dependencies:
-    json-crawl "^0.5.1"
+    json-crawl "^0.5.3"
 
 ansi-align@^3.0.0:
   version "3.0.1"
@@ -2445,10 +2445,10 @@ json-crawl@^0.3.1:
   resolved "https://registry.npmjs.org/json-crawl/-/json-crawl-0.3.1.tgz"
   integrity sha512-exEL+d2gjjPIGCPwJQOeIeVj9Q6hBKDER4izDoKI7KSibf2EcwKBNM0GGRy/ws79bUHCNh3JHkofIoj4als8OQ==
 
-json-crawl@^0.5.1:
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/json-crawl/-/json-crawl-0.5.1.tgz#1dcd753ee1bcbebe15934f350bb577e422e5c16b"
-  integrity sha512-guQYl5NFDUC6XtJvlMb80rYTJ0LhY9lLlDpL6idDwSGldpGayWBzsstK7BlmULXM/WsT0jI+skiilwiRb904wA==
+json-crawl@^0.5.3:
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/json-crawl/-/json-crawl-0.5.3.tgz#3a2e1d308d4fc5a444902f1f94f4a9e03d584c6b"
+  integrity sha512-BEjjCw8c7SxzNK4orhlWD5cXQh8vCk2LqDr4WgQq4CV+5dvopeYwt1Tskg67SuSLKvoFH5g0yuYtg7rcfKV6YA==
 
 json-parse-even-better-errors@^2.3.0:
   version "2.3.1"
